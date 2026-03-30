@@ -12,10 +12,15 @@ jobs:
     steps:
       - name: Login and get token
         id: auth
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
         run: |
-          TOKEN=$(curl -sf -X POST "${{ secrets.API_URL }}/api/v1/auth/login" \
+          PAYLOAD=$(jq -n --arg e "$ADMIN_EMAIL" --arg p "$ADMIN_PASSWORD" '{email:$e,password:$p}')
+          TOKEN=$(curl -sf -X POST "${API_URL}/api/v1/auth/login" \
             -H "Content-Type: application/json" \
-            -d "{\"email\":\"${{ secrets.ADMIN_EMAIL }}\",\"password\":\"${{ secrets.ADMIN_PASSWORD }}\"}" \
+            -d "$PAYLOAD" \
             | jq -r '.access_token')
           if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
             echo "::error::Login failed"
