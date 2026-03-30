@@ -197,10 +197,10 @@ label {
   border-radius: 2px;
   transition: width 0.4s ease;
 }
-.score-low .score-bar-fill { background: var(--color-text-tertiary); }
-.score-med .score-bar-fill { background: var(--color-warning); }
+.score-low .score-bar-fill { background: var(--color-accent); opacity: 0.35; }
+.score-med .score-bar-fill { background: var(--color-accent); opacity: 0.6; }
 .score-high .score-bar-fill { background: var(--color-accent); }
-.score-critical .score-bar-fill { background: var(--color-danger); }
+.score-critical .score-bar-fill { background: var(--color-accent); }
 
 /* ---- Header ---- */
 .header {
@@ -429,8 +429,8 @@ label {
   margin-right: 8px;
   flex-shrink: 0;
 }
-.source-dot.ok { background: var(--color-success); }
-.source-dot.warn { background: var(--color-warning); }
+.source-dot.ok { background: var(--color-accent); }
+.source-dot.warn { background: var(--color-text-tertiary); }
 .source-dot.err { background: var(--color-danger); }
 
 /* ---- Loading ---- */
