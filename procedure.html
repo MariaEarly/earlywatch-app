@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Early Watch — Procédures</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="app.js"></script>
+  <script>
+    if (!requireAuth()) throw new Error('redirect');
+
+    let procedures = [];
+
+    async function init() {
+      document.getElementById('app').innerHTML = renderHeader() + `
+        <div class="flex">
+          <!-- Left: Generator form -->
+          <div style="width:380px; min-width:380px; border-right:0.5px solid var(--color-border-tertiary); height:calc(100vh - 52px); overflow-y:auto; padding:24px; background:var(--color-background-primary)">
+            <h2 style="margin-bottom:20px">Générer une procédure</h2>
+
+            <div style="margin-bottom:16px">
+              <label for="textId">Identifiant Legifrance</label>
+              <input id="textId" class="input" placeholder="ex: cmf, LEGITEXT000..." value="cmf">
+              <p class="text-xs text-tertiary" style="margin-top:4px">
+                Utilisez <strong>cmf</strong> pour le Code monétaire et financier
+              </p>
+            </div>
+
+            <div style="margin-bottom:16px">
+              <label for="profile">Profil réglementaire</label>
+              <select id="profile" class="select">
+                <option value="banque">Banque (Établissement de crédit)</option>
+                <option value="psp">PSP (Prestataire de services de paiement)</option>
+                <option value="casp">CASP (Crypto-actifs / PSAN)</option>
+              </select>
+            </div>
+
+            <div style="margin-bottom:20px">
+              <label for="context">Contexte client <span class="text-tertiary">(optionnel)</span></label>
+              <textarea id="context" class="textarea" placeholder="Ex: Banque de détail, 150 employés, clientèle PME..."></textarea>
+            </div>
+
+            <button class="btn btn-primary" id="generateBtn" onclick="generate()" style="width:100%">
+              Générer la procédure
+            </button>
+
+            <div id="generate-error" style="display:none; margin-top:12px" class="warning-box"></div>
+
+            <!-- Previous procedures -->
+            <div style="margin-top:32px; padding-top:20px; border-top:0.5px solid var(--color-border-tertiary)">
+              <h3 style="margin-bottom:12px">Procédures générées</h3>
+              <div id="procedure-list">
+                <div class="loading-overlay" style="padding:20px"><div class="spinner"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Result display -->
+          <main class="content-main" id="result-area">
+            <div class="empty-state" style="height:100%">
+              <div class="icon">&#128221;</div>
+              <p>Configurez les paramètres et cliquez sur<br>"Générer la procédure"</p>
+              <p class="text-xs text-tertiary" style="margin-top:8px">
+                La procédure sera générée à partir des obligations<br>
+                extraites de Legifrance via Claude AI
+              </p>
+            </div>
+          </main>
+        </div>`;
+
+      loadProcedures();
+    }
+
+    async function loadProcedures() {
+      try {
+        procedures = await api('/api/v1/procedures');
+        renderProcedureList();
+      } catch (e) {
+        document.getElementById('procedure-list').innerHTML =
+          `<p class="text-sm text-tertiary">${e.message}</p>`;
+      }
+    }
+
+    function renderProcedureList() {
+      const list = document.getElementById('procedure-list');
+      if (!procedures.length) {
+        list.innerHTML = '<p class="text-sm text-tertiary">Aucune procédure</p>';
+        return;
+      }
+      list.innerHTML = procedures.map(p => `
+        <div class="article-card" style="padding:10px 0; cursor:pointer" onclick="loadProcedure('${p.id}')">
+          <div class="flex items-center justify-between">
+            <span class="text-sm fw-500">${escHtml(p.text_id)}</span>
+            ${statusBadge(p.status)}
+          </div>
+          <div class="text-xs text-tertiary" style="margin-top:2px">
+            ${escHtml(p.profile)} &middot; ${p.obligation_count} obligations &middot; ${formatDate(p.created_at)}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function generate() {
+      const btn = document.getElementById('generateBtn');
+      const errEl = document.getElementById('generate-error');
+      errEl.style.display = 'none';
+
+      const textId = document.getElementById('textId').value.trim();
+      const profile = document.getElementById('profile').value;
+      const context = document.getElementById('context').value.trim();
+
+      if (!textId) {
+        errEl.innerHTML = '<span>&#9888;</span> Identifiant Legifrance requis';
+        errEl.style.display = 'flex';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:1.5px"></div> Génération en cours...';
+
+      // Show loading in result area
+      document.getElementById('result-area').innerHTML = `
+        <div class="loading-overlay" style="height:100%; flex-direction:column">
+          <div class="spinner"></div>
+          <p>Extraction des obligations depuis Legifrance...</p>
+          <p class="text-xs text-tertiary">Génération de la procédure via Claude AI</p>
+          <p class="text-xs text-tertiary">Cela peut prendre 30 à 60 secondes</p>
+        </div>`;
+
+      try {
+        const body = { text_id: textId, tenant_profile: profile };
+        if (context) body.client_context = context;
+
+        const result = await api('/api/v1/procedures/generate', { method: 'POST', body });
+        renderResult(result);
+        toast('Procédure générée avec succès');
+
+        // Refresh list
+        loadProcedures();
+      } catch (e) {
+        errEl.innerHTML = `<span>&#9888;</span> ${escHtml(e.message)}`;
+        errEl.style.display = 'flex';
+        document.getElementById('result-area').innerHTML = `
+          <div class="empty-state" style="height:100%">
+            <div class="icon" style="color:var(--color-danger)">&#10007;</div>
+            <p>${escHtml(e.message)}</p>
+          </div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Générer la procédure';
+      }
+    }
+
+    async function loadProcedure(id) {
+      document.getElementById('result-area').innerHTML = `
+        <div class="loading-overlay" style="height:50%"><div class="spinner"></div></div>`;
+      try {
+        const result = await api(`/api/v1/procedures/${id}`);
+        renderResult(result);
+      } catch (e) {
+        toast(e.message, 'error');
+      }
+    }
+
+    function renderResult(proc) {
+      // Parse sections from markdown
+      const content = proc.content || '';
+      const sections = parseSections(content);
+      const sources = proc.sources_cited || [];
+
+      document.getElementById('result-area').innerHTML = `
+        <div style="padding:24px; max-width:800px; margin:0 auto">
+          <!-- Header -->
+          <div class="flex items-center justify-between" style="margin-bottom:20px">
+            <div>
+              <div class="flex items-center gap-8">
+                <h1>Procédure générée</h1>
+                ${statusBadge(proc.status)}
+              </div>
+              <p class="text-sm text-secondary" style="margin-top:4px">
+                ${proc.profile} &middot; ${proc.obligation_count} obligations &middot; ${proc.model_name}
+              </p>
+            </div>
+            ${proc.status === 'pending_validation' ? `
+              <div class="flex gap-8">
+                <button class="btn btn-success btn-sm" onclick="validateProc('${proc.id}','validated')">Valider</button>
+                <button class="btn btn-danger btn-sm" onclick="validateProc('${proc.id}','rejected')">Rejeter</button>
+              </div>` : ''}
+          </div>
+
+          <!-- Sources cited badges -->
+          <div style="margin-bottom:16px">
+            <h3 class="text-xs text-tertiary" style="margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Articles cités</h3>
+            <div class="flex gap-4" style="flex-wrap:wrap">
+              ${sources.map(s => `
+                <a href="${s.lien_legifrance || '#'}" target="_blank" rel="noopener"
+                   class="badge badge-accent" style="text-decoration:none; cursor:pointer"
+                   title="${s.legiarti_id || ''}">
+                  Art. ${escHtml(s.article_number)}
+                </a>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Sections -->
+          ${sections.map((sec, i) => `
+            <div class="expandable ${i < 4 ? 'open' : ''}">
+              <button class="expandable-header">
+                <span>${escHtml(sec.title)}</span>
+                <span class="arrow">&#9654;</span>
+              </button>
+              <div class="expandable-body">
+                <div class="md-content">${renderMarkdown(sec.content)}</div>
+              </div>
+            </div>
+          `).join('')}
+
+          <!-- Warning -->
+          <div class="warning-box" style="margin-top:20px">
+            <span>&#9888;</span>
+            <div>
+              <strong>Avertissement Compliance Officer</strong><br>
+              Ce document est un PROJET généré automatiquement par IA à partir de sources Legifrance.
+              Il DOIT être validé par le Compliance Officer avant toute mise en application.
+            </div>
+          </div>
+
+          <!-- Provenance -->
+          <p class="text-xs text-tertiary" style="margin-top:12px">${escHtml(proc.provenance || '')}</p>
+        </div>`;
+
+      initExpandables();
+    }
+
+    function parseSections(md) {
+      const lines = md.split('\n');
+      const sections = [];
+      let current = null;
+
+      for (const line of lines) {
+        // Match ## headers (section headers)
+        const m2 = line.match(/^## \d*\.?\s*(.+)/);
+        const m1 = line.match(/^# (.+)/);
+
+        if (m2) {
+          if (current) sections.push(current);
+          current = { title: m2[1], content: '' };
+        } else if (m1 && !current) {
+          // Main title — skip or use as first section
+          if (current) sections.push(current);
+          current = { title: m1[1], content: '' };
+        } else if (current) {
+          current.content += line + '\n';
+        }
+      }
+      if (current) sections.push(current);
+
+      // If no sections parsed, return full content as one block
+      if (sections.length === 0) {
+        sections.push({ title: 'Procédure', content: md });
+      }
+
+      return sections;
+    }
+
+    async function validateProc(id, decision) {
+      const comment = decision === 'rejected'
+        ? prompt('Raison du rejet (optionnel):')
+        : null;
+
+      try {
+        const body = { decision };
+        if (comment) body.comment = comment;
+        const result = await api(`/api/v1/procedures/${id}/validate`, { method: 'POST', body });
+        renderResult(result);
+        toast(decision === 'validated' ? 'Procédure validée' : 'Procédure rejetée');
+        loadProcedures();
+      } catch (e) {
+        toast(e.message, 'error');
+      }
+    }
+
+    function escHtml(s) {
+      if (!s) return '';
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    init();
+  </script>
+</body>
+</html>

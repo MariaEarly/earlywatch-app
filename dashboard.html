@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Early Watch — Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="app.js"></script>
+  <script>
+    if (!requireAuth()) throw new Error('redirect');
+
+    // ---- State ----
+    let articles = [];
+    let sources = [];
+    let activeFilter = 'all';
+    let scoreFilter = 'all';
+
+    // ---- Init ----
+    async function init() {
+      document.getElementById('app').innerHTML = renderHeader() + `
+        <div class="flex">
+          <!-- Left sidebar: Filters -->
+          <aside class="sidebar" id="sidebar-left"></aside>
+
+          <!-- Center: Article list -->
+          <main class="content-main" id="article-list">
+            <div class="loading-overlay"><div class="spinner"></div> Chargement des articles...</div>
+          </main>
+
+          <!-- Right sidebar: Stats -->
+          <aside class="sidebar sidebar-right" id="sidebar-right"></aside>
+        </div>`;
+
+      try {
+        const [articlesData, sourcesData] = await Promise.all([
+          api('/api/v1/articles'),
+          api('/api/v1/sources/health').catch(() => []),
+        ]);
+        // Handle paginated response {items:[], total} or plain array
+        articles = Array.isArray(articlesData) ? articlesData : (articlesData?.items || []);
+        sources = Array.isArray(sourcesData) ? sourcesData : (sourcesData?.items || []);
+      } catch (e) {
+        document.getElementById('article-list').innerHTML =
+          `<div class="empty-state"><div class="icon">!</div><p>${e.message}</p></div>`;
+        return;
+      }
+
+      renderSidebar();
+      renderArticles();
+      renderRightPanel();
+    }
+
+    // ---- Left sidebar ----
+    function renderSidebar() {
+      const counts = { all: articles.length, new: 0, pending_review: 0, reviewed: 0, dismissed: 0 };
+      articles.forEach(a => { if (counts[a.status] !== undefined) counts[a.status]++; });
+
+      // Score ranges
+      const scoreCounts = { all: articles.length, high: 0, med: 0, low: 0 };
+      articles.forEach(a => {
+        if ((a.score || 0) >= 50) scoreCounts.high++;
+        else if ((a.score || 0) >= 25) scoreCounts.med++;
+        else scoreCounts.low++;
+      });
+
+      // Source counts
+      const srcCounts = {};
+      articles.forEach(a => {
+        const s = a.source_name || 'Autre';
+        srcCounts[s] = (srcCounts[s] || 0) + 1;
+      });
+
+      document.getElementById('sidebar-left').innerHTML = `
+        <div class="sidebar-section">
+          <h3>Statut</h3>
+          <div class="filter-group">
+            ${filterBtn('all', 'Tous', counts.all)}
+            ${filterBtn('new', 'Nouveaux', counts.new)}
+            ${filterBtn('pending_review', 'En revue', counts.pending_review)}
+            ${filterBtn('reviewed', 'Revus', counts.reviewed)}
+            ${filterBtn('dismissed', 'Ignorés', counts.dismissed)}
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <h3>Score</h3>
+          <div class="filter-group">
+            ${scoreFilterBtn('all', 'Tous', scoreCounts.all)}
+            ${scoreFilterBtn('high', 'Prioritaire (50+)', scoreCounts.high)}
+            ${scoreFilterBtn('med', 'Moyen (25-49)', scoreCounts.med)}
+            ${scoreFilterBtn('low', 'Faible (<25)', scoreCounts.low)}
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <h3>Source</h3>
+          <div class="filter-group" style="max-height:200px;overflow-y:auto">
+            ${Object.entries(srcCounts).sort((a,b) => b[1]-a[1]).slice(0, 10).map(([name, count]) =>
+              `<div class="filter-item text-sm"><span style="flex:1;overflow:hidden;text-overflow:ellipsis">${name}</span><span class="filter-count">${count}</span></div>`
+            ).join('')}
+          </div>
+        </div>`;
+
+      // Bind filter clicks
+      document.querySelectorAll('[data-filter]').forEach(el => {
+        el.addEventListener('click', () => {
+          activeFilter = el.dataset.filter;
+          renderSidebar();
+          renderArticles();
+        });
+      });
+      document.querySelectorAll('[data-score-filter]').forEach(el => {
+        el.addEventListener('click', () => {
+          scoreFilter = el.dataset.scoreFilter;
+          renderSidebar();
+          renderArticles();
+        });
+      });
+    }
+
+    function filterBtn(key, label, count) {
+      const active = activeFilter === key ? 'active' : '';
+      return `<button class="filter-item ${active}" data-filter="${key}">
+        <span>${label}</span><span class="filter-count">${count}</span>
+      </button>`;
+    }
+    function scoreFilterBtn(key, label, count) {
+      const active = scoreFilter === key ? 'active' : '';
+      return `<button class="filter-item ${active}" data-score-filter="${key}">
+        <span>${label}</span><span class="filter-count">${count}</span>
+      </button>`;
+    }
+
+    // ---- Article list ----
+    function renderArticles() {
+      let filtered = [...articles];
+
+      if (activeFilter !== 'all') {
+        filtered = filtered.filter(a => a.status === activeFilter);
+      }
+      if (scoreFilter === 'high') filtered = filtered.filter(a => (a.score||0) >= 50);
+      else if (scoreFilter === 'med') filtered = filtered.filter(a => (a.score||0) >= 25 && (a.score||0) < 50);
+      else if (scoreFilter === 'low') filtered = filtered.filter(a => (a.score||0) < 25);
+
+      if (filtered.length === 0) {
+        document.getElementById('article-list').innerHTML = `
+          <div class="empty-state">
+            <div class="icon">&#128196;</div>
+            <p>Aucun article dans cette vue</p>
+          </div>`;
+        return;
+      }
+
+      document.getElementById('article-list').innerHTML = filtered.map(a => `
+        <div class="article-card" onclick="window.location.href='article.html?id=${a.id}'">
+          <div class="article-meta">
+            <span>${a.source_name || 'Source inconnue'}</span>
+            <span>&middot;</span>
+            <span>${formatDate(a.published_at || a.created_at)}</span>
+            ${a.detected_action_type ? actionBadge(a.detected_action_type) : ''}
+            <span style="margin-left:auto">${statusBadge(a.status)}</span>
+          </div>
+          <div class="article-title">${escHtml(a.title || 'Sans titre')}</div>
+          ${scoreBar(a.score)}
+          <div class="article-actions">
+            <button class="btn btn-sm btn-success" onclick="event.stopPropagation();triage('${a.id}','reviewed')">Valider</button>
+            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();triage('${a.id}','pending_review')">En revue</button>
+            <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();triage('${a.id}','dismissed')">Ignorer</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function triage(id, status) {
+      try {
+        await api(`/api/v1/articles/${id}/triage`, { method: 'PATCH', body: { status } });
+        const idx = articles.findIndex(a => a.id === id);
+        if (idx !== -1) articles[idx].status = status;
+        renderSidebar();
+        renderArticles();
+        toast(`Article ${status === 'reviewed' ? 'validé' : status === 'dismissed' ? 'ignoré' : 'en revue'}`);
+      } catch (e) {
+        toast(e.message, 'error');
+      }
+    }
+
+    // ---- Right panel ----
+    function renderRightPanel() {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const weekAgo = new Date(today - 7 * 86400000);
+
+      const daily = articles.filter(a => new Date(a.created_at) >= today).length;
+      const weekly = articles.filter(a => new Date(a.created_at) >= weekAgo).length;
+
+      // Sources health
+      const srcList = Array.isArray(sources) ? sources : [];
+
+      document.getElementById('sidebar-right').innerHTML = `
+        <div class="sidebar-section">
+          <h3>Quotidien</h3>
+          <div class="stat-card">
+            <div class="stat-value">${daily}</div>
+            <div class="stat-label">articles aujourd'hui</div>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <h3>Hebdomadaire</h3>
+          <div class="stat-card">
+            <div class="stat-value">${weekly}</div>
+            <div class="stat-label">articles cette semaine</div>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <h3>Export</h3>
+          <div class="flex flex-col gap-4">
+            <button class="btn btn-secondary btn-sm" onclick="exportArticles('json')">Export JSON</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportArticles('markdown')">Export Markdown</button>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <h3>Sources</h3>
+          <div id="sources-health">
+            ${srcList.length ? srcList.slice(0, 12).map(s => `
+              <div class="source-row">
+                <span class="flex items-center">
+                  <span class="source-dot ${s.status === 'OK' || s.status === 'ok' ? 'ok' : s.status === 'warning' ? 'warn' : 'err'}"></span>
+                  <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name || s.slug}</span>
+                </span>
+                <span class="text-xs text-tertiary">${s.article_count || 0}</span>
+              </div>`).join('') : '<p class="text-sm text-tertiary">Aucune source</p>'}
+          </div>
+        </div>`;
+    }
+
+    async function exportArticles(format) {
+      try {
+        const path = format === 'markdown' ? '/api/v1/articles/export/markdown' : '/api/v1/articles/export';
+        const data = await api(path);
+        const blob = new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `earlywatch-export.${format === 'markdown' ? 'md' : 'json'}`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast('Export téléchargé');
+      } catch (e) {
+        toast(e.message, 'error');
+      }
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    init();
+  </script>
+</body>
+</html>

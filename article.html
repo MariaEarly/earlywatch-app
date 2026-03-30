@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Early Watch — Article</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="app.js"></script>
+  <script>
+    if (!requireAuth()) throw new Error('redirect');
+
+    const articleId = new URLSearchParams(window.location.search).get('id');
+    if (!articleId) { window.location.href = 'dashboard.html'; throw new Error('no id'); }
+
+    let article = null;
+    let actionResult = null;
+
+    async function init() {
+      document.getElementById('app').innerHTML = renderHeader() + `
+        <div class="content-inner" id="content">
+          <div class="loading-overlay"><div class="spinner"></div> Chargement de l'article...</div>
+        </div>`;
+
+      try {
+        article = await api(`/api/v1/articles/${articleId}`);
+      } catch (e) {
+        document.getElementById('content').innerHTML =
+          `<div class="empty-state"><p>${e.message}</p><a href="dashboard.html" class="btn btn-secondary" style="margin-top:12px">Retour</a></div>`;
+        return;
+      }
+
+      render();
+    }
+
+    function render() {
+      const a = article;
+      document.title = `Early Watch — ${a.title || 'Article'}`;
+
+      document.getElementById('content').innerHTML = `
+        <!-- Back link -->
+        <a href="dashboard.html" class="btn btn-ghost btn-sm" style="margin-bottom:16px">&larr; Retour à l'inbox</a>
+
+        <!-- Article header -->
+        <div class="card" style="padding:20px; margin-bottom:16px">
+          <div class="article-meta" style="margin-bottom:8px">
+            <span>${a.source_name || 'Source inconnue'}</span>
+            <span>&middot;</span>
+            <span>${formatDate(a.published_at || a.created_at)}</span>
+            ${statusBadge(a.status)}
+          </div>
+          <h1 style="font-size:18px; margin-bottom:8px">${escHtml(a.title || 'Sans titre')}</h1>
+          ${scoreBar(a.score)}
+          <p style="margin-top:12px; font-size:13px; color:var(--color-text-secondary); line-height:1.7">
+            ${escHtml(a.summary || a.content || 'Aucun contenu disponible.')}
+          </p>
+          ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="margin-top:12px">Voir la source &rarr;</a>` : ''}
+
+          <!-- Triage -->
+          <div style="margin-top:16px; padding-top:16px; border-top:0.5px solid var(--color-border-tertiary)">
+            <div class="flex gap-8">
+              <button class="btn btn-sm btn-success" onclick="triageArticle('reviewed')">Valider</button>
+              <button class="btn btn-sm btn-secondary" onclick="triageArticle('pending_review')">En revue</button>
+              <button class="btn btn-sm btn-danger" onclick="triageArticle('dismissed')">Ignorer</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action panel -->
+        ${a.detected_action_type ? renderActionPanel(a) : ''}
+
+        <!-- Action result -->
+        <div id="action-result"></div>
+      `;
+    }
+
+    function renderActionPanel(a) {
+      const typeLabels = {
+        sanctions_update: 'Mise à jour des sanctions',
+        doctrine_update: 'Évolution de la doctrine',
+        obligation_update: 'Nouvelles obligations',
+      };
+      return `
+        <div class="action-panel" style="margin-bottom:16px">
+          <div class="flex items-center justify-between" style="margin-bottom:12px">
+            <div>
+              <h3 style="color:var(--color-accent-text)">Action détectée</h3>
+              <p class="text-sm" style="color:var(--color-accent); margin-top:2px">
+                ${typeLabels[a.detected_action_type] || a.detected_action_type}
+              </p>
+            </div>
+            ${actionBadge(a.detected_action_type)}
+          </div>
+          <button class="btn btn-primary" id="executeBtn" onclick="executeAction()">
+            Exécuter l'action
+          </button>
+        </div>`;
+    }
+
+    async function executeAction() {
+      const btn = document.getElementById('executeBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:1.5px"></div> Exécution...';
+
+      try {
+        actionResult = await api(`/api/v1/articles/${articleId}/execute-action`, { method: 'POST' });
+        renderActionResult();
+        toast('Action exécutée');
+      } catch (e) {
+        toast(e.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Exécuter l\'action';
+      }
+    }
+
+    function renderActionResult() {
+      if (!actionResult) return;
+      const r = actionResult;
+      const output = r.output || {};
+
+      // Build expandable sections from output
+      let sections = '';
+
+      if (output.entities) {
+        sections += expandableSection('Entités détectées', `
+          <ul>${output.entities.map(e => `<li>${escHtml(e)}</li>`).join('')}</ul>
+          ${output.source_url ? `<p style="margin-top:8px"><a href="${output.source_url}" target="_blank">Source officielle</a></p>` : ''}
+        `);
+      }
+
+      if (output.obligations) {
+        sections += expandableSection('Obligations extraites', `
+          ${output.obligations.map(o => `
+            <div style="padding:8px 0; border-bottom:0.5px solid var(--color-border-tertiary)">
+              <strong>Article ${escHtml(o.article_number || '?')}</strong>
+              ${o.lien_legifrance ? `<a href="${o.lien_legifrance}" target="_blank" class="text-sm text-accent" style="margin-left:8px">Legifrance</a>` : ''}
+              <ul style="margin-top:4px">${(o.relevant_paragraphs || []).map(p => `<li class="text-sm">${escHtml(p)}</li>`).join('')}</ul>
+            </div>
+          `).join('')}
+        `);
+      }
+
+      if (output.diff_sections) {
+        sections += expandableSection('Diff doctrine', `
+          ${output.diff_sections.map(d => `
+            <div style="padding:6px 0">
+              <span class="badge ${d.change_type === 'added' ? 'badge-success' : d.change_type === 'removed' ? 'badge-danger' : 'badge-warning'}">
+                ${d.change_type}
+              </span>
+              <pre style="font-size:12px; margin-top:4px; white-space:pre-wrap; background:var(--color-background-tertiary); padding:8px; border-radius:4px">${escHtml(d.content || '')}</pre>
+            </div>
+          `).join('')}
+        `);
+      }
+
+      if (output.current_content_preview) {
+        sections += expandableSection('Contenu actuel', `<div class="text-sm">${escHtml(output.current_content_preview)}</div>`);
+      }
+
+      // Sources cited
+      if (r.source_url) {
+        sections += expandableSection('Sources citées', `<a href="${r.source_url}" target="_blank">${r.source_url}</a>`);
+      }
+
+      if (output.provenance) {
+        sections += expandableSection('Provenance', `<p class="text-sm">${escHtml(output.provenance)}</p>`);
+      }
+
+      document.getElementById('action-result').innerHTML = `
+        <div class="card" style="padding:20px; margin-bottom:16px">
+          <div class="flex items-center justify-between" style="margin-bottom:16px">
+            <h2>Résultat de l'action</h2>
+            ${statusBadge(r.status)}
+          </div>
+
+          ${sections}
+
+          <!-- Warning compliance -->
+          <div class="warning-box" style="margin-top:16px">
+            <span>&#9888;</span>
+            <div>
+              <strong>Avertissement Compliance Officer</strong><br>
+              ${escHtml(r.warning || r.confidence_note || 'Ce contenu est généré automatiquement. Validation obligatoire avant usage.')}
+            </div>
+          </div>
+        </div>`;
+
+      initExpandables();
+      // Open first section by default
+      const first = document.querySelector('#action-result .expandable');
+      if (first) first.classList.add('open');
+    }
+
+    function expandableSection(title, content) {
+      return `
+        <div class="expandable">
+          <button class="expandable-header">
+            <span>${title}</span>
+            <span class="arrow">&#9654;</span>
+          </button>
+          <div class="expandable-body">${content}</div>
+        </div>`;
+    }
+
+    async function triageArticle(status) {
+      try {
+        await api(`/api/v1/articles/${articleId}/triage`, { method: 'PATCH', body: { status } });
+        article.status = status;
+        render();
+        toast(`Article ${status === 'reviewed' ? 'validé' : status === 'dismissed' ? 'ignoré' : 'en revue'}`);
+      } catch (e) {
+        toast(e.message, 'error');
+      }
+    }
+
+    function escHtml(s) {
+      if (!s) return '';
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    init();
+  </script>
+</body>
+</html>
