@@ -56,7 +56,7 @@
 
     // ---- Left sidebar ----
     function renderSidebar() {
-      const counts = { all: articles.length, new: 0, pending_review: 0, reviewed: 0, dismissed: 0 };
+      const counts = { all: articles.length, nouveau: 0, quotidien: 0, hebdo: 0, ignorer: 0 };
       articles.forEach(a => { if (counts[a.status] !== undefined) counts[a.status]++; });
 
       // Score ranges
@@ -79,10 +79,10 @@
           <h3>Statut</h3>
           <div class="filter-group">
             ${filterBtn('all', 'Tous', counts.all)}
-            ${filterBtn('new', 'Nouveaux', counts.new)}
-            ${filterBtn('pending_review', 'En revue', counts.pending_review)}
-            ${filterBtn('reviewed', 'Revus', counts.reviewed)}
-            ${filterBtn('dismissed', 'Ignorés', counts.dismissed)}
+            ${filterBtn('nouveau', 'Nouveaux', counts.nouveau)}
+            ${filterBtn('quotidien', 'Quotidien', counts.quotidien)}
+            ${filterBtn('hebdo', 'Hebdo', counts.hebdo)}
+            ${filterBtn('ignorer', 'Ignorés', counts.ignorer)}
           </div>
         </div>
 
@@ -167,9 +167,9 @@
           <div class="article-title">${escHtml(a.title || 'Sans titre')}</div>
           ${scoreBar(a.score)}
           <div class="article-actions">
-            <button class="btn btn-sm btn-success" onclick="event.stopPropagation();triage('${a.id}','reviewed')">Valider</button>
-            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();triage('${a.id}','pending_review')">En revue</button>
-            <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();triage('${a.id}','dismissed')">Ignorer</button>
+            <button class="btn btn-sm btn-triage${a.status === 'quotidien' ? ' btn-triage-active' : ''}" onclick="event.stopPropagation();triage('${a.id}','quotidien')">Quotidien</button>
+            <button class="btn btn-sm btn-triage${a.status === 'hebdo' ? ' btn-triage-active' : ''}" onclick="event.stopPropagation();triage('${a.id}','hebdo')">Hebdo</button>
+            <button class="btn btn-sm btn-triage${a.status === 'ignorer' ? ' btn-triage-active' : ''}" onclick="event.stopPropagation();triage('${a.id}','ignorer')">Ignorer</button>
           </div>
         </div>
       `).join('');
@@ -182,7 +182,7 @@
         if (idx !== -1) articles[idx].status = status;
         renderSidebar();
         renderArticles();
-        toast(`Article ${status === 'reviewed' ? 'validé' : status === 'dismissed' ? 'ignoré' : 'en revue'}`);
+        toast(`Article → ${status === 'quotidien' ? 'Quotidien' : status === 'hebdo' ? 'Hebdo' : 'Ignoré'}`);
       } catch (e) {
         toast(e.message, 'error');
       }

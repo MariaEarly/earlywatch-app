@@ -91,12 +91,15 @@ function formatTime(d) {
 // ---- Badge helpers ----
 function statusBadge(status) {
   const map = {
-    new: ['Nouveau', 'badge-accent'],
-    pending_review: ['En revue', 'badge-warning'],
-    reviewed: ['Revu', 'badge-success'],
-    dismissed: ['Ignoré', 'badge-neutral'],
+    nouveau: ['Nouveau', 'badge-accent'],
+    important: ['Important', 'badge-warning'],
+    quotidien: ['Quotidien', 'badge-accent'],
+    hebdo: ['Hebdo', 'badge-neutral'],
+    relu: ['Relu', 'badge-neutral'],
+    archive: ['Archive', 'badge-neutral'],
+    ignorer: ['Ignoré', 'badge-neutral'],
     pending_validation: ['Validation', 'badge-warning'],
-    validated: ['Validé', 'badge-success'],
+    validated: ['Validé', 'badge-accent'],
     rejected: ['Rejeté', 'badge-danger'],
   };
   const [label, cls] = map[status] || [status, 'badge-neutral'];

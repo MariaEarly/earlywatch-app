@@ -122,6 +122,23 @@ h3 { font-size: 14px; font-weight: 500; }
 .btn-warning { background: var(--color-warning); color: #fff; }
 .btn-warning:hover:not(:disabled) { background: #b45309; }
 
+/* Triage buttons — neutral routing, no value judgment */
+.btn-triage {
+  background: var(--color-background-primary);
+  color: var(--color-text-secondary);
+  border: 0.5px solid var(--color-border-primary);
+}
+.btn-triage:hover:not(:disabled) {
+  background: var(--color-background-tertiary);
+  color: var(--color-text-primary);
+}
+.btn-triage-active {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  border-color: rgba(55,48,163,0.2);
+  font-weight: 500;
+}
+
 /* ---- Badge ---- */
 .badge {
   display: inline-flex;
