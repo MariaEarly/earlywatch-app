@@ -1,0 +1,35 @@
+name: Hourly Ingestion
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Every hour
+  workflow_dispatch: {}    # Manual trigger from GitHub UI
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Login and get token
+        id: auth
+        run: |
+          TOKEN=$(curl -sf -X POST "${{ secrets.API_URL }}/api/v1/auth/login" \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"${{ secrets.ADMIN_EMAIL }}\",\"password\":\"${{ secrets.ADMIN_PASSWORD }}\"}" \
+            | jq -r '.access_token')
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+            echo "::error::Login failed"
+            exit 1
+          fi
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger ingestion
+        run: |
+          RESULT=$(curl -sf -X POST "${{ secrets.API_URL }}/api/v1/sources/ingest" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+            --max-time 300)
+          echo "$RESULT" | jq .
+          TOTAL=$(echo "$RESULT" | jq '[.report | to_entries[].value | to_entries[].value.count] | add // 0')
+          echo "### Ingestion completed" >> $GITHUB_STEP_SUMMARY
+          echo "**$TOTAL articles** ingested" >> $GITHUB_STEP_SUMMARY
+          echo "$RESULT" | jq -r '.report | to_entries[].value | to_entries[] | select(.value.count > 0) | "- \(.key): \(.value.count) (\(.value.mode))"' >> $GITHUB_STEP_SUMMARY
