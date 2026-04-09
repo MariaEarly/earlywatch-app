@@ -191,7 +191,7 @@ function renderHeader() {
       </div>
       <div class="flex items-center gap-12">
         ${tenant ? `<span class="badge badge-accent">${tenant}</span>` : ''}
-        <div class="avatar" title="${user?.email || ''}" onclick="if(confirm('Se déconnecter ?')) logout()">${initials}</div>
+        <a href="account.html" class="avatar" title="${user?.email || ''} — Mon compte" style="text-decoration:none">${initials}</a>
       </div>
     </header>`;
 }
