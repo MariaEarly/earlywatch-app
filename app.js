@@ -2,7 +2,18 @@
    Early Watch — Shared Application Logic
    ================================================================ */
 
-const API = 'https://earlybriefp7hwqsga-earlybrief-api.functions.fnc.fr-par.scw.cloud';
+// Detection automatique : dev local vs prod.
+// - Si la page est servie depuis localhost/127.0.0.1 (ou file://), on tape le backend local
+//   sur http://127.0.0.1:8000.
+// - Sinon (GitHub Pages, domaine custom), on tape la prod Scaleway.
+// Regle d'or : jamais de dev contre la prod.
+const API = (() => {
+  const h = window.location.hostname;
+  if (h === 'localhost' || h === '127.0.0.1' || h === '' /* file:// */) {
+    return 'http://127.0.0.1:8000';
+  }
+  return 'https://earlybriefp7hwqsga-earlybrief-api.functions.fnc.fr-par.scw.cloud';
+})();
 
 // ---- Auth ----
 function getToken() {

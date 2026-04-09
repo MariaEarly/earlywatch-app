@@ -18,6 +18,11 @@
     let sources = [];
     let activeFilter = 'all';
     let scoreFilter = 'all';
+    let newsletterCounts = null; // {quotidien_total, quotidien_published, hebdo_total, hebdo_published}
+
+    function newsletterEnabled() {
+      return !!getUser()?.tenant_newsletter_enabled;
+    }
 
     // ---- Init ----
     async function init() {
@@ -36,13 +41,15 @@
         </div>`;
 
       try {
-        const [articlesData, sourcesData] = await Promise.all([
+        const [articlesData, sourcesData, countsData] = await Promise.all([
           api('/api/v1/articles'),
           api('/api/v1/sources/health').catch(() => []),
+          newsletterEnabled() ? api('/api/v1/articles/newsletter/counts').catch(() => null) : Promise.resolve(null),
         ]);
         // Handle paginated response {items:[], total} or plain array
         articles = Array.isArray(articlesData) ? articlesData : (articlesData?.items || []);
         sources = Array.isArray(sourcesData) ? sourcesData : (sourcesData?.items || []);
+        newsletterCounts = countsData;
       } catch (e) {
         document.getElementById('article-list').innerHTML =
           `<div class="empty-state"><div class="icon">!</div><p>${e.message}</p></div>`;
@@ -170,9 +177,35 @@
             <button class="btn btn-sm btn-triage${a.status === 'quotidien' ? ' btn-triage-active' : ''}" onclick="event.stopPropagation();triage('${a.id}','quotidien')">Quotidien</button>
             <button class="btn btn-sm btn-triage${a.status === 'hebdo' ? ' btn-triage-active' : ''}" onclick="event.stopPropagation();triage('${a.id}','hebdo')">Hebdo</button>
             <button class="btn btn-sm btn-triage${a.status === 'ignorer' ? ' btn-triage-active' : ''}" onclick="event.stopPropagation();triage('${a.id}','ignorer')">Ignorer</button>
+            ${newsletterEnabled() && (a.status === 'quotidien' || a.status === 'hebdo') ? `
+              <button class="btn btn-sm ${a.published_to_newsletter ? 'btn-primary' : 'btn-secondary'}"
+                      onclick="event.stopPropagation();publishArticle('${a.id}')"
+                      ${a.published_to_newsletter ? 'disabled title="Publié le ' + formatDate(a.published_to_newsletter_at) + '"' : ''}>
+                ${a.published_to_newsletter ? '✓ Publié' : 'Publier'}
+              </button>` : ''}
           </div>
         </div>
       `).join('');
+    }
+
+    async function publishArticle(id) {
+      try {
+        const res = await api(`/api/v1/articles/${id}/published`, { method: 'POST', body: {} });
+        const idx = articles.findIndex(a => a.id === id);
+        if (idx !== -1) {
+          articles[idx].published_to_newsletter = true;
+          articles[idx].published_to_newsletter_at = res.published_to_newsletter_at;
+        }
+        // Refresh counts
+        if (newsletterEnabled()) {
+          newsletterCounts = await api('/api/v1/articles/newsletter/counts').catch(() => newsletterCounts);
+        }
+        renderArticles();
+        renderRightPanel();
+        toast('Article publié dans la newsletter');
+      } catch (e) {
+        toast(e.message, 'error');
+      }
     }
 
     async function triage(id, status) {
@@ -200,7 +233,26 @@
       // Sources health
       const srcList = Array.isArray(sources) ? sources : [];
 
+      const nc = newsletterCounts;
+      const newsletterBlock = (newsletterEnabled() && nc) ? `
+        <div class="sidebar-section">
+          <h3>Newsletter</h3>
+          <div class="stat-card">
+            <div class="stat-value">${nc.quotidien_published} / ${nc.quotidien_total}</div>
+            <div class="stat-label">Quotidien publié</div>
+          </div>
+          <div class="stat-card" style="margin-top:8px">
+            <div class="stat-value">${nc.hebdo_published} / ${nc.hebdo_total}</div>
+            <div class="stat-label">Hebdo publié</div>
+          </div>
+          <div class="flex flex-col gap-4" style="margin-top:12px">
+            <button class="btn btn-secondary btn-sm" onclick="exportArticles('markdown','quotidien')">Export Markdown — Quotidien</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportArticles('markdown','hebdo')">Export Markdown — Hebdo</button>
+          </div>
+        </div>` : '';
+
       document.getElementById('sidebar-right').innerHTML = `
+        ${newsletterBlock}
         <div class="sidebar-section">
           <h3>Quotidien</h3>
           <div class="stat-card">
@@ -240,15 +292,17 @@
         </div>`;
     }
 
-    async function exportArticles(format) {
+    async function exportArticles(format, type) {
       try {
-        const path = format === 'markdown' ? '/api/v1/articles/export/markdown' : '/api/v1/articles/export';
+        let path = format === 'markdown' ? '/api/v1/articles/export/markdown' : '/api/v1/articles/export';
+        if (type) path += `?type=${type}`;
         const data = await api(path);
         const blob = new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `earlywatch-export.${format === 'markdown' ? 'md' : 'json'}`;
+        const suffix = type ? `-${type}` : '';
+        a.download = `earlywatch-export${suffix}.${format === 'markdown' ? 'md' : 'json'}`;
         a.click();
         URL.revokeObjectURL(url);
         toast('Export téléchargé');
