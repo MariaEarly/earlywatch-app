@@ -4,31 +4,43 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&display=swap');
 
 :root {
-  --color-accent: #3730A3;
-  --color-accent-hover: #2e2890;
-  --color-accent-light: #EEEDFE;
-  --color-accent-text: #26215C;
-  --color-background-primary: #FFFFFF;
-  --color-background-secondary: #F9FAFB;
-  --color-background-tertiary: #F3F4F6;
-  --color-border-primary: rgba(0,0,0,0.12);
-  --color-border-secondary: rgba(0,0,0,0.08);
-  --color-border-tertiary: rgba(0,0,0,0.05);
-  --color-text-primary: #111827;
-  --color-text-secondary: #6B7280;
-  --color-text-tertiary: #9CA3AF;
-  --color-success: #059669;
-  --color-success-bg: #ECFDF5;
-  --color-warning: #D97706;
-  --color-warning-bg: #FFFBEB;
-  --color-danger: #DC2626;
-  --color-danger-bg: #FEF2F2;
+  /* Beige palette v2 — tokens */
+  --beige: #F6F1E9;
+  --beige2: #EDE5D5;
+  --beige3: #E2D8C6;
+  --kaki: #4A5240;
+  --kaki-hover: #3a4132;
+  --terra: #C4603A;
+  --terra-hover: #a8502f;
+  --noir: #1A1A17;
+
+  /* Design-system aliases (preserve existing class contracts, change values only) */
+  --color-accent: var(--kaki);
+  --color-accent-hover: var(--kaki-hover);
+  --color-accent-light: var(--beige2);
+  --color-accent-text: var(--kaki);
+  --color-background-primary: var(--beige);
+  --color-background-secondary: var(--beige);
+  --color-background-tertiary: var(--beige2);
+  --color-border-primary: var(--beige3);
+  --color-border-secondary: var(--beige3);
+  --color-border-tertiary: var(--beige3);
+  --color-text-primary: var(--noir);
+  --color-text-secondary: #5A584E;
+  --color-text-tertiary: #8A877C;
+  --color-success: var(--kaki);
+  --color-success-bg: var(--beige2);
+  --color-warning: var(--terra);
+  --color-warning-bg: var(--beige2);
+  --color-danger: #8B2F1F;
+  --color-danger-bg: var(--beige2);
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
-  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
+  /* No shadows in beige v2 */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -39,8 +51,19 @@ body {
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-primary);
-  background: var(--color-background-secondary);
+  background: var(--color-background-primary);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Shell principal cartoon — overlay fixe, n'affecte pas le layout */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 8px;
+  border: 1.5px solid var(--noir);
+  border-radius: 16px;
+  pointer-events: none;
+  z-index: 1000;
 }
 
 /* ---- Typography ---- */
@@ -99,11 +122,16 @@ h3 { font-size: 14px; font-weight: 500; }
 .btn-primary:hover:not(:disabled) { background: var(--color-accent-hover); }
 
 .btn-secondary {
-  background: var(--color-background-primary);
-  color: var(--color-text-primary);
-  border: 0.5px solid var(--color-border-primary);
+  background: transparent;
+  color: var(--noir);
+  border: 1.5px solid var(--noir);
+  border-radius: 20px;
+  box-shadow: 2px 2px 0 rgba(26,26,23,0.4);
 }
-.btn-secondary:hover:not(:disabled) { background: var(--color-background-tertiary); }
+.btn-secondary:hover:not(:disabled) {
+  background: var(--noir);
+  color: var(--beige);
+}
 
 .btn-ghost {
   background: transparent;
@@ -122,22 +150,39 @@ h3 { font-size: 14px; font-weight: 500; }
 .btn-warning { background: var(--color-warning); color: #fff; }
 .btn-warning:hover:not(:disabled) { background: #b45309; }
 
-/* Triage buttons — neutral routing, no value judgment */
+/* Triage buttons — pill cartoon, bordure noire visible, plein quand actif */
 .btn-triage {
-  background: var(--color-background-primary);
-  color: var(--color-text-secondary);
-  border: 0.5px solid var(--color-border-primary);
+  background: var(--beige);
+  color: var(--noir);
+  border: 1.5px solid var(--noir);
+  border-radius: 20px;
 }
 .btn-triage:hover:not(:disabled) {
-  background: var(--color-background-tertiary);
-  color: var(--color-text-primary);
+  background: var(--beige2);
+  color: var(--noir);
 }
-.btn-triage-active {
-  background: var(--color-accent-light);
-  color: var(--color-accent);
-  border-color: rgba(55,48,163,0.2);
+/* Active states per position — Quotidien (1er) terra, Hebdo (2e) kaki, Ignorer (3e) noir */
+.article-actions .btn-triage:nth-child(1).btn-triage-active {
+  background: var(--terra);
+  color: var(--beige);
+  border-color: var(--noir);
+  font-weight: 500;
+  box-shadow: 2px 2px 0 rgba(26,26,23,0.4);
+}
+.article-actions .btn-triage:nth-child(2).btn-triage-active {
+  background: var(--kaki);
+  color: var(--beige);
+  border-color: var(--noir);
+  font-weight: 500;
+  box-shadow: 2px 2px 0 rgba(26,26,23,0.4);
+}
+.article-actions .btn-triage:nth-child(3).btn-triage-active {
+  background: var(--noir);
+  color: var(--beige);
+  border-color: var(--noir);
   font-weight: 500;
 }
+.btn-triage-active { font-weight: 500; }
 
 /* ---- Badge ---- */
 .badge {
@@ -149,7 +194,12 @@ h3 { font-size: 14px; font-weight: 500; }
   border-radius: 100px;
   white-space: nowrap;
 }
-.badge-accent { background: var(--color-accent-light); color: var(--color-accent); }
+.badge-accent {
+  background: var(--beige);
+  color: var(--noir);
+  border: 1px solid currentColor;
+  border-radius: 20px;
+}
 .badge-success { background: var(--color-success-bg); color: var(--color-success); }
 .badge-warning { background: var(--color-warning-bg); color: var(--color-warning); }
 .badge-danger { background: var(--color-danger-bg); color: var(--color-danger); }
@@ -197,16 +247,16 @@ label {
   border-radius: 2px;
   transition: width 0.4s ease;
 }
-.score-low .score-bar-fill { background: var(--color-accent); opacity: 0.35; }
-.score-med .score-bar-fill { background: var(--color-accent); opacity: 0.6; }
-.score-high .score-bar-fill { background: var(--color-accent); }
-.score-critical .score-bar-fill { background: var(--color-accent); }
+.score-low .score-bar-fill { background: var(--kaki); opacity: 0.6; }
+.score-med .score-bar-fill { background: var(--kaki); }
+.score-high .score-bar-fill { background: var(--terra); }
+.score-critical .score-bar-fill { background: var(--terra); }
 
 /* ---- Header ---- */
 .header {
   height: 52px;
-  background: var(--color-background-primary);
-  border-bottom: 0.5px solid var(--color-border-tertiary);
+  background: var(--beige);
+  border-bottom: 1.5px solid var(--noir);
   padding: 0 24px;
   display: flex;
   align-items: center;
@@ -227,8 +277,9 @@ label {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: var(--color-accent-light);
-  color: var(--color-accent);
+  background: var(--beige2);
+  color: var(--noir);
+  border: 1px solid var(--beige3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -240,17 +291,18 @@ label {
 .sidebar {
   width: 220px;
   min-width: 220px;
-  padding: 20px 16px;
-  background: var(--color-background-primary);
-  border-right: 0.5px solid var(--color-border-tertiary);
+  padding: 20px 20px 24px 16px;
+  background: var(--beige);
+  border-right: 1.5px solid var(--noir);
   height: calc(100vh - 52px);
   overflow-y: auto;
+  scrollbar-gutter: stable;
   position: sticky;
   top: 52px;
 }
 .sidebar-right {
   border-right: none;
-  border-left: 0.5px solid var(--color-border-tertiary);
+  border-left: 1.5px solid var(--noir);
 }
 
 .sidebar-section {
@@ -286,24 +338,33 @@ label {
   text-align: left;
   font-family: inherit;
 }
-.filter-item:hover { background: var(--color-background-tertiary); }
-.filter-item.active { background: var(--color-accent-light); color: var(--color-accent); font-weight: 500; }
+.filter-item:hover { background: var(--beige2); }
+.filter-item.active {
+  background: var(--kaki);
+  color: var(--beige);
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1.5px solid var(--noir);
+}
+.filter-item.active .filter-count { color: var(--beige); opacity: 0.85; }
 .filter-count {
   margin-left: auto;
   font-size: 11px;
   color: var(--color-text-tertiary);
 }
 
-/* ---- Stat card ---- */
+/* ---- Stat card (Newsletter / Quotidien / Hebdo compteurs) ---- */
 .stat-card {
   padding: 12px;
-  border-radius: var(--radius-md);
-  background: var(--color-background-tertiary);
+  border-radius: 12px;
+  background: var(--beige2);
+  border: 1.5px solid var(--noir);
+  box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
 }
 .stat-card .stat-value {
   font-size: 24px;
   font-weight: 500;
-  color: var(--color-accent-text);
+  color: var(--noir);
 }
 .stat-card .stat-label {
   font-size: 11px;
