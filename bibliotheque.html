@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bibliotheque — Early Watch</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  /* ── PAGE LAYOUT ── */
+  .bib-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .bib-main {
+    flex: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    width: 100%;
+  }
+
+  .page-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--noir);
+    margin-bottom: 4px;
+  }
+  .page-subtitle {
+    font-size: 14px;
+    color: var(--color-text-tertiary);
+    margin-bottom: 28px;
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: var(--beige);
+    border: 1.5px solid var(--noir);
+    border-radius: 12px;
+    box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+  }
+  .stat-item { display: flex; flex-direction: column; gap: 2px; }
+  .stat-value { font-size: 20px; font-weight: 600; color: var(--noir); }
+  .stat-label { font-size: 12px; color: var(--color-text-tertiary); }
+  .stat-hot .stat-value { color: #8B2F1F; }
+  .stat-warm .stat-value { color: var(--terra); }
+
+  /* ── FILTERS ── */
+  .filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    align-items: center;
+  }
+  .filter-label {
+    font-size: 13px;
+    color: var(--color-text-tertiary);
+    font-weight: 500;
+  }
+  .filter-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--noir);
+    background: var(--beige);
+    font-size: 13px;
+    color: var(--noir);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { background: var(--beige2); }
+  .filter-btn.active {
+    background: var(--kaki);
+    border-color: var(--noir);
+    color: var(--beige);
+  }
+
+  .search-input {
+    padding: 8px 14px;
+    border: 1.5px solid var(--noir);
+    border-radius: 20px;
+    font-size: 14px;
+    font-family: inherit;
+    width: 260px;
+    color: var(--noir);
+    background: var(--beige);
+  }
+  .search-input:focus { outline: none; border-color: var(--kaki); }
+  .search-input::placeholder { color: var(--color-text-tertiary); }
+
+  /* ── GRID ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--beige);
+    border: 1.5px solid var(--noir);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: box-shadow 0.15s;
+    box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+  }
+  .card:hover { box-shadow: 4px 4px 0 rgba(26,26,23,0.45); }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .card-ref {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--kaki);
+    background: var(--beige2);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--beige3);
+    white-space: nowrap;
+  }
+
+  .freshness-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .freshness-badge.hot {
+    background: #fde8e4;
+    color: #8B2F1F;
+    border-color: #8B2F1F;
+  }
+  .freshness-badge.warm {
+    background: #fdf0e0;
+    color: var(--terra);
+    border-color: var(--terra);
+  }
+  .freshness-badge.ok {
+    background: var(--beige2);
+    color: var(--kaki);
+    border-color: var(--kaki);
+  }
+  .freshness-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--noir);
+    line-height: 1.4;
+  }
+  .card-subtitle {
+    font-size: 13px;
+    color: var(--color-text-tertiary);
+    margin-top: 2px;
+  }
+
+  .card-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .card-domain {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    background: var(--beige2);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .card-version {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+  }
+  .card-profiles {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .profile-tag {
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid var(--beige3);
+    color: var(--color-text-secondary);
+  }
+
+  /* ── LINKED ARTICLES ── */
+  .linked-articles {
+    border-top: 1px solid var(--beige3);
+    padding-top: 14px;
+    display: none;
+  }
+  .linked-articles.open { display: block; }
+  .linked-articles-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    margin-bottom: 10px;
+  }
+  .article-item {
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: var(--beige2);
+    margin-bottom: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .article-item-title {
+    font-size: 13px;
+    color: var(--noir);
+    font-weight: 500;
+    text-decoration: none;
+    line-height: 1.3;
+  }
+  .article-item-title:hover { color: var(--kaki); }
+  .article-item-meta {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .article-theme-tag {
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--beige2);
+    color: var(--kaki);
+    border: 1px solid var(--beige3);
+  }
+  .no-articles {
+    font-size: 13px;
+    color: var(--color-text-tertiary);
+    font-style: italic;
+  }
+
+  /* ── CARD ACTIONS ── */
+  .card-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: auto;
+  }
+  .btn-download {
+    flex: 1;
+    padding: 9px 16px;
+    background: var(--kaki);
+    color: var(--beige);
+    border: 1.5px solid var(--noir);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.15s;
+    box-shadow: 2px 2px 0 rgba(26,26,23,0.4);
+  }
+  .btn-download:hover { background: var(--kaki-hover); }
+  .btn-articles-toggle {
+    padding: 9px 14px;
+    background: var(--beige);
+    color: var(--noir);
+    border: 1.5px solid var(--noir);
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    box-shadow: 2px 2px 0 rgba(26,26,23,0.3);
+  }
+  .btn-articles-toggle:hover { background: var(--beige2); }
+  .btn-articles-toggle.active {
+    background: var(--kaki);
+    color: var(--beige);
+  }
+
+  .loading {
+    text-align: center;
+    padding: 60px;
+    color: var(--color-text-tertiary);
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="bib-layout">
+  <div id="header-root"></div>
+
+  <div class="bib-main">
+    <div class="page-title">Bibliotheque de procedures LCB-FT</div>
+    <div class="page-subtitle">19 templates mis a jour — lies en temps reel a votre veille reglementaire</div>
+
+    <div id="stats-bar" class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-value" id="stat-total">--</div>
+        <div class="stat-label">Templates</div>
+      </div>
+      <div class="stat-item stat-hot">
+        <div class="stat-value" id="stat-hot">--</div>
+        <div class="stat-label">Potentiellement impactes (7 j)</div>
+      </div>
+      <div class="stat-item stat-warm">
+        <div class="stat-value" id="stat-warm">--</div>
+        <div class="stat-label">Articles lies (30 j)</div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <span class="filter-label">Profil :</span>
+      <button class="filter-btn active" data-filter="profile" data-value="">Tous</button>
+      <button class="filter-btn" data-filter="profile" data-value="Banque">Banque</button>
+      <button class="filter-btn" data-filter="profile" data-value="PSP">PSP</button>
+      <button class="filter-btn" data-filter="profile" data-value="CASP">CASP</button>
+
+      <span class="filter-label" style="margin-left:8px">Domaine :</span>
+      <button class="filter-btn active" data-filter="domain" data-value="">Tous</button>
+      <button class="filter-btn" data-filter="domain" data-value="KYC">KYC</button>
+      <button class="filter-btn" data-filter="domain" data-value="Sanctions">Sanctions</button>
+      <button class="filter-btn" data-filter="domain" data-value="Monitoring">Monitoring</button>
+      <button class="filter-btn" data-filter="domain" data-value="Tracfin">Tracfin</button>
+      <button class="filter-btn" data-filter="domain" data-value="Crypto">Crypto</button>
+
+      <input type="text" class="search-input" id="search-input" placeholder="Rechercher un template...">
+    </div>
+
+    <div id="grid" class="grid">
+      <div class="loading">Chargement des procedures...</div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  if (!requireAuth()) throw new Error('redirect');
+
+  let allProcedures = [];
+  let filters = { profile: '', domain: '' };
+  let searchQuery = '';
+  let openArticles = new Set();
+
+  // ── HEADER ──
+  document.getElementById('header-root').innerHTML = renderHeader();
+
+  // ── FETCH ──
+  async function loadProcedures() {
+    try {
+      const data = await api('/api/v1/procedures-library');
+      allProcedures = data.procedures || [];
+      updateStats();
+      renderGrid();
+    } catch (e) {
+      document.getElementById('grid').innerHTML =
+        '<div class="loading">Erreur de chargement. Verifiez votre connexion.</div>';
+    }
+  }
+
+  // ── STATS ──
+  function updateStats() {
+    const hot = allProcedures.filter(p => p.freshness === 'hot').length;
+    const warm = allProcedures.filter(p => p.articles_count_30d > 0)
+      .reduce((s, p) => s + p.articles_count_30d, 0);
+    document.getElementById('stat-total').textContent = allProcedures.length;
+    document.getElementById('stat-hot').textContent = hot;
+    document.getElementById('stat-warm').textContent = warm;
+  }
+
+  // ── FILTER ──
+  function getFiltered() {
+    return allProcedures.filter(p => {
+      const profileOk = !filters.profile || p.profile_tags.includes(filters.profile);
+      const domainOk  = !filters.domain  || p.domain === filters.domain;
+      const searchOk  = !searchQuery ||
+        p.title.toLowerCase().includes(searchQuery) ||
+        p.reference.toLowerCase().includes(searchQuery) ||
+        (p.subtitle || '').toLowerCase().includes(searchQuery);
+      return profileOk && domainOk && searchOk;
+    });
+  }
+
+  // ── RENDER ──
+  function renderGrid() {
+    const procs = getFiltered();
+    const grid = document.getElementById('grid');
+
+    if (!procs.length) {
+      grid.innerHTML = '<div class="loading">Aucun template trouve pour ces filtres.</div>';
+      return;
+    }
+
+    grid.innerHTML = procs.map(p => renderCard(p)).join('');
+
+    openArticles.forEach(ref => {
+      const panel = document.getElementById(`articles-${ref}`);
+      if (panel) panel.classList.add('open');
+    });
+  }
+
+  function freshnessBadge(p) {
+    if (p.freshness === 'hot') {
+      return `<span class="freshness-badge hot" onclick="toggleArticles('${p.reference}')">
+        <span class="freshness-dot"></span>
+        ${p.articles_count_7d} article${p.articles_count_7d > 1 ? 's' : ''} recent${p.articles_count_7d > 1 ? 's' : ''}
+      </span>`;
+    }
+    if (p.freshness === 'warm') {
+      return `<span class="freshness-badge warm" onclick="toggleArticles('${p.reference}')">
+        <span class="freshness-dot"></span>
+        ${p.articles_count_30d} article${p.articles_count_30d > 1 ? 's' : ''} ce mois
+      </span>`;
+    }
+    return `<span class="freshness-badge ok">
+      <span class="freshness-dot"></span> A jour
+    </span>`;
+  }
+
+  function renderCard(p) {
+    const badge = freshnessBadge(p);
+    const profiles = p.profile_tags.map(t =>
+      `<span class="profile-tag">${t}</span>`).join('');
+    const isOpen = openArticles.has(p.reference);
+    const btnClass = 'btn-articles-toggle' + (isOpen ? ' active' : '');
+
+    return `
+    <div class="card" id="card-${p.reference}">
+      <div class="card-top">
+        <span class="card-ref">${p.reference}</span>
+        ${badge}
+      </div>
+      <div>
+        <div class="card-title">${p.title}</div>
+        <div class="card-subtitle">${p.subtitle || ''}</div>
+      </div>
+      <div class="card-meta">
+        <span class="card-domain">${p.domain}</span>
+        <span class="card-version">v${p.version}</span>
+      </div>
+      <div class="card-profiles">${profiles}</div>
+      <div class="linked-articles ${isOpen ? 'open' : ''}" id="articles-${p.reference}">
+        <div class="linked-articles-title">Articles reglementaires lies (30 derniers jours)</div>
+        <div id="articles-content-${p.reference}">
+          <div class="loading" style="padding:12px 0; font-size:13px">Chargement...</div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <a href="${p.file_url}" download class="btn-download">
+          Telecharger .docx
+        </a>
+        ${p.freshness !== 'ok' ? `
+        <button class="${btnClass}" id="btn-${p.reference}" onclick="toggleArticles('${p.reference}')">
+          Articles lies
+        </button>` : ''}
+      </div>
+    </div>`;
+  }
+
+  // ── TOGGLE ARTICLES ──
+  async function toggleArticles(ref) {
+    const panel = document.getElementById(`articles-${ref}`);
+    const btn   = document.getElementById(`btn-${ref}`);
+
+    if (openArticles.has(ref)) {
+      openArticles.delete(ref);
+      panel.classList.remove('open');
+      if (btn) btn.classList.remove('active');
+      return;
+    }
+
+    openArticles.add(ref);
+    panel.classList.add('open');
+    if (btn) btn.classList.add('active');
+
+    const contentEl = document.getElementById(`articles-content-${ref}`);
+    if (contentEl.dataset.loaded) return;
+
+    try {
+      const data = await api(`/api/v1/procedures-library/${ref}/articles`);
+
+      if (!data.articles || !data.articles.length) {
+        contentEl.innerHTML = '<div class="no-articles">Aucun article lie sur les 30 derniers jours.</div>';
+      } else {
+        contentEl.innerHTML = data.articles.map(a => {
+          const date = a.published_at
+            ? new Date(a.published_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+            : '';
+          const tags = (a.common_themes || []).map(t =>
+            `<span class="article-theme-tag">${t}</span>`).join('');
+          return `
+          <div class="article-item">
+            <a href="${a.url}" target="_blank" class="article-item-title">${a.title}</a>
+            <div class="article-item-meta">
+              <span>${a.source}</span>
+              <span>${date}</span>
+              ${tags}
+            </div>
+          </div>`;
+        }).join('');
+      }
+      contentEl.dataset.loaded = '1';
+    } catch (e) {
+      contentEl.innerHTML = '<div class="no-articles">Erreur de chargement des articles.</div>';
+    }
+  }
+
+  // ── FILTER UI ──
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const filterType = btn.dataset.filter;
+      document.querySelectorAll(`[data-filter="${filterType}"]`).forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filters[filterType] = btn.dataset.value;
+      renderGrid();
+    });
+  });
+
+  document.getElementById('search-input').addEventListener('input', e => {
+    searchQuery = e.target.value.toLowerCase().trim();
+    renderGrid();
+  });
+
+  // ── INIT ──
+  loadProcedures();
+</script>
+</body>
+</html>

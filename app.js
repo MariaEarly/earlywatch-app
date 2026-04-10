@@ -186,7 +186,8 @@ function renderHeader() {
         <a href="dashboard.html" class="logo">Early <span>Watch</span></a>
         <nav class="flex gap-4">
           <a href="dashboard.html" class="btn btn-ghost btn-sm">Inbox</a>
-          <a href="procedure.html" class="btn btn-ghost btn-sm">Procédures</a>
+          <a href="procedure.html" class="btn btn-ghost btn-sm">Procedures</a>
+          <a href="bibliotheque.html" class="btn btn-ghost btn-sm">Bibliotheque</a>
         </nav>
       </div>
       <div class="flex items-center gap-12">
