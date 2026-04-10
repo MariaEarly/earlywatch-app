@@ -187,6 +187,7 @@ function renderHeader() {
         <nav class="flex gap-4">
           <a href="dashboard.html" class="btn btn-ghost btn-sm">Inbox</a>
           <a href="procedure.html" class="btn btn-ghost btn-sm">Procedures</a>
+          <a href="mes-procedures.html" class="btn btn-ghost btn-sm">Mes Procedures</a>
           <a href="bibliotheque.html" class="btn btn-ghost btn-sm">Bibliotheque</a>
         </nav>
       </div>
