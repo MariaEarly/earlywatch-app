@@ -118,6 +118,37 @@
   .empty { text-align: center; padding: 60px; color: var(--color-text-tertiary); font-size: 14px; }
   .empty-icon { font-size: 40px; margin-bottom: 12px; }
   .loading { text-align: center; padding: 60px; color: var(--color-text-tertiary); font-size: 14px; }
+
+  /* Gap Analysis */
+  .gap-card {
+    background: var(--beige); border: 1.5px solid var(--noir);
+    border-left: 5px solid; border-radius: 12px; margin-bottom: 12px;
+    overflow: hidden; box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+  }
+  .gap-card.critical { border-left-color: #8B2F1F; }
+  .gap-card.high { border-left-color: var(--terra); }
+  .gap-card.medium { border-left-color: var(--kaki); }
+  .gap-card.low { border-left-color: var(--beige3); }
+  .gap-body { padding: 16px 20px; }
+  .gap-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; }
+  .gap-ref { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--kaki); background:var(--beige2); padding:4px 9px; border-radius:4px; border:1px solid var(--beige3); }
+  .gap-impact { font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; white-space:nowrap; border:1px solid; }
+  .gap-impact.critical { background:#fde8e4; color:#8B2F1F; border-color:#8B2F1F; }
+  .gap-impact.high { background:#fdf0e0; color:var(--terra); border-color:var(--terra); }
+  .gap-impact.medium { background:var(--beige2); color:var(--kaki); border-color:var(--kaki); }
+  .gap-impact.low { background:var(--beige2); color:var(--color-text-tertiary); border-color:var(--beige3); }
+  .gap-summary { font-size:14px; font-weight:500; line-height:1.6; margin-bottom:14px; }
+  .gap-changes { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+  .change-item { display:flex; gap:8px; align-items:flex-start; font-size:13px; line-height:1.5; }
+  .change-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+  .change-dot.new { background:#16A34A; }
+  .change-dot.modified { background:#D97706; }
+  .change-dot.removed { background:#DC2626; }
+  .gap-procs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+  .gap-proc-badge { font-family:'IBM Plex Mono',monospace; font-size:10px; padding:3px 8px; border-radius:4px; background:var(--beige2); color:var(--kaki); border:1px solid var(--beige3); }
+  .gap-article { font-size:12px; color:var(--color-text-tertiary); padding-top:12px; border-top:1px solid var(--beige3); }
+  .gap-article a { color:var(--kaki); text-decoration:none; }
+  .gap-article a:hover { text-decoration:underline; }
 </style>
 </head>
 <body>
@@ -159,6 +190,18 @@
 
     <div id="reminders-list" class="reminders-list">
       <div class="loading">Chargement des reminders...</div>
+    </div>
+
+    <!-- Gap Analysis Section -->
+    <div style="margin-top:40px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--terra);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Analyse des textes</div>
+          <h2 style="font-size:20px;font-weight:600;color:var(--noir);letter-spacing:-.3px;">Gap Analysis — Evolutions reglementaires N vs N-1</h2>
+        </div>
+        <div style="font-size:12px;color:var(--color-text-tertiary);">Comparaison automatique via OpenLegi</div>
+      </div>
+      <div id="gap-list"></div>
     </div>
   </div>
 </div>
@@ -294,7 +337,71 @@
     });
   });
 
+  // ── GAP ANALYSIS ──
+  async function loadGapAnalyses() {
+    const el = document.getElementById('gap-list');
+    if (!el) return;
+    try {
+      const data = await api('/api/v1/gap-analysis/auto?limit=10');
+      const gaps = data.gap_analyses || [];
+      if (!gaps.length) {
+        el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--color-text-tertiary);font-size:14px;">
+          Aucun gap analysis disponible — les analyses apparaissent automatiquement<br>
+          quand des articles citant des textes CMF sont ingeres.
+        </div>`;
+        return;
+      }
+      el.innerHTML = gaps.map(renderGap).join('');
+    } catch(e) { if (el) el.innerHTML = ''; }
+  }
+
+  function renderGap(g) {
+    const LABELS = { critical:'Critique', high:'Eleve', medium:'Moyen', low:'Faible' };
+    const allChanges = [
+      ...(g.changes_new||[]).map(c=>({type:'new',text:c,label:'Nouveau'})),
+      ...(g.changes_modified||[]).map(c=>({type:'modified',text:c,label:'Modifie'})),
+      ...(g.changes_removed||[]).map(c=>({type:'removed',text:c,label:'Supprime'})),
+    ];
+    const changesHtml = allChanges.length ? `
+      <div class="gap-changes">
+        ${allChanges.map(c=>`
+          <div class="change-item">
+            <span class="change-dot ${c.type}"></span>
+            <span><strong>${c.label} :</strong> ${c.text}</span>
+          </div>`).join('')}
+      </div>` : '';
+    const procsHtml = (g.impacted_procedures||[]).length ? `
+      <div class="gap-procs">
+        ${g.impacted_procedures.map(p=>`<span class="gap-proc-badge">${p}</span>`).join('')}
+      </div>` : '';
+    const articleHtml = g.article ? `
+      <div class="gap-article">
+        Source : <a href="${g.article.url}" target="_blank">${g.article.title}</a>
+        ${g.article.published_at ? ' · ' + new Date(g.article.published_at).toLocaleDateString('fr-FR') : ''}
+      </div>` : '';
+    const verHtml = (g.version_current||g.version_previous) ? `
+      <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:12px;">
+        ${g.version_previous?`Version N-1 : ${g.version_previous}`:''}
+        ${g.version_current?` → Version N : ${g.version_current}`:''}
+      </div>` : '';
+    return `
+    <div class="gap-card ${g.impact_level}">
+      <div class="gap-body">
+        <div class="gap-top">
+          <span class="gap-ref">${g.obligation_ref}</span>
+          <span class="gap-impact ${g.impact_level}">${LABELS[g.impact_level]||g.impact_level}</span>
+        </div>
+        ${verHtml}
+        <div class="gap-summary">${g.summary}</div>
+        ${changesHtml}
+        ${procsHtml}
+        ${articleHtml}
+      </div>
+    </div>`;
+  }
+
   load();
+  loadGapAnalyses();
 </script>
 </body>
 </html>
