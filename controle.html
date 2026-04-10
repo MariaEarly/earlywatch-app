@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle — Early Watch</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .ctrl-layout { min-height: 100vh; display: flex; flex-direction: column; }
+  .ctrl-main { flex: 1; max-width: 900px; margin: 0 auto; padding: 32px 24px; width: 100%; }
+  .page-title { font-size: 22px; font-weight: 600; color: var(--noir); margin-bottom: 4px; }
+  .page-subtitle { font-size: 14px; color: var(--color-text-tertiary); margin-bottom: 28px; }
+
+  /* Stats */
+  .stats-row { display: flex; gap: 12px; margin-bottom: 24px; }
+  .stat-card {
+    flex: 1; padding: 16px 20px; border-radius: 12px;
+    border: 1.5px solid var(--noir); display: flex; flex-direction: column; gap: 4px;
+    box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+  }
+  .stat-card.critical { background: #fde8e4; }
+  .stat-card.high { background: #fdf0e0; }
+  .stat-card.medium { background: var(--beige2); }
+  .stat-card.total-card { background: var(--beige); }
+  .stat-value { font-size: 28px; font-weight: 700; }
+  .stat-label { font-size: 12px; color: var(--color-text-secondary); }
+  .critical .stat-value { color: #8B2F1F; }
+  .high .stat-value { color: var(--terra); }
+  .medium .stat-value { color: var(--kaki); }
+  .total-card .stat-value { color: var(--noir); }
+
+  /* Toolbar */
+  .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; justify-content: space-between; }
+  .filters { display: flex; gap: 8px; }
+  .filter-btn {
+    padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--noir);
+    background: var(--beige); font-size: 13px; color: var(--noir);
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+  }
+  .filter-btn:hover { background: var(--beige2); }
+  .filter-btn.active { background: var(--kaki); border-color: var(--noir); color: var(--beige); }
+  .btn-mark-all {
+    padding: 7px 16px; border-radius: 20px; border: 1.5px solid var(--noir);
+    background: var(--beige); font-size: 13px; color: var(--noir);
+    cursor: pointer; font-family: inherit; box-shadow: 2px 2px 0 rgba(26,26,23,0.3);
+  }
+  .btn-mark-all:hover { background: var(--beige2); }
+
+  /* Reminders list */
+  .reminders-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .reminder-card {
+    background: var(--beige); border-radius: 12px; border: 1.5px solid var(--noir);
+    border-left: 5px solid; overflow: hidden;
+    box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+    transition: box-shadow 0.15s;
+  }
+  .reminder-card:hover { box-shadow: 4px 4px 0 rgba(26,26,23,0.45); }
+  .reminder-card.critical { border-left-color: #8B2F1F; }
+  .reminder-card.high { border-left-color: var(--terra); }
+  .reminder-card.medium { border-left-color: var(--kaki); }
+  .reminder-card.low { border-left-color: var(--beige3); }
+  .reminder-card.done, .reminder-card.dismissed { opacity: 0.5; }
+
+  .reminder-body { padding: 16px 20px; }
+  .reminder-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+  .reminder-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+  .severity-badge {
+    font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.3px; border: 1px solid;
+  }
+  .severity-badge.critical { background: #fde8e4; color: #8B2F1F; border-color: #8B2F1F; }
+  .severity-badge.high { background: #fdf0e0; color: var(--terra); border-color: var(--terra); }
+  .severity-badge.medium { background: var(--beige2); color: var(--kaki); border-color: var(--kaki); }
+  .severity-badge.low { background: var(--beige2); color: var(--color-text-tertiary); border-color: var(--beige3); }
+
+  .impact-badge {
+    font-size: 11px; padding: 3px 8px; border-radius: 20px;
+    background: var(--beige2); color: var(--color-text-secondary); border: 1px solid var(--beige3);
+  }
+  .proc-badge {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    padding: 3px 8px; border-radius: 4px;
+    background: var(--beige2); color: var(--kaki); border: 1px solid var(--beige3);
+  }
+
+  .reminder-message { font-size: 14px; line-height: 1.6; color: var(--noir); margin-bottom: 12px; font-weight: 500; }
+
+  .reminder-article {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 10px 12px; background: var(--beige2); border-radius: 6px; margin-bottom: 12px;
+  }
+  .article-source { font-size: 11px; color: var(--color-text-tertiary); white-space: nowrap; }
+  .article-link { font-size: 13px; color: var(--noir); text-decoration: none; font-weight: 500; }
+  .article-link:hover { color: var(--kaki); }
+  .article-info { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+
+  .obligations-list { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .obligation-tag {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    padding: 2px 7px; border-radius: 4px;
+    background: var(--beige2); color: var(--kaki); border: 1px solid var(--beige3);
+  }
+
+  .reminder-footer { display: flex; align-items: center; justify-content: space-between; }
+  .reminder-date { font-size: 12px; color: var(--color-text-tertiary); }
+  .reminder-actions { display: flex; gap: 8px; }
+  .btn-action {
+    padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--noir);
+    background: var(--beige); font-size: 12px; color: var(--noir);
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+    box-shadow: 2px 2px 0 rgba(26,26,23,0.3);
+  }
+  .btn-action:hover { background: var(--beige2); }
+  .btn-action.done-btn { background: #e8f0e4; border-color: #2d5016; color: #2d5016; }
+
+  .empty { text-align: center; padding: 60px; color: var(--color-text-tertiary); font-size: 14px; }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .loading { text-align: center; padding: 60px; color: var(--color-text-tertiary); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="ctrl-layout">
+  <div id="header-root"></div>
+
+  <div class="ctrl-main">
+    <div class="page-title">Controle reglementaire</div>
+    <div class="page-subtitle">Actions a prendre suite aux evolutions reglementaires recentes</div>
+
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card critical">
+        <div class="stat-value" id="count-critical">--</div>
+        <div class="stat-label">Critique</div>
+      </div>
+      <div class="stat-card high">
+        <div class="stat-value" id="count-high">--</div>
+        <div class="stat-label">Eleve</div>
+      </div>
+      <div class="stat-card medium">
+        <div class="stat-value" id="count-medium">--</div>
+        <div class="stat-label">Moyen</div>
+      </div>
+      <div class="stat-card total-card">
+        <div class="stat-value" id="count-total">--</div>
+        <div class="stat-label">Total actifs</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="filters">
+        <button class="filter-btn active" data-sev="">Tous</button>
+        <button class="filter-btn" data-sev="critical">Critique</button>
+        <button class="filter-btn" data-sev="high">Eleve</button>
+        <button class="filter-btn" data-sev="medium">Moyen</button>
+      </div>
+      <button class="btn-mark-all" onclick="markAllSeen()">Tout marquer comme vu</button>
+    </div>
+
+    <div id="reminders-list" class="reminders-list">
+      <div class="loading">Chargement des reminders...</div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  if (!requireAuth()) throw new Error('redirect');
+
+  let allReminders = [];
+  let activeSev = '';
+
+  document.getElementById('header-root').innerHTML = renderHeader();
+
+  // ── LOAD ──
+  async function load() {
+    try {
+      const [data, counts] = await Promise.all([
+        api('/api/v1/reminders'),
+        api('/api/v1/reminders/counts'),
+      ]);
+
+      allReminders = data.reminders || [];
+
+      document.getElementById('count-critical').textContent = counts.critical || 0;
+      document.getElementById('count-high').textContent = counts.high || 0;
+      document.getElementById('count-medium').textContent = counts.medium || 0;
+      document.getElementById('count-total').textContent = counts.total || 0;
+
+      render();
+    } catch (e) {
+      document.getElementById('reminders-list').innerHTML =
+        '<div class="loading">Erreur de chargement.</div>';
+    }
+  }
+
+  // ── RENDER ──
+  function render() {
+    const filtered = activeSev
+      ? allReminders.filter(r => r.severity === activeSev)
+      : allReminders;
+
+    const list = document.getElementById('reminders-list');
+
+    if (!filtered.length) {
+      list.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">OK</div>
+          <div>Aucun reminder actif${activeSev ? ' pour ce niveau de severite' : ''}.</div>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map(renderCard).join('');
+  }
+
+  function renderCard(r) {
+    const date = r.created_at
+      ? new Date(r.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+      : '';
+
+    const obligations = (r.article.obligations_cited || []).map(o =>
+      `<span class="obligation-tag">${o}</span>`).join('');
+
+    const isDone = r.status === 'done';
+
+    return `
+    <div class="reminder-card ${r.severity} ${isDone ? 'done' : ''}" id="reminder-${r.id}">
+      <div class="reminder-body">
+        <div class="reminder-top">
+          <div class="reminder-badges">
+            <span class="severity-badge ${r.severity}">${r.severity_label}</span>
+            <span class="impact-badge">${r.impact_label}</span>
+            ${r.procedure_ref ? `<span class="proc-badge">${r.procedure_ref}</span>` : ''}
+          </div>
+        </div>
+        <div class="reminder-message">${r.message}</div>
+        <div class="reminder-article">
+          <div class="article-info">
+            <a href="${r.article.url}" target="_blank" class="article-link">${r.article.title}</a>
+            <div style="display:flex; gap:10px; margin-top:3px;">
+              <span class="article-source">${r.article.source || ''}</span>
+              <span class="article-source">${r.article.published_at ? new Date(r.article.published_at).toLocaleDateString('fr-FR') : ''}</span>
+            </div>
+          </div>
+        </div>
+        ${obligations ? `<div class="obligations-list">${obligations}</div>` : ''}
+        <div class="reminder-footer">
+          <span class="reminder-date">Cree le ${date}</span>
+          <div class="reminder-actions">
+            ${!isDone ? `
+            <button class="btn-action" onclick="updateReminder(${r.id}, 'dismissed')">Ignorer</button>
+            <button class="btn-action done-btn" onclick="updateReminder(${r.id}, 'done')">Traite</button>
+            ` : `<span style="font-size:12px; color:#2d5016">Traite le ${r.done_at ? new Date(r.done_at).toLocaleDateString('fr-FR') : ''}</span>`}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ── ACTIONS ──
+  async function updateReminder(id, status) {
+    try {
+      await api(`/api/v1/reminders/${id}`, {
+        method: 'PATCH',
+        body: { status },
+      });
+      const r = allReminders.find(r => r.id === id);
+      if (r) r.status = status;
+      render();
+      toast(status === 'done' ? 'Marque comme traite' : 'Reminder ignore', 'success');
+    } catch (e) {
+      toast('Erreur lors de la mise a jour', 'error');
+    }
+  }
+
+  async function markAllSeen() {
+    try {
+      await api('/api/v1/reminders/bulk/mark-seen', { method: 'PATCH' });
+      allReminders.forEach(r => { if (r.status === 'pending') r.status = 'seen'; });
+      toast('Tous les reminders marques comme vus', 'success');
+    } catch (e) {
+      toast('Erreur', 'error');
+    }
+  }
+
+  // ── FILTERS ──
+  document.querySelectorAll('[data-sev]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-sev]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeSev = btn.dataset.sev;
+      render();
+    });
+  });
+
+  load();
+</script>
+</body>
+</html>

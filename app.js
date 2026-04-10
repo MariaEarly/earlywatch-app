@@ -189,6 +189,7 @@ function renderHeader() {
           <a href="procedure.html" class="btn btn-ghost btn-sm">Procedures</a>
           <a href="mes-procedures.html" class="btn btn-ghost btn-sm">Mes Procedures</a>
           <a href="bibliotheque.html" class="btn btn-ghost btn-sm">Bibliotheque</a>
+          <a href="controle.html" class="btn btn-ghost btn-sm" style="position:relative">Controle <span id="nav-badge-ctrl" style="display:none;position:absolute;top:-4px;right:-10px;background:#8B2F1F;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;line-height:18px;text-align:center;border-radius:9px;padding:0 5px;border:1.5px solid var(--noir)"></span></a>
         </nav>
       </div>
       <div class="flex items-center gap-12">
@@ -205,4 +206,23 @@ function initExpandables() {
       h.closest('.expandable').classList.toggle('open');
     });
   });
+}
+
+// ---- Reminder badge (nav) ----
+async function loadReminderBadge() {
+  try {
+    const counts = await api('/api/v1/reminders/counts');
+    const total = (counts.critical || 0) + (counts.high || 0) + (counts.medium || 0);
+    const badge = document.getElementById('nav-badge-ctrl');
+    if (badge && total > 0) {
+      badge.textContent = total > 99 ? '99+' : total;
+      badge.style.display = 'inline-block';
+    }
+  } catch (_) { /* silently ignore */ }
+}
+// Auto-load badge when header is rendered and user is authenticated
+if (getToken()) {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(loadReminderBadge, 200));
+  // Fallback if DOM already loaded
+  if (document.readyState !== 'loading') setTimeout(loadReminderBadge, 200);
 }
