@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiches Réflexes — Early Watch</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.page-title{font-size:22px;font-weight:600;margin-bottom:4px;}
+.page-sub{font-size:14px;color:var(--muted);margin-bottom:28px;}
+
+/* FILTRES */
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;align-items:center;}
+.filter-lbl{font-size:13px;color:var(--muted);font-weight:500;}
+.fbtn{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .15s;}
+.fbtn:hover{border-color:var(--noir);color:var(--noir);}
+.fbtn.active{background:var(--kaki);border-color:var(--kaki);color:var(--white);}
+
+/* GRILLE */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
+.loading{text-align:center;padding:60px;color:var(--muted);font-size:14px;}
+
+/* CARTE */
+.card{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:12px;box-shadow:3px 3px 0 var(--noir);}
+.card:hover{border-color:var(--kaki);}
+.card.open{border-color:var(--kaki);}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.card-ref{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--terra);background:var(--terra-l, #F2DDD5);padding:3px 7px;border-radius:4px;}
+
+/* Badges urgence */
+.urgency-badge{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+.urgency-badge.immediate{background:#FEF2F2;color:#DC2626;}
+.urgency-badge.high{background:#FFF7ED;color:#EA580C;}
+.urgency-badge.medium{background:var(--kaki-l, #D4DFBF);color:var(--kaki);}
+.urgency-badge.low{background:var(--beige2, #EDE5D5);color:var(--muted);}
+
+/* Freshness */
+.fresh-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;}
+.fresh-dot.hot{background:#DC2626;}
+.fresh-dot.warm{background:#EA580C;}
+.fresh-dot.ok{background:#10B981;}
+
+.card-title{font-size:15px;font-weight:600;line-height:1.35;}
+.card-sit{font-size:13px;color:var(--muted);line-height:1.6;}
+.card-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.tag{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 7px;border-radius:3px;background:var(--beige2, #EDE5D5);color:var(--muted);}
+.card-articles{font-size:12px;color:var(--terra, #C4603A);}
+
+/* PANEL DÉTAIL */
+.panel{display:none;margin-top:8px;border-top:1px solid var(--border);padding-top:16px;}
+.card.open .panel{display:block;}
+
+.panel-section{margin-bottom:20px;}
+.panel-section-title{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+
+/* ÉTAPES */
+.steps-list{display:flex;flex-direction:column;gap:10px;}
+.step-item{display:flex;gap:12px;align-items:flex-start;}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--kaki);color:var(--white);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-num.immediate{background:#DC2626;}
+.step-num.high{background:#EA580C;}
+.step-content{flex:1;}
+.step-action{font-size:13px;line-height:1.55;margin-bottom:4px;}
+.step-meta{display:flex;gap:10px;flex-wrap:wrap;}
+.step-delai{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
+.step-loi{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--terra, #C4603A);}
+
+/* DOCS */
+.docs-list{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.docs-list li{font-size:13px;color:var(--muted);padding-left:14px;position:relative;}
+.docs-list li::before{content:'→';position:absolute;left:0;font-size:11px;color:var(--kaki);}
+
+/* BASE LÉGALE */
+.loi-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.loi-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 8px;border-radius:3px;background:var(--terra-l, #F2DDD5);color:var(--terra, #C4603A);border:1px solid rgba(196,96,58,.2);}
+
+/* ARTICLES LIÉS */
+.article-item{padding:8px 10px;border-radius:6px;background:var(--beige);margin-bottom:6px;}
+.article-link{font-size:13px;color:var(--noir);text-decoration:none;font-weight:500;}
+.article-link:hover{color:var(--kaki);}
+.article-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* NOTES */
+.notes-box{background:var(--kaki-l, #D4DFBF);border-radius:6px;padding:12px;font-size:12px;color:var(--kaki);line-height:1.7;}
+
+@media(max-width:700px){
+  .grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div id="app-header"></div>
+
+<div class="container" style="max-width:1100px;margin:0 auto;padding:32px 24px;">
+  <div class="page-title">Fiches Reflexes</div>
+  <div class="page-sub">Guides operationnels par situation — lies a votre veille reglementaire en temps reel</div>
+
+  <div class="filters">
+    <span class="filter-lbl">Profil :</span>
+    <button class="fbtn active" data-f="profile" data-v="">Tous</button>
+    <button class="fbtn" data-f="profile" data-v="PSP">PSP</button>
+    <button class="fbtn" data-f="profile" data-v="CASP">CASP</button>
+    <button class="fbtn" data-f="profile" data-v="Banque">Banque</button>
+    <span class="filter-lbl" style="margin-left:8px">Urgence :</span>
+    <button class="fbtn active" data-f="urgency" data-v="">Toutes</button>
+    <button class="fbtn" data-f="urgency" data-v="immediate">Immediate</button>
+    <button class="fbtn" data-f="urgency" data-v="high">Haute</button>
+  </div>
+
+  <div id="grid" class="grid">
+    <div class="loading">Chargement des fiches reflexes…</div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+if (!requireAuth()) throw new Error('auth');
+document.getElementById('app-header').innerHTML = renderHeader();
+
+let all = [], filters = {profile:'', urgency:''}, openId = null;
+const URGENCY = {immediate:'Urgence immediate',high:'Priorite haute',medium:'Priorite normale',low:'Pour information'};
+
+async function load(){
+  try{
+    const d = await api('/api/v1/situations');
+    all = d.situations||[];
+    render();
+  }catch(e){
+    document.getElementById('grid').innerHTML='<div class="loading">Erreur de chargement.</div>';
+  }
+}
+
+function getFiltered(){
+  return all.filter(s=>{
+    const p = !filters.profile || (s.profile_tags||[]).includes(filters.profile);
+    const u = !filters.urgency || s.urgency === filters.urgency;
+    return p && u;
+  });
+}
+
+function render(){
+  const items = getFiltered();
+  const grid = document.getElementById('grid');
+  if(!items.length){grid.innerHTML='<div class="loading">Aucune fiche pour ces filtres.</div>';return;}
+  grid.innerHTML = items.map(s=>renderCard(s)).join('');
+}
+
+function freshLabel(s){
+  if(s.freshness==='hot') return `<span class="fresh-dot hot"></span>${s.articles_count_7d} article${s.articles_count_7d>1?'s':''} recent${s.articles_count_7d>1?'s':''}`;
+  if(s.freshness==='warm') return `<span class="fresh-dot warm"></span>${s.articles_count_30d} article${s.articles_count_30d>1?'s':''} ce mois`;
+  return `<span class="fresh-dot ok"></span>A jour`;
+}
+
+function renderCard(s){
+  const isOpen = openId === s.reference;
+  return `
+  <div class="card ${isOpen?'open':''}" id="card-${s.reference}" onclick="toggle('${s.reference}')">
+    <div class="card-top">
+      <span class="card-ref">${s.reference}</span>
+      <span class="urgency-badge ${s.urgency}">${URGENCY[s.urgency]||s.urgency}</span>
+    </div>
+    <div class="card-title">${s.title}</div>
+    <div class="card-sit">${s.situation}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+      <div class="card-tags">${(s.profile_tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      <div class="card-articles">${freshLabel(s)}</div>
+    </div>
+    <div class="panel" id="panel-${s.reference}">
+      <div class="loading" style="padding:20px 0;font-size:13px;">Chargement…</div>
+    </div>
+  </div>`;
+}
+
+async function toggle(ref){
+  if(openId === ref){openId = null; render(); return;}
+  openId = ref;
+  render();
+  const panel = document.getElementById(`panel-${ref}`);
+  if(panel.dataset.loaded) return;
+  try{
+    const d = await api(`/api/v1/situations/${ref}`);
+    panel.innerHTML = buildPanel(d);
+    panel.dataset.loaded = '1';
+  }catch(e){
+    panel.innerHTML = '<div style="color:var(--muted);font-size:13px;">Erreur de chargement.</div>';
+  }
+}
+
+function buildPanel(d){
+  const urgClass = d.urgency==='immediate'?'immediate':d.urgency==='high'?'high':'';
+  const steps = (d.steps||[]).map(s=>`
+    <div class="step-item">
+      <div class="step-num ${urgClass}">${s.order}</div>
+      <div class="step-content">
+        <div class="step-action">${s.action}</div>
+        <div class="step-meta">
+          ${s.delai?`<span class="step-delai">${s.delai}</span>`:''}
+          ${s.base_legale?`<span class="step-loi">${s.base_legale}</span>`:''}
+        </div>
+      </div>
+    </div>`).join('');
+
+  const docs = (d.documents_requis||[]).length
+    ? `<div class="panel-section">
+        <div class="panel-section-title">Documents a conserver</div>
+        <ul class="docs-list">${d.documents_requis.map(doc=>`<li>${doc}</li>`).join('')}</ul>
+      </div>` : '';
+
+  const lois = (d.base_legale||[]).length
+    ? `<div class="panel-section">
+        <div class="panel-section-title">Base legale</div>
+        <div class="loi-chips">${d.base_legale.map(l=>`<span class="loi-chip">${l}</span>`).join('')}</div>
+      </div>` : '';
+
+  const articles = (d.articles||[]).length
+    ? `<div class="panel-section">
+        <div class="panel-section-title">Articles reglementaires recents lies</div>
+        ${d.articles.map(a=>`
+        <div class="article-item">
+          <a href="${a.url}" target="_blank" class="article-link">${a.title}</a>
+          <div class="article-meta">${a.source||''}${a.published_at?' · '+new Date(a.published_at).toLocaleDateString('fr-FR'):''} ${(a.common_themes||[]).map(t=>`<span style="font-size:10px;background:var(--terra-l,#F2DDD5);color:var(--terra,#C4603A);padding:1px 5px;border-radius:3px;margin-left:4px;">${t}</span>`).join('')}</div>
+        </div>`).join('')}
+      </div>` : '';
+
+  const notes = d.notes
+    ? `<div class="panel-section"><div class="notes-box">${d.notes}</div></div>`
+    : '';
+
+  return `
+    <div class="panel-section">
+      <div class="panel-section-title">Etapes a suivre</div>
+      <div class="steps-list">${steps}</div>
+    </div>
+    ${docs}${lois}${articles}${notes}`;
+}
+
+// Filtres
+document.querySelectorAll('.fbtn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const f = btn.dataset.f;
+    document.querySelectorAll(`[data-f="${f}"]`).forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    filters[f] = btn.dataset.v;
+    openId = null;
+    render();
+  });
+});
+
+load();
+</script>
+</body>
+</html>
