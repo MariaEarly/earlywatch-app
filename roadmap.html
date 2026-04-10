@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadmap Reglementaire — Early Watch</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.page-title{font-size:22px;font-weight:600;margin-bottom:4px;}
+.page-sub{font-size:14px;color:var(--muted);margin-bottom:28px;}
+
+.stats-row{display:flex;gap:12px;margin-bottom:28px;}
+.stat{flex:1;background:var(--white);border:1.5px solid var(--noir);border-radius:12px;padding:16px 18px;box-shadow:3px 3px 0 var(--noir);}
+.stat-val{font-size:28px;font-weight:600;line-height:1;margin-bottom:4px;}
+.stat-lbl{font-size:12px;color:var(--muted);}
+.stat.red .stat-val{color:#8B2F1F;}
+.stat.orange .stat-val{color:var(--terra);}
+.stat.kaki .stat-val{color:var(--kaki);}
+
+.legend{display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+.fbtn{padding:6px 14px;border-radius:20px;border:1.5px solid var(--noir);background:var(--beige);font-size:13px;color:var(--noir);cursor:pointer;font-family:inherit;transition:all .15s;}
+.fbtn:hover{background:var(--beige2);}
+.fbtn.active{background:var(--kaki);border-color:var(--kaki);color:var(--white);}
+
+.timeline{position:relative;padding-left:28px;}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border);}
+
+.tl-year{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin:28px 0 14px -28px;}
+
+.tl-item{position:relative;margin-bottom:12px;}
+.tl-dot{position:absolute;left:-24px;top:18px;width:12px;height:12px;border-radius:50%;border:2px solid var(--white);z-index:1;}
+.tl-dot.critical{background:#8B2F1F;}
+.tl-dot.high{background:var(--terra);}
+.tl-dot.medium{background:var(--kaki);}
+.tl-dot.low{background:#059669;}
+.tl-dot.passed{background:var(--border);}
+
+.card{background:var(--white);border:1.5px solid var(--noir);border-radius:12px;padding:18px 20px;transition:all .15s;cursor:pointer;box-shadow:3px 3px 0 var(--noir);}
+.card:hover{border-color:var(--kaki);}
+.card.passed{opacity:.55;}
+.card.imminent{border-left:4px solid #8B2F1F;}
+.card.soon{border-left:4px solid var(--terra);}
+
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
+.card-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.card-ref{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--terra);background:var(--terra-l, #F2DDD5);padding:3px 7px;border-radius:3px;}
+.card-reg{font-size:12px;font-weight:500;color:var(--noir);}
+.card-type{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
+
+.card-date{text-align:right;flex-shrink:0;}
+.date-main{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--noir);}
+.date-delta{font-size:11px;margin-top:2px;}
+.date-delta.imminent{color:#8B2F1F;}
+.date-delta.soon{color:var(--terra);}
+.date-delta.upcoming{color:var(--muted);}
+.date-delta.passed{color:var(--muted);}
+
+.card-title{font-size:14px;font-weight:600;line-height:1.35;margin-bottom:6px;}
+.card-desc{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:10px;display:none;}
+.card.open .card-desc{display:block;}
+
+.card-bottom{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.proc-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 7px;border-radius:3px;background:var(--terra-l, #F2DDD5);color:var(--terra);border:1px solid rgba(196,96,58,.2);}
+.fresh-badge{font-size:11px;color:var(--terra);margin-left:auto;}
+
+.loading{text-align:center;padding:60px;color:var(--muted);font-size:14px;}
+
+@media(max-width:700px){
+  .stats-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+}
+</style>
+</head>
+<body>
+<div id="app-header"></div>
+
+<div class="container" style="max-width:1000px;margin:0 auto;padding:32px 24px;">
+  <div class="page-title">Roadmap Reglementaire</div>
+  <div class="page-sub">Calendrier des echeances LCB-FT — AMLR · DORA · AI Act · MiCA</div>
+
+  <div class="stats-row" id="stats-row"></div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#8B2F1F"></div> Critique</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--terra)"></div> Eleve</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--kaki)"></div> Moyen</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--border)"></div> Passe</div>
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="fbtn active" data-f="reg" data-v="">Toutes</button>
+    <button class="fbtn" data-f="reg" data-v="AMLR">AMLR</button>
+    <button class="fbtn" data-f="reg" data-v="DORA">DORA</button>
+    <button class="fbtn" data-f="reg" data-v="AI Act">AI Act</button>
+    <button class="fbtn" data-f="reg" data-v="MiCA">MiCA</button>
+  </div>
+
+  <div id="timeline" class="timeline">
+    <div class="loading">Chargement de la roadmap…</div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+if (!requireAuth()) throw new Error('auth');
+document.getElementById('app-header').innerHTML = renderHeader();
+
+let allDeadlines = [], regFilter = '', openIds = new Set();
+
+async function load(){
+  try{
+    const d = await api('/api/v1/deadlines?include_passed=true');
+    allDeadlines = d.deadlines||[];
+    renderStats(d.stats||{});
+    render();
+  }catch(e){
+    document.getElementById('timeline').innerHTML='<div class="loading">Erreur de chargement.</div>';
+  }
+}
+
+function renderStats(s){
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat red"><div class="stat-val">${s.critical||0}</div><div class="stat-lbl">Echeances critiques a venir</div></div>
+    <div class="stat orange"><div class="stat-val">${s.imminent||0}</div><div class="stat-lbl">Dans les 30 prochains jours</div></div>
+    <div class="stat kaki"><div class="stat-val">${s.upcoming||0}</div><div class="stat-lbl">Echeances a venir</div></div>`;
+}
+
+function getFiltered(){
+  return allDeadlines.filter(d => !regFilter || d.regulation === regFilter);
+}
+
+function render(){
+  const items = getFiltered();
+  const tl = document.getElementById('timeline');
+  if(!items.length){tl.innerHTML='<div class="loading">Aucune echeance pour ce filtre.</div>';return;}
+  const byYear = {};
+  items.forEach(d=>{
+    const yr = d.deadline_date.slice(0,4);
+    if(!byYear[yr]) byYear[yr]=[];
+    byYear[yr].push(d);
+  });
+  let html = '';
+  Object.keys(byYear).sort().forEach(yr=>{
+    const isCurrent = yr === new Date().getFullYear().toString();
+    html += `<div class="tl-year">${yr}${isCurrent?' — en cours':''}</div>`;
+    byYear[yr].forEach(d=>{ html += renderItem(d); });
+  });
+  tl.innerHTML = html;
+}
+
+function deltaLabel(d){
+  if(d.status==='passed') return `<span class="date-delta passed">Passee</span>`;
+  const delta = d.delta_days;
+  if(delta<=0) return `<span class="date-delta imminent">Aujourd'hui</span>`;
+  if(delta<=30) return `<span class="date-delta imminent">Dans ${delta}j</span>`;
+  if(delta<=90) return `<span class="date-delta soon">Dans ${delta}j</span>`;
+  return `<span class="date-delta upcoming">Dans ~${Math.round(delta/30)} mois</span>`;
+}
+
+function renderItem(d){
+  const isOpen = openIds.has(d.reference);
+  const dotClass = d.status==='passed'?'passed':d.priority;
+  const cardClass = d.status==='passed'?'passed':d.urgency==='imminent'?'imminent':d.urgency==='soon'?'soon':'';
+  const dateStr = new Date(d.deadline_date+'T00:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  const procs = (d.impacted_procedures||[]).slice(0,4).map(p=>`<span class="proc-chip">${p}</span>`).join('');
+  const fresh = d.articles_count_30d>0?`<span class="fresh-badge">${d.articles_count_30d} article${d.articles_count_30d>1?'s':''} recent${d.articles_count_30d>1?'s':''}</span>`:'';
+  const desc = isOpen && d.description
+    ? `<div class="card-desc" style="display:block">${d.description}${d.notes?`<br><br><strong>Note :</strong> ${d.notes}`:''}${d.source_url?`<br><a href="${d.source_url}" target="_blank" style="color:var(--kaki);font-size:12px;">Source officielle</a>`:''}</div>`
+    : `<div class="card-desc">${d.description||''}</div>`;
+  return `
+  <div class="tl-item">
+    <div class="tl-dot ${dotClass}"></div>
+    <div class="card ${cardClass} ${isOpen?'open':''}" onclick="toggleItem('${d.reference}')">
+      <div class="card-top">
+        <div class="card-left">
+          <span class="card-ref">${d.reference}</span>
+          <span class="card-reg">${d.regulation}</span>
+          <span class="card-type">${d.deadline_type_label||d.deadline_type}</span>
+        </div>
+        <div class="card-date">
+          <div class="date-main">${dateStr}</div>
+          ${deltaLabel(d)}
+        </div>
+      </div>
+      <div class="card-title">${d.title}</div>
+      ${desc}
+      <div class="card-bottom">${procs}${fresh}</div>
+    </div>
+  </div>`;
+}
+
+function toggleItem(ref){
+  if(openIds.has(ref)) openIds.delete(ref);
+  else openIds.add(ref);
+  render();
+}
+
+document.querySelectorAll('.fbtn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-f="reg"]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    regFilter = btn.dataset.v;
+    render();
+  });
+});
+
+load();
+</script>
+</body>
+</html>
