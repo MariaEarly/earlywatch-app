@@ -1,0 +1,74 @@
+---
+import AuthLayout from '../layouts/AuthLayout.astro';
+---
+
+<AuthLayout title="Early Watch — Connexion">
+  <form id="login-form">
+    <label for="email">Email</label>
+    <input type="email" id="email" autocomplete="email" required>
+    <label for="password">Mot de passe</label>
+    <input type="password" id="password" autocomplete="current-password" required>
+    <div class="auth-error" id="err">Email ou mot de passe incorrect.</div>
+    <button type="submit" class="auth-btn" id="btn">Se connecter</button>
+  </form>
+  <div class="auth-footer">
+    <a href={`${import.meta.env.BASE_URL}forgot-password`}>Mot de passe oublié ?</a>
+    &nbsp;&middot;&nbsp;
+    <a href="mailto:maria@early.consulting">Besoin d'accès ?</a>
+  </div>
+
+  <script>
+    import { API, getToken } from '../scripts/api';
+
+    const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
+
+    // Already logged in?
+    const t = sessionStorage.getItem('ew_token');
+    if (t) {
+      fetch(`${API}/api/v1/auth/me`, { headers: { 'Authorization': `Bearer ${t}` } })
+        .then(r => { if (r.ok) return r.json(); throw 0; })
+        .then(u => { window.location.href = BASE + (u.role === 'superadmin' ? 'superadmin' : 'conformite'); })
+        .catch(() => {});
+    }
+
+    document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn') as HTMLButtonElement;
+      const err = document.getElementById('err')!;
+      const email = document.getElementById('email') as HTMLInputElement;
+      const pwd = document.getElementById('password') as HTMLInputElement;
+
+      email.classList.remove('error');
+      pwd.classList.remove('error');
+      err.classList.remove('show');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="auth-spinner"></span>Connexion\u2026';
+
+      try {
+        const r = await fetch(`${API}/api/v1/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.value.trim(), password: pwd.value }),
+        });
+
+        if (!r.ok) {
+          const d = await r.json().catch(() => ({}));
+          throw new Error(d.detail || 'Identifiants incorrects');
+        }
+
+        const d = await r.json();
+        sessionStorage.setItem('ew_token', d.access_token);
+        sessionStorage.setItem('ew_user', JSON.stringify(d.user));
+        window.location.href = BASE + (d.user?.role === 'superadmin' ? 'superadmin' : 'conformite');
+
+      } catch (ex: any) {
+        email.classList.add('error');
+        pwd.classList.add('error');
+        err.textContent = ex.message || 'Erreur de connexion';
+        err.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Se connecter';
+      }
+    });
+  </script>
+</AuthLayout>

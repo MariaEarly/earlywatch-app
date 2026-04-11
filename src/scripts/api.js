@@ -1,0 +1,185 @@
+/* ================================================================
+   Early Watch — Shared Application Logic
+   ================================================================ */
+
+export const API = (() => {
+  const h = window.location.hostname;
+  if (h === 'localhost' || h === '127.0.0.1' || h === '') {
+    return 'http://127.0.0.1:8000';
+  }
+  return 'https://earlybriefp7hwqsga-earlybrief-api.functions.fnc.fr-par.scw.cloud';
+})();
+
+// Astro base path for page redirects
+const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
+
+// ---- Auth ----
+export function getToken() {
+  return sessionStorage.getItem('ew_token');
+}
+export function getUser() {
+  const u = sessionStorage.getItem('ew_user');
+  return u ? JSON.parse(u) : null;
+}
+export function requireAuth() {
+  if (!getToken()) {
+    window.location.href = BASE + 'login';
+    return false;
+  }
+  return true;
+}
+export function logout() {
+  sessionStorage.removeItem('ew_token');
+  sessionStorage.removeItem('ew_user');
+  window.location.href = BASE + 'login';
+}
+
+// ---- API helper ----
+export async function api(path, opts = {}) {
+  const token = getToken();
+  const headers = { ...opts.headers };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (opts.body && typeof opts.body === 'object') {
+    headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(opts.body);
+  }
+  const res = await fetch(`${API}${path}`, { ...opts, headers });
+  if (res.status === 401) {
+    logout();
+    throw new Error('Session expirée');
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || 'Erreur serveur');
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+// ---- Toast ----
+export function toast(msg, type = 'success') {
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ---- Score helpers ----
+export function scoreClass(score) {
+  if (score == null) return 'score-low';
+  if (score >= 80) return 'score-critical';
+  if (score >= 50) return 'score-high';
+  if (score >= 25) return 'score-med';
+  return 'score-low';
+}
+export function scoreBar(score) {
+  const pct = Math.min(100, Math.max(0, score || 0));
+  const cls = scoreClass(score);
+  return `<div class="score-bar ${cls}"><div class="score-bar-fill" style="width:${pct}%"></div></div>`;
+}
+
+// ---- Date formatting ----
+export function formatDate(d) {
+  if (!d) return '\u2014';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+export function formatTime(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  return dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ---- Badge helpers ----
+export function statusBadge(status) {
+  const map = {
+    nouveau: ['Nouveau', 'badge-accent'],
+    important: ['Important', 'badge-warning'],
+    quotidien: ['Quotidien', 'badge-accent'],
+    hebdo: ['Hebdo', 'badge-neutral'],
+    relu: ['Relu', 'badge-neutral'],
+    archive: ['Archive', 'badge-neutral'],
+    ignorer: ['Ignor\u00e9', 'badge-neutral'],
+    pending_validation: ['Validation', 'badge-warning'],
+    validated: ['Valid\u00e9', 'badge-accent'],
+    rejected: ['Rejet\u00e9', 'badge-danger'],
+  };
+  const [label, cls] = map[status] || [status, 'badge-neutral'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+export function actionBadge(type) {
+  if (!type) return '';
+  const map = {
+    sanctions_update: 'Sanctions',
+    doctrine_update: 'Doctrine',
+    obligation_update: 'Obligations',
+  };
+  return `<span class="badge badge-accent">${map[type] || type}</span>`;
+}
+
+// ---- Simple Markdown renderer ----
+export function renderMarkdown(md) {
+  if (!md) return '';
+  let html = md
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/^---$/gm, '<hr>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+    .replace(/^\|(.+)\|$/gm, (match, content) => {
+      if (content.match(/^[\s\-|]+$/)) return '<!-- sep -->';
+      const cells = content.split('|').map(c => c.trim());
+      return '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+    });
+
+  html = html.replace(/((?:<tr>.*<\/tr>\n?)+)/g, (m) => {
+    const cleaned = m.replace(/<!-- sep -->\n?/g, '');
+    const firstRowEnd = cleaned.indexOf('</tr>') + 5;
+    const header = cleaned.slice(0, firstRowEnd).replace(/<td>/g, '<th>').replace(/<\/td>/g, '</th>');
+    const rest = cleaned.slice(firstRowEnd);
+    return `<table>${header}${rest}</table>`;
+  });
+
+  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+
+  html = html.split('\n').map(line => {
+    if (line.match(/^<(h[1-3]|ul|ol|li|table|tr|hr|!-)/)) return line;
+    if (line.trim() === '') return '';
+    return `<p>${line}</p>`;
+  }).join('\n');
+
+  return html;
+}
+
+// ---- Expandable sections ----
+export function initExpandables() {
+  document.querySelectorAll('.expandable-header').forEach(h => {
+    h.addEventListener('click', () => {
+      h.closest('.expandable').classList.toggle('open');
+    });
+  });
+}
+
+// ---- Reminder badge (nav) ----
+export async function loadReminderBadge() {
+  try {
+    const counts = await api('/api/v1/reminders/counts');
+    const total = (counts.critical || 0) + (counts.high || 0) + (counts.medium || 0);
+    const badge = document.getElementById('nav-badge-ctrl');
+    if (badge && total > 0) {
+      badge.textContent = total > 99 ? '99+' : total;
+      badge.style.display = 'inline-block';
+    }
+  } catch (_) { /* silently ignore */ }
+}

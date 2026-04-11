@@ -1,0 +1,235 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+const base = import.meta.env.BASE_URL;
+---
+
+<AppLayout title="Fiches Reflexes — Early Watch" activePage="situations">
+  <div class="container" style="max-width:1100px;margin:0 auto;padding:32px 24px;">
+    <div class="page-title">Fiches Reflexes</div>
+    <div class="page-sub">Guides operationnels par situation — lies a votre veille reglementaire en temps reel</div>
+
+    <div class="filters">
+      <span class="filter-lbl">Profil :</span>
+      <button class="fbtn active" data-f="profile" data-v="">Tous</button>
+      <button class="fbtn" data-f="profile" data-v="PSP">PSP</button>
+      <button class="fbtn" data-f="profile" data-v="CASP">CASP</button>
+      <button class="fbtn" data-f="profile" data-v="Banque">Banque</button>
+      <span class="filter-lbl" style="margin-left:8px">Urgence :</span>
+      <button class="fbtn active" data-f="urgency" data-v="">Toutes</button>
+      <button class="fbtn" data-f="urgency" data-v="immediate">Immediate</button>
+      <button class="fbtn" data-f="urgency" data-v="high">Haute</button>
+    </div>
+
+    <div id="grid" class="grid">
+      <div class="loading">Chargement des fiches reflexes...</div>
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .page-title{font-size:22px;font-weight:600;margin-bottom:4px;}
+  .page-sub{font-size:14px;color:var(--muted);margin-bottom:28px;}
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;align-items:center;}
+  .filter-lbl{font-size:13px;color:var(--muted);font-weight:500;}
+  .fbtn{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .15s;}
+  .fbtn:hover{border-color:var(--noir);color:var(--noir);}
+  .fbtn.active{background:var(--kaki);border-color:var(--kaki);color:var(--white);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
+  .loading{text-align:center;padding:60px;color:var(--muted);font-size:14px;}
+
+  @media(max-width:700px){
+    .grid{grid-template-columns:1fr;}
+  }
+</style>
+
+<style is:global>
+  .sit-card{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:12px;box-shadow:3px 3px 0 var(--noir);}
+  .sit-card:hover{border-color:var(--kaki);}
+  .sit-card.open{border-color:var(--kaki);}
+  .sit-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .sit-card-ref{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--terra);background:var(--terra-l, #F2DDD5);padding:3px 7px;border-radius:4px;}
+  .urgency-badge{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+  .urgency-badge.immediate{background:#FEF2F2;color:#DC2626;}
+  .urgency-badge.high{background:#FFF7ED;color:#EA580C;}
+  .urgency-badge.medium{background:var(--kaki-l, #D4DFBF);color:var(--kaki);}
+  .urgency-badge.low{background:var(--beige2, #EDE5D5);color:var(--muted);}
+  .fresh-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;}
+  .fresh-dot.hot{background:#DC2626;}
+  .fresh-dot.warm{background:#EA580C;}
+  .fresh-dot.ok{background:#10B981;}
+  .sit-card-title{font-size:15px;font-weight:600;line-height:1.35;}
+  .sit-card-sit{font-size:13px;color:var(--muted);line-height:1.6;}
+  .sit-card-tags{display:flex;gap:6px;flex-wrap:wrap;}
+  .sit-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 7px;border-radius:3px;background:var(--beige2, #EDE5D5);color:var(--muted);}
+  .sit-card-articles{font-size:12px;color:var(--terra, #C4603A);}
+  .sit-panel{display:none;margin-top:8px;border-top:1px solid var(--border);padding-top:16px;}
+  .sit-card.open .sit-panel{display:block;}
+  .panel-section{margin-bottom:20px;}
+  .panel-section-title{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+  .steps-list{display:flex;flex-direction:column;gap:10px;}
+  .step-item{display:flex;gap:12px;align-items:flex-start;}
+  .step-num{width:24px;height:24px;border-radius:50%;background:var(--kaki);color:var(--white);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .step-num.immediate{background:#DC2626;}
+  .step-num.high{background:#EA580C;}
+  .step-content{flex:1;}
+  .step-action{font-size:13px;line-height:1.55;margin-bottom:4px;}
+  .step-meta{display:flex;gap:10px;flex-wrap:wrap;}
+  .step-delai{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
+  .step-loi{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--terra, #C4603A);}
+  .docs-list{list-style:none;display:flex;flex-direction:column;gap:6px;}
+  .docs-list li{font-size:13px;color:var(--muted);padding-left:14px;position:relative;}
+  .docs-list li::before{content:'\2192';position:absolute;left:0;font-size:11px;color:var(--kaki);}
+  .loi-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .loi-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 8px;border-radius:3px;background:var(--terra-l, #F2DDD5);color:var(--terra, #C4603A);border:1px solid rgba(196,96,58,.2);}
+  .sit-article-item{padding:8px 10px;border-radius:6px;background:var(--beige);margin-bottom:6px;}
+  .sit-article-link{font-size:13px;color:var(--noir);text-decoration:none;font-weight:500;}
+  .sit-article-link:hover{color:var(--kaki);}
+  .sit-article-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+  .notes-box{background:var(--kaki-l, #D4DFBF);border-radius:6px;padding:12px;font-size:12px;color:var(--kaki);line-height:1.7;}
+</style>
+
+<script>
+  import { api } from '../scripts/api';
+
+  let all: any[] = [];
+  let filters: any = { profile: '', urgency: '' };
+  let openId: string | null = null;
+  const URGENCY: any = { immediate: 'Urgence immediate', high: 'Priorite haute', medium: 'Priorite normale', low: 'Pour information' };
+
+  async function load(): Promise<void> {
+    try {
+      const d: any = await api('/api/v1/situations');
+      all = d.situations || [];
+      render();
+    } catch (e: any) {
+      document.getElementById('grid')!.innerHTML = '<div class="loading">Erreur de chargement.</div>';
+    }
+  }
+
+  function getFiltered(): any[] {
+    return all.filter((s: any) => {
+      const p: boolean = !filters.profile || (s.profile_tags || []).includes(filters.profile);
+      const u: boolean = !filters.urgency || s.urgency === filters.urgency;
+      return p && u;
+    });
+  }
+
+  function render(): void {
+    const items: any[] = getFiltered();
+    const grid: HTMLElement = document.getElementById('grid')!;
+    if (!items.length) { grid.innerHTML = '<div class="loading">Aucune fiche pour ces filtres.</div>'; return; }
+    grid.innerHTML = items.map((s: any) => renderCard(s)).join('');
+    bindCardClicks();
+  }
+
+  function freshLabel(s: any): string {
+    if (s.freshness === 'hot') return `<span class="fresh-dot hot"></span>${s.articles_count_7d} article${s.articles_count_7d > 1 ? 's' : ''} recent${s.articles_count_7d > 1 ? 's' : ''}`;
+    if (s.freshness === 'warm') return `<span class="fresh-dot warm"></span>${s.articles_count_30d} article${s.articles_count_30d > 1 ? 's' : ''} ce mois`;
+    return `<span class="fresh-dot ok"></span>A jour`;
+  }
+
+  function renderCard(s: any): string {
+    const isOpen: boolean = openId === s.reference;
+    return `
+    <div class="sit-card ${isOpen ? 'open' : ''}" id="card-${s.reference}" data-card-ref="${s.reference}">
+      <div class="sit-card-top">
+        <span class="sit-card-ref">${s.reference}</span>
+        <span class="urgency-badge ${s.urgency}">${URGENCY[s.urgency] || s.urgency}</span>
+      </div>
+      <div class="sit-card-title">${s.title}</div>
+      <div class="sit-card-sit">${s.situation}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+        <div class="sit-card-tags">${(s.profile_tags || []).map((t: string) => `<span class="sit-tag">${t}</span>`).join('')}</div>
+        <div class="sit-card-articles">${freshLabel(s)}</div>
+      </div>
+      <div class="sit-panel" id="panel-${s.reference}">
+        <div class="loading" style="padding:20px 0;font-size:13px;">Chargement...</div>
+      </div>
+    </div>`;
+  }
+
+  function bindCardClicks(): void {
+    document.querySelectorAll('[data-card-ref]').forEach((card: any) => {
+      card.addEventListener('click', () => {
+        toggle(card.dataset.cardRef);
+      });
+    });
+  }
+
+  async function toggle(ref: string): Promise<void> {
+    if (openId === ref) { openId = null; render(); return; }
+    openId = ref;
+    render();
+    const panel: any = document.getElementById(`panel-${ref}`);
+    if (panel.dataset.loaded) return;
+    try {
+      const d: any = await api(`/api/v1/situations/${ref}`);
+      panel.innerHTML = buildPanel(d);
+      panel.dataset.loaded = '1';
+    } catch (e: any) {
+      panel.innerHTML = '<div style="color:var(--muted);font-size:13px;">Erreur de chargement.</div>';
+    }
+  }
+
+  function buildPanel(d: any): string {
+    const urgClass: string = d.urgency === 'immediate' ? 'immediate' : d.urgency === 'high' ? 'high' : '';
+    const steps: string = (d.steps || []).map((s: any) => `
+      <div class="step-item">
+        <div class="step-num ${urgClass}">${s.order}</div>
+        <div class="step-content">
+          <div class="step-action">${s.action}</div>
+          <div class="step-meta">
+            ${s.delai ? `<span class="step-delai">${s.delai}</span>` : ''}
+            ${s.base_legale ? `<span class="step-loi">${s.base_legale}</span>` : ''}
+          </div>
+        </div>
+      </div>`).join('');
+
+    const docs: string = (d.documents_requis || []).length
+      ? `<div class="panel-section">
+          <div class="panel-section-title">Documents a conserver</div>
+          <ul class="docs-list">${d.documents_requis.map((doc: string) => `<li>${doc}</li>`).join('')}</ul>
+        </div>` : '';
+
+    const lois: string = (d.base_legale || []).length
+      ? `<div class="panel-section">
+          <div class="panel-section-title">Base legale</div>
+          <div class="loi-chips">${d.base_legale.map((l: string) => `<span class="loi-chip">${l}</span>`).join('')}</div>
+        </div>` : '';
+
+    const articles: string = (d.articles || []).length
+      ? `<div class="panel-section">
+          <div class="panel-section-title">Articles reglementaires recents lies</div>
+          ${d.articles.map((a: any) => `
+          <div class="sit-article-item">
+            <a href="${a.url}" target="_blank" class="sit-article-link">${a.title}</a>
+            <div class="sit-article-meta">${a.source || ''}${a.published_at ? ' \u00b7 ' + new Date(a.published_at).toLocaleDateString('fr-FR') : ''} ${(a.common_themes || []).map((t: string) => `<span style="font-size:10px;background:var(--terra-l,#F2DDD5);color:var(--terra,#C4603A);padding:1px 5px;border-radius:3px;margin-left:4px;">${t}</span>`).join('')}</div>
+          </div>`).join('')}
+        </div>` : '';
+
+    const notes: string = d.notes
+      ? `<div class="panel-section"><div class="notes-box">${d.notes}</div></div>`
+      : '';
+
+    return `
+      <div class="panel-section">
+        <div class="panel-section-title">Etapes a suivre</div>
+        <div class="steps-list">${steps}</div>
+      </div>
+      ${docs}${lois}${articles}${notes}`;
+  }
+
+  // Filters
+  document.querySelectorAll('.fbtn').forEach((btn: any) => {
+    btn.addEventListener('click', () => {
+      const f: string = btn.dataset.f;
+      document.querySelectorAll(`[data-f="${f}"]`).forEach((b: any) => b.classList.remove('active'));
+      btn.classList.add('active');
+      filters[f] = btn.dataset.v;
+      openId = null;
+      render();
+    });
+  });
+
+  load();
+</script>

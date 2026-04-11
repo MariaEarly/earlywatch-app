@@ -1,0 +1,441 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+const base = import.meta.env.BASE_URL;
+---
+
+<AppLayout title="Mes Procedures — Early Watch" activePage="mes-procedures">
+  <div class="mp-layout">
+    <div class="mp-main">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+        <div>
+          <div class="page-title">Mes procedures LCB-FT</div>
+          <div class="page-subtitle">Vos procedures reglementaires — statut, articles lies et telechargement</div>
+        </div>
+        <button id="btn-export-pdf" class="filter-btn" style="background:var(--kaki);color:var(--beige);font-weight:600;padding:8px 18px;margin-top:4px">
+          Exporter piste d'audit PDF
+        </button>
+      </div>
+
+      <div id="stats-bar" class="stats-bar" style="display:none">
+        <div class="stat-item">
+          <div class="stat-value" id="stat-total">--</div>
+          <div class="stat-label">Procedures</div>
+        </div>
+        <div class="stat-item stat-ok">
+          <div class="stat-value" id="stat-valide">--</div>
+          <div class="stat-label">Validees</div>
+        </div>
+        <div class="stat-item stat-warn">
+          <div class="stat-value" id="stat-pending">--</div>
+          <div class="stat-label">A valider</div>
+        </div>
+        <div class="stat-item stat-hot">
+          <div class="stat-value" id="stat-alert">--</div>
+          <div class="stat-label">Alertes articles</div>
+        </div>
+      </div>
+
+      <div class="filters" id="filters-bar" style="display:none">
+        <span class="filter-label">Statut :</span>
+        <button class="filter-btn active" data-filter="status" data-value="">Tous</button>
+        <button class="filter-btn" data-filter="status" data-value="a_valider">A valider</button>
+        <button class="filter-btn" data-filter="status" data-value="en_cours">En cours</button>
+        <button class="filter-btn" data-filter="status" data-value="valide">Valide</button>
+        <button class="filter-btn" data-filter="status" data-value="obsolete">Obsolete</button>
+
+        <span class="filter-label" style="margin-left:8px">Domaine :</span>
+        <button class="filter-btn active" data-filter="domain" data-value="">Tous</button>
+        <button class="filter-btn" data-filter="domain" data-value="KYC">KYC</button>
+        <button class="filter-btn" data-filter="domain" data-value="Sanctions">Sanctions</button>
+        <button class="filter-btn" data-filter="domain" data-value="Monitoring">Monitoring</button>
+        <button class="filter-btn" data-filter="domain" data-value="Tracfin">Tracfin</button>
+      </div>
+
+      <div id="grid" class="grid">
+        <div class="loading">Chargement...</div>
+      </div>
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .mp-layout { min-height: 100vh; display: flex; flex-direction: column; }
+  .mp-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
+  .page-title { font-size: 22px; font-weight: 600; color: var(--noir); margin-bottom: 4px; }
+  .page-subtitle { font-size: 14px; color: var(--color-text-tertiary); margin-bottom: 28px; }
+
+  .stats-bar {
+    display: flex; gap: 24px; margin-bottom: 24px; padding: 16px 20px;
+    background: var(--beige); border: 1.5px solid var(--noir);
+    border-radius: 12px; box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+  }
+  .stat-item { display: flex; flex-direction: column; gap: 2px; }
+  .stat-value { font-size: 20px; font-weight: 600; color: var(--noir); }
+  .stat-label { font-size: 12px; color: var(--color-text-tertiary); }
+  .stat-hot .stat-value { color: #8B2F1F; }
+  .stat-warn .stat-value { color: var(--terra); }
+  .stat-ok .stat-value { color: var(--kaki); }
+
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
+  .filter-label { font-size: 13px; color: var(--color-text-tertiary); font-weight: 500; }
+  .filter-btn {
+    padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--noir);
+    background: var(--beige); font-size: 13px; color: var(--noir);
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+  }
+  .filter-btn:hover { background: var(--beige2); }
+  .filter-btn.active { background: var(--kaki); border-color: var(--noir); color: var(--beige); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
+  .loading { text-align: center; padding: 60px; color: var(--color-text-tertiary); font-size: 14px; }
+  .disabled-msg { text-align: center; padding: 80px 40px; }
+  .disabled-msg h2 { font-size: 20px; color: var(--noir); margin-bottom: 8px; }
+  .disabled-msg p { font-size: 14px; color: var(--color-text-tertiary); }
+</style>
+
+<style is:global>
+  .mp-card {
+    background: var(--beige); border: 1.5px solid var(--noir); border-radius: 12px;
+    padding: 20px; display: flex; flex-direction: column; gap: 12px;
+    box-shadow: 3px 3px 0 rgba(26,26,23,0.35); transition: box-shadow 0.15s;
+  }
+  .mp-card:hover { box-shadow: 4px 4px 0 rgba(26,26,23,0.45); }
+  .mp-card.alert-border { border-color: #8B2F1F; }
+
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .card-ref {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--kaki);
+    background: var(--beige2); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--beige3);
+    white-space: nowrap;
+  }
+
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500;
+    padding: 4px 10px; border-radius: 20px; border: 1px solid; white-space: nowrap;
+  }
+  .status-badge.a_valider { background: #fdf0e0; color: var(--terra); border-color: var(--terra); }
+  .status-badge.en_cours { background: var(--beige2); color: var(--kaki); border-color: var(--kaki); }
+  .status-badge.valide { background: #e8f0e4; color: #2d5016; border-color: #2d5016; }
+  .status-badge.obsolete { background: #fde8e4; color: #8B2F1F; border-color: #8B2F1F; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .alert-ribbon {
+    font-size: 11px; font-weight: 500; color: #8B2F1F; background: #fde8e4;
+    padding: 6px 10px; border-radius: 6px; border: 1px solid #8B2F1F;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .freshness-badge {
+    display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500;
+    padding: 4px 10px; border-radius: 20px; white-space: nowrap; cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .freshness-badge.hot { background: #fde8e4; color: #8B2F1F; border-color: #8B2F1F; }
+  .freshness-badge.warm { background: #fdf0e0; color: var(--terra); border-color: var(--terra); }
+  .freshness-badge.ok { background: var(--beige2); color: var(--kaki); border-color: var(--kaki); }
+  .freshness-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .card-title { font-size: 15px; font-weight: 600; color: var(--noir); line-height: 1.4; }
+  .card-subtitle { font-size: 13px; color: var(--color-text-tertiary); margin-top: 2px; }
+  .card-meta { display: flex; gap: 12px; align-items: center; }
+  .card-domain { font-size: 12px; color: var(--color-text-tertiary); background: var(--beige2); padding: 3px 8px; border-radius: 4px; }
+  .card-version { font-size: 12px; color: var(--color-text-tertiary); }
+
+  .status-selector {
+    display: flex; gap: 6px; flex-wrap: wrap; padding-top: 10px;
+    border-top: 1px solid var(--beige3);
+  }
+  .status-opt {
+    padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--noir);
+    background: var(--beige); font-size: 12px; cursor: pointer;
+    font-family: inherit; transition: all 0.15s; color: var(--noir);
+  }
+  .status-opt:hover { background: var(--beige2); }
+  .status-opt.active { background: var(--kaki); color: var(--beige); }
+  .status-opt.active-valide { background: #2d5016; color: #e8f0e4; }
+  .status-opt.active-obsolete { background: #8B2F1F; color: #fde8e4; }
+
+  .linked-articles { border-top: 1px solid var(--beige3); padding-top: 12px; display: none; }
+  .linked-articles.open { display: block; }
+  .linked-articles-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 10px; }
+  .article-item { padding: 8px 10px; border-radius: 6px; background: var(--beige2); margin-bottom: 6px; display: flex; flex-direction: column; gap: 3px; }
+  .article-item-title { font-size: 13px; color: var(--noir); font-weight: 500; text-decoration: none; line-height: 1.3; }
+  .article-item-title:hover { color: var(--kaki); }
+  .article-item-meta { font-size: 11px; color: var(--color-text-tertiary); display: flex; gap: 8px; flex-wrap: wrap; }
+  .article-theme-tag { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: var(--beige2); color: var(--kaki); border: 1px solid var(--beige3); }
+  .no-articles { font-size: 13px; color: var(--color-text-tertiary); font-style: italic; }
+
+  .card-actions { display: flex; gap: 10px; align-items: center; margin-top: auto; }
+  .btn-download {
+    flex: 1; padding: 9px 16px; background: var(--kaki); color: var(--beige);
+    border: 1.5px solid var(--noir); border-radius: 20px; font-size: 13px; font-weight: 500;
+    cursor: pointer; text-decoration: none; text-align: center; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: background 0.15s; box-shadow: 2px 2px 0 rgba(26,26,23,0.4);
+  }
+  .btn-download:hover { background: var(--kaki-hover); }
+  .btn-toggle {
+    padding: 9px 14px; background: var(--beige); color: var(--noir);
+    border: 1.5px solid var(--noir); border-radius: 20px; font-size: 13px;
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+    display: flex; align-items: center; gap: 5px; white-space: nowrap;
+    box-shadow: 2px 2px 0 rgba(26,26,23,0.3);
+  }
+  .btn-toggle:hover { background: var(--beige2); }
+  .btn-toggle.active { background: var(--kaki); color: var(--beige); }
+</style>
+
+<script>
+  import { api, toast, API } from '../scripts/api';
+
+  let allProcedures: any[] = [];
+  let filters: any = { status: '', domain: '' };
+  let openArticles: Set<string> = new Set();
+
+  async function loadProcedures(): Promise<void> {
+    try {
+      const data: any = await api('/api/v1/my-procedures');
+
+      if (!data.enabled) {
+        document.getElementById('grid')!.innerHTML = `
+          <div class="disabled-msg">
+            <h2>Module Procedures non active</h2>
+            <p>Contactez votre administrateur pour activer l'acces aux procedures LCB-FT.</p>
+          </div>`;
+        return;
+      }
+
+      allProcedures = data.procedures || [];
+      document.getElementById('stats-bar')!.style.display = 'flex';
+      document.getElementById('filters-bar')!.style.display = 'flex';
+      updateStats();
+      renderGrid();
+    } catch (e: any) {
+      document.getElementById('grid')!.innerHTML =
+        '<div class="loading">Erreur de chargement.</div>';
+    }
+  }
+
+  function updateStats(): void {
+    const valide: number = allProcedures.filter((p: any) => p.status === 'valide').length;
+    const pending: number = allProcedures.filter((p: any) => p.status === 'a_valider' || p.status === 'en_cours').length;
+    const alert: number = allProcedures.filter((p: any) => p.status_alert).length;
+    document.getElementById('stat-total')!.textContent = String(allProcedures.length);
+    document.getElementById('stat-valide')!.textContent = String(valide);
+    document.getElementById('stat-pending')!.textContent = String(pending);
+    document.getElementById('stat-alert')!.textContent = String(alert);
+  }
+
+  function getFiltered(): any[] {
+    return allProcedures.filter((p: any) => {
+      const statusOk: boolean = !filters.status || p.status === filters.status;
+      const domainOk: boolean = !filters.domain || p.domain === filters.domain;
+      return statusOk && domainOk;
+    });
+  }
+
+  function renderGrid(): void {
+    const procs: any[] = getFiltered();
+    const grid: HTMLElement = document.getElementById('grid')!;
+    if (!procs.length) {
+      grid.innerHTML = '<div class="loading">Aucune procedure pour ces filtres.</div>';
+      return;
+    }
+    grid.innerHTML = procs.map(renderCard).join('');
+    openArticles.forEach((ref: string) => {
+      const panel: HTMLElement | null = document.getElementById(`articles-${ref}`);
+      if (panel) panel.classList.add('open');
+    });
+    bindCardEvents();
+  }
+
+  function renderCard(p: any): string {
+    const isOpen: boolean = openArticles.has(p.reference);
+    const hasArticles: boolean = p.freshness !== 'ok';
+
+    const statusBdg: string = `<span class="status-badge ${p.status}">
+      <span class="status-dot"></span>${p.status_label}
+    </span>`;
+
+    let freshBdg: string = '';
+    if (p.freshness === 'hot') {
+      freshBdg = `<span class="freshness-badge hot" data-toggle-articles="${p.reference}">
+        <span class="freshness-dot"></span>${p.articles_count_7d} article${p.articles_count_7d > 1 ? 's' : ''} recent${p.articles_count_7d > 1 ? 's' : ''}
+      </span>`;
+    } else if (p.freshness === 'warm') {
+      freshBdg = `<span class="freshness-badge warm" data-toggle-articles="${p.reference}">
+        <span class="freshness-dot"></span>${p.articles_count_30d} ce mois
+      </span>`;
+    }
+
+    const alertRibbon: string = p.status_alert
+      ? `<div class="alert-ribbon">Nouveaux articles detectes — revision recommandee</div>`
+      : '';
+
+    const statuses: string[] = ['a_valider', 'en_cours', 'valide', 'obsolete'];
+    const statusLabels: any = { a_valider: 'A valider', en_cours: 'En cours', valide: 'Valide', obsolete: 'Obsolete' };
+    const statusSelector: string = statuses.map((s: string) => {
+      let cls: string = 'status-opt';
+      if (s === p.status) {
+        if (s === 'valide') cls += ' active-valide';
+        else if (s === 'obsolete') cls += ' active-obsolete';
+        else cls += ' active';
+      }
+      return `<button class="${cls}" data-set-status="${p.reference}" data-new-status="${s}">${statusLabels[s]}</button>`;
+    }).join('');
+
+    return `
+    <div class="mp-card ${p.status_alert ? 'alert-border' : ''}" id="card-${p.reference}">
+      <div class="card-top">
+        <span class="card-ref">${p.reference}</span>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          ${statusBdg}
+          ${freshBdg}
+        </div>
+      </div>
+      ${alertRibbon}
+      <div>
+        <div class="card-title">${p.title}</div>
+        <div class="card-subtitle">${p.subtitle || ''}</div>
+      </div>
+      <div class="card-meta">
+        <span class="card-domain">${p.domain}</span>
+        <span class="card-version">v${p.version}</span>
+      </div>
+      <div class="status-selector">${statusSelector}</div>
+      <div class="linked-articles ${isOpen ? 'open' : ''}" id="articles-${p.reference}">
+        <div class="linked-articles-title">Articles lies (30 jours)</div>
+        <div id="articles-content-${p.reference}">
+          <div class="loading" style="padding:12px 0;font-size:13px">Chargement...</div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <a href="${p.file_url}" download class="btn-download">Telecharger .docx</a>
+        ${hasArticles ? `<button class="btn-toggle ${isOpen ? 'active' : ''}" id="btn-${p.reference}" data-toggle-articles="${p.reference}">Articles</button>` : ''}
+      </div>
+    </div>`;
+  }
+
+  function bindCardEvents(): void {
+    document.querySelectorAll('[data-set-status]').forEach((btn: any) => {
+      btn.addEventListener('click', () => {
+        setStatus(btn.dataset.setStatus, btn.dataset.newStatus);
+      });
+    });
+    document.querySelectorAll('[data-toggle-articles]').forEach((btn: any) => {
+      btn.addEventListener('click', () => {
+        toggleArticles(btn.dataset.toggleArticles);
+      });
+    });
+  }
+
+  async function setStatus(ref: string, newStatus: string): Promise<void> {
+    try {
+      await api(`/api/v1/my-procedures/${ref}/status`, {
+        method: 'POST',
+        body: { status: newStatus },
+      });
+      const proc: any = allProcedures.find((p: any) => p.reference === ref);
+      if (proc) {
+        proc.status = newStatus;
+        proc.status_label = ({ a_valider: 'A valider', en_cours: 'En cours', valide: 'Valide', obsolete: 'Obsolete' } as any)[newStatus] || newStatus;
+        if (newStatus === 'valide') proc.status_alert = null;
+      }
+      updateStats();
+      renderGrid();
+      toast('Statut mis a jour', 'success');
+    } catch (e: any) {
+      toast(e.message || 'Erreur', 'error');
+    }
+  }
+
+  async function toggleArticles(ref: string): Promise<void> {
+    const panel: HTMLElement | null = document.getElementById(`articles-${ref}`);
+    const btn: HTMLElement | null = document.getElementById(`btn-${ref}`);
+
+    if (openArticles.has(ref)) {
+      openArticles.delete(ref);
+      panel?.classList.remove('open');
+      btn?.classList.remove('active');
+      return;
+    }
+
+    openArticles.add(ref);
+    panel?.classList.add('open');
+    btn?.classList.add('active');
+
+    const contentEl: any = document.getElementById(`articles-content-${ref}`);
+    if (contentEl.dataset.loaded) return;
+
+    try {
+      const data: any = await api(`/api/v1/my-procedures/${ref}/articles`);
+      if (!data.articles || !data.articles.length) {
+        contentEl.innerHTML = '<div class="no-articles">Aucun article lie sur les 30 derniers jours.</div>';
+      } else {
+        contentEl.innerHTML = data.articles.map((a: any) => {
+          const date: string = a.published_at
+            ? new Date(a.published_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+            : '';
+          const tags: string = (a.common_themes || []).map((t: string) =>
+            `<span class="article-theme-tag">${t}</span>`).join('');
+          return `
+          <div class="article-item">
+            <a href="${a.url}" target="_blank" class="article-item-title">${a.title}</a>
+            <div class="article-item-meta">
+              <span>${a.source}</span><span>${date}</span>${tags}
+            </div>
+          </div>`;
+        }).join('');
+      }
+      contentEl.dataset.loaded = '1';
+    } catch (e: any) {
+      contentEl.innerHTML = '<div class="no-articles">Erreur de chargement.</div>';
+    }
+  }
+
+  // Filter UI
+  document.querySelectorAll('.filter-btn').forEach((btn: any) => {
+    btn.addEventListener('click', () => {
+      const filterType: string = btn.dataset.filter;
+      if (!filterType) return;
+      document.querySelectorAll(`[data-filter="${filterType}"]`).forEach((b: any) => b.classList.remove('active'));
+      btn.classList.add('active');
+      filters[filterType] = btn.dataset.value;
+      renderGrid();
+    });
+  });
+
+  // Export PDF
+  document.getElementById('btn-export-pdf')!.addEventListener('click', async () => {
+    const btn: HTMLButtonElement = document.getElementById('btn-export-pdf') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Generation en cours...';
+    try {
+      const token: string | null = sessionStorage.getItem('ew_token');
+      const res: Response = await fetch(`${API}/api/v1/audit/export-pdf`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const err: any = await res.json().catch(() => ({}));
+        throw new Error(err.detail || 'Erreur export');
+      }
+      const blob: Blob = await res.blob();
+      const url: string = URL.createObjectURL(blob);
+      const a: HTMLAnchorElement = document.createElement('a');
+      a.href = url;
+      a.download = `piste-audit-lcbft-${new Date().toISOString().slice(0,10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast('PDF telecharge', 'success');
+    } catch (e: any) {
+      toast(e.message || 'Erreur export PDF', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Exporter piste d\'audit PDF';
+    }
+  });
+
+  loadProcedures();
+</script>

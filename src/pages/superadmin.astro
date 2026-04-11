@@ -1,0 +1,319 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+const base = import.meta.env.BASE_URL;
+---
+
+<AppLayout title="Superadmin — Early Watch">
+  <div class="sa-layout">
+    <div class="sa-main">
+      <div><span class="sa-title">Superadmin</span><span class="sa-badge">INTERNE</span></div>
+      <div class="sa-subtitle">Gestion des clients Early Watch — tenants, modules, onboarding</div>
+
+      <div class="stats-bar" id="stats-bar">
+        <div class="stat-card"><div class="stat-card-value" id="s-tenants">--</div><div class="stat-card-label">Tenants actifs</div></div>
+        <div class="stat-card"><div class="stat-card-value" id="s-procs">--</div><div class="stat-card-label">Procedures attribuees</div></div>
+        <div class="stat-card"><div class="stat-card-value" id="s-reminders">--</div><div class="stat-card-label">Reminders actifs</div></div>
+        <div class="stat-card"><div class="stat-card-value" id="s-articles">--</div><div class="stat-card-label">Articles 7 jours</div></div>
+      </div>
+
+      <div id="table-container">
+        <div class="loading">Chargement des tenants...</div>
+      </div>
+
+      <div class="create-section">
+        <div class="create-header" id="create-header-toggle">
+          Creer un nouveau client
+          <span style="font-size:18px">+</span>
+        </div>
+        <div class="create-body" id="create-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nom de l'etablissement</label>
+              <input type="text" id="c-name" placeholder="Ex: Fintech Solutions SAS">
+            </div>
+            <div class="form-group">
+              <label>Type d'entite</label>
+              <select id="c-type">
+                <option value="PSP">PSP</option>
+                <option value="EC">Etablissement de credit</option>
+                <option value="EME">EME</option>
+                <option value="SGP">SGP</option>
+                <option value="CASP">CASP/PSAN</option>
+                <option value="CIF">CIF</option>
+                <option value="OTHER">Autre</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Plan</label>
+              <select id="c-plan">
+                <option value="demo">Demo</option>
+                <option value="starter">Starter</option>
+                <option value="pro">Pro</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email admin</label>
+              <input type="email" id="c-email" placeholder="compliance@client.com">
+            </div>
+            <div class="form-group">
+              <label>Prenom</label>
+              <input type="text" id="c-fn" placeholder="Jean">
+            </div>
+            <div class="form-group">
+              <label>Nom</label>
+              <input type="text" id="c-ln" placeholder="Dupont">
+            </div>
+          </div>
+          <button class="btn-create" id="btn-create-tenant">Creer le tenant</button>
+          <div class="result-box" id="create-result"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .sa-layout { min-height: 100vh; display: flex; flex-direction: column; background: #EDEAE3; }
+  .sa-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
+  .sa-title { font-size: 22px; font-weight: 700; color: var(--noir); }
+  .sa-subtitle { font-size: 13px; color: var(--color-text-tertiary); margin-bottom: 24px; }
+  .sa-badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; background: #8B2F1F; color: #fff; margin-left: 8px; vertical-align: middle; }
+
+  .stats-bar {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    padding: 14px 18px; background: var(--beige); border: 1.5px solid var(--noir);
+    border-radius: 12px; box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+  }
+  .stat-card-value { font-size: 24px; font-weight: 700; color: var(--noir); }
+  .stat-card-label { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+
+  .create-section {
+    margin-top: 24px; background: var(--beige); border: 1.5px solid var(--noir);
+    border-radius: 12px; box-shadow: 3px 3px 0 rgba(26,26,23,0.35); overflow: hidden;
+  }
+  .create-header {
+    padding: 14px 18px; font-size: 14px; font-weight: 600; color: var(--noir);
+    border-bottom: 1px solid var(--color-border); cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .create-body { padding: 18px; display: none; }
+  :global(.create-body.open) { display: block; }
+  .form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .form-group { flex: 1; min-width: 180px; }
+  .form-group label { display: block; font-size: 11px; font-weight: 600; color: var(--noir); margin-bottom: 3px; text-transform: uppercase; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 7px 10px; border: 1.5px solid var(--noir);
+    border-radius: 8px; font-size: 13px; font-family: inherit; background: #fff;
+  }
+  .btn-create {
+    padding: 10px 24px; background: var(--kaki); color: var(--beige);
+    border: 1.5px solid var(--noir); border-radius: 8px; font-size: 13px;
+    font-weight: 600; cursor: pointer; font-family: inherit;
+    box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+  }
+  .result-box {
+    margin-top: 12px; padding: 12px 16px; background: #E8F5E9;
+    border: 1px solid #81C784; border-radius: 8px; font-size: 13px; display: none;
+  }
+  :global(.result-box.visible) { display: block; }
+  .loading { padding: 40px; text-align: center; color: var(--color-text-tertiary); font-size: 14px; }
+</style>
+
+<style is:global>
+  .tenant-table {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    border: 1.5px solid var(--noir); border-radius: 12px; overflow: hidden;
+    box-shadow: 3px 3px 0 rgba(26,26,23,0.35); background: var(--beige);
+  }
+  .tenant-table thead th {
+    background: var(--kaki); color: var(--beige); font-size: 11px;
+    font-weight: 600; text-align: left; padding: 10px 12px;
+    text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .tenant-table tbody tr { transition: background 0.1s; }
+  .tenant-table tbody tr:nth-child(even) { background: rgba(246,241,233,0.5); }
+  .tenant-table tbody tr:hover { background: #F6F1E9; }
+  .tenant-table td { padding: 10px 12px; font-size: 13px; color: var(--noir); border-top: 1px solid var(--color-border); }
+
+  .plan-badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .plan-demo { background: #FFF3E0; color: #B36B00; }
+  .plan-starter { background: #E3ECFA; color: #2E5090; }
+  .plan-pro { background: var(--kaki); color: var(--beige); }
+
+  .module-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 3px; }
+  .dot-on { background: var(--kaki); }
+  .dot-off { background: var(--color-border); }
+
+  .sa-btn-sm {
+    padding: 4px 10px; border-radius: 6px; border: 1px solid var(--noir);
+    font-size: 11px; cursor: pointer; font-family: inherit;
+    background: var(--beige); color: var(--noir); transition: all 0.15s;
+  }
+  .sa-btn-sm:hover { background: var(--beige2); }
+  .sa-btn-sm-kaki { background: var(--kaki); color: var(--beige); }
+</style>
+
+<script>
+  import { api, toast } from '../scripts/api';
+
+  let allTenants: any[] = [];
+
+  document.getElementById('create-header-toggle')!.addEventListener('click', () => {
+    document.getElementById('create-body')!.classList.toggle('open');
+  });
+
+  document.getElementById('btn-create-tenant')!.addEventListener('click', () => {
+    createTenant();
+  });
+
+  async function loadTenants(): Promise<void> {
+    try {
+      const data: any = await api('/api/v1/admin/tenants');
+      allTenants = data.tenants || [];
+      const stats: any = data.stats || {};
+
+      document.getElementById('s-tenants')!.textContent = stats.tenants_active || 0;
+      document.getElementById('s-procs')!.textContent = stats.total_procedures || 0;
+      document.getElementById('s-reminders')!.textContent = stats.total_reminders || 0;
+      document.getElementById('s-articles')!.textContent = stats.articles_7d || 0;
+
+      renderTable();
+    } catch (e: any) {
+      document.getElementById('table-container')!.innerHTML = `<div class="loading">Erreur : ${e.message}</div>`;
+    }
+  }
+
+  function renderTable(): void {
+    if (!allTenants.length) {
+      document.getElementById('table-container')!.innerHTML = '<div class="loading">Aucun tenant.</div>';
+      return;
+    }
+
+    let html: string = `<table class="tenant-table">
+      <thead><tr>
+        <th>Tenant</th><th>Type</th><th>Plan</th><th>Users</th>
+        <th>Procs</th><th>Reminders</th><th>Modules</th><th>Actions</th>
+      </tr></thead><tbody>`;
+
+    for (const t of allTenants) {
+      const planCls: string = t.plan === 'pro' ? 'plan-pro' : t.plan === 'starter' ? 'plan-starter' : 'plan-demo';
+      const procPct: number = t.procedures_count ? Math.round(t.procedures_validated / t.procedures_count * 100) : 0;
+
+      const modules: any[] = [
+        { key: 'procedures_enabled', label: 'Proc', on: t.procedures_enabled },
+        { key: 'newsletter_enabled', label: 'News', on: t.newsletter_enabled },
+        { key: 'alert_email_enabled', label: 'Email', on: t.alert_email_enabled },
+      ];
+      const moduleDots: string = modules.map((m: any) =>
+        `<span class="module-dot ${m.on ? 'dot-on' : 'dot-off'}" title="${m.label}: ${m.on ? 'ON' : 'OFF'}"></span>`
+      ).join('');
+
+      const created: string = t.created_at ? new Date(t.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short' }) : '';
+
+      html += `<tr>
+        <td>
+          <div style="font-weight:600">${t.name}</div>
+          <div style="font-size:11px;color:var(--color-text-tertiary)">${created}</div>
+        </td>
+        <td>${t.entity_type || '\u2014'}</td>
+        <td><span class="plan-badge ${planCls}">${t.plan}</span></td>
+        <td>${t.users_count}</td>
+        <td>${t.procedures_validated}/${t.procedures_count} <span style="font-size:11px;color:var(--color-text-tertiary)">(${procPct}%)</span></td>
+        <td>${t.reminders_pending > 0 ? '<b style="color:#8B2F1F">' + t.reminders_pending + '</b>' : '0'}</td>
+        <td>${moduleDots}</td>
+        <td>
+          <button class="sa-btn-sm" data-toggle-module="${t.id}" data-module="procedures_enabled" data-enabled="${!t.procedures_enabled}">
+            ${t.procedures_enabled ? 'Desact. Proc' : 'Act. Proc'}
+          </button>
+          <button class="sa-btn-sm sa-btn-sm-kaki" data-grant-all="${t.id}">+ Procs</button>
+        </td>
+      </tr>`;
+    }
+
+    html += '</tbody></table>';
+    document.getElementById('table-container')!.innerHTML = html;
+
+    // Bind buttons
+    document.querySelectorAll('[data-toggle-module]').forEach((btn: any) => {
+      btn.addEventListener('click', () => {
+        toggleModule(btn.dataset.toggleModule, btn.dataset.module, btn.dataset.enabled === 'true');
+      });
+    });
+    document.querySelectorAll('[data-grant-all]').forEach((btn: any) => {
+      btn.addEventListener('click', () => {
+        grantAll(btn.dataset.grantAll);
+      });
+    });
+  }
+
+  async function toggleModule(tenantId: string, module: string, enabled: boolean): Promise<void> {
+    try {
+      await api('/api/v1/admin/tenants/toggle-module', {
+        method: 'POST',
+        body: { tenant_id: tenantId, module, enabled },
+      });
+      toast(`Module ${enabled ? 'active' : 'desactive'}`, 'success');
+      loadTenants();
+    } catch (e: any) {
+      toast(e.message, 'error');
+    }
+  }
+
+  async function grantAll(tenantId: string): Promise<void> {
+    try {
+      await api('/api/v1/admin/procedures/grant', {
+        method: 'POST',
+        body: { tenant_id: tenantId, procedure_refs: [] },
+      });
+      toast('19 procedures attribuees', 'success');
+      loadTenants();
+    } catch (e: any) {
+      toast(e.message, 'error');
+    }
+  }
+
+  async function createTenant(): Promise<void> {
+    const name: string = (document.getElementById('c-name') as HTMLInputElement).value.trim();
+    const email: string = (document.getElementById('c-email') as HTMLInputElement).value.trim();
+    if (!name || !email) { toast('Nom et email requis', 'error'); return; }
+
+    try {
+      const result: any = await api('/api/v1/admin/tenants', {
+        method: 'POST',
+        body: {
+          name,
+          entity_type: (document.getElementById('c-type') as HTMLSelectElement).value,
+          admin_email: email,
+          admin_first_name: (document.getElementById('c-fn') as HTMLInputElement).value.trim(),
+          admin_last_name: (document.getElementById('c-ln') as HTMLInputElement).value.trim(),
+          plan: (document.getElementById('c-plan') as HTMLSelectElement).value,
+        },
+      });
+
+      const box: HTMLElement = document.getElementById('create-result')!;
+      box.innerHTML = `<b>Tenant cree !</b><br>
+        ID : ${result.tenant_id}<br>
+        Email : ${result.admin_email}<br>
+        Mot de passe temporaire : <code style="background:#fff;padding:2px 6px;border-radius:4px;font-weight:700">${result.temp_password}</code><br>
+        <span style="font-size:11px;color:#6B6860">Communiquer ce mot de passe au client — il devra le changer a la premiere connexion.</span>`;
+      box.classList.add('visible');
+
+      (document.getElementById('c-name') as HTMLInputElement).value = '';
+      (document.getElementById('c-email') as HTMLInputElement).value = '';
+      (document.getElementById('c-fn') as HTMLInputElement).value = '';
+      (document.getElementById('c-ln') as HTMLInputElement).value = '';
+
+      toast('Client cree avec succes', 'success');
+      loadTenants();
+    } catch (e: any) {
+      toast(e.message, 'error');
+    }
+  }
+
+  loadTenants();
+</script>

@@ -1,0 +1,90 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style is:global>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: #F5F0E8; color: #1A1A17;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 24px;
+    }
+    .auth-card { width: 100%; max-width: 340px; }
+    .auth-brand {
+      font-size: 16px; font-weight: 500; color: #1A1A17;
+      margin-bottom: 36px; text-align: center;
+    }
+    .auth-brand span { color: #6B7A5E; }
+    .auth-subtitle {
+      font-size: 13px; color: #6B6860; text-align: center;
+      margin-bottom: 32px; line-height: 1.6;
+    }
+    .auth-card label {
+      display: block; font-size: 13px; font-weight: 400;
+      color: #6B6860; margin-bottom: 6px;
+    }
+    .auth-card input {
+      width: 100%; padding: 11px 0;
+      border: none; border-bottom: 1px solid rgba(28,28,26,0.11);
+      background: transparent;
+      font-size: 15px; font-family: inherit; color: #1A1A17;
+      outline: none; margin-bottom: 24px; transition: border-color .15s;
+      border-radius: 0;
+    }
+    .auth-card input:focus { border-color: #6B7A5E; }
+    .auth-card input.error { border-color: #DC2626; margin-bottom: 6px; }
+    .auth-btn {
+      width: 100%; padding: 13px;
+      background: #6B7A5E; color: #fff;
+      border: none; border-radius: 6px;
+      font-size: 14px; font-weight: 500;
+      font-family: inherit; cursor: pointer;
+      transition: opacity .15s; margin-top: 8px;
+    }
+    .auth-btn:hover { opacity: .85; }
+    .auth-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .auth-error {
+      font-size: 12px; color: #DC2626;
+      margin-bottom: 16px; display: none;
+    }
+    .auth-error.show { display: block; }
+    .auth-msg {
+      font-size: 13px; text-align: center; margin-top: 16px;
+      line-height: 1.6; display: none;
+    }
+    .auth-msg.success { display: block; color: #4A5240; }
+    .auth-msg.error { display: block; color: #DC2626; }
+    .auth-footer {
+      margin-top: 24px; text-align: center;
+      font-size: 12px; color: #6B6860;
+    }
+    .auth-footer a { color: #6B7A5E; text-decoration: none; }
+    .auth-spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white; border-radius: 50%;
+      animation: auth-spin .8s linear infinite; margin-right: 6px; vertical-align: middle;
+    }
+    @keyframes auth-spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="auth-card">
+    <div class="auth-brand">Early<span>Watch</span></div>
+    <slot />
+  </div>
+</body>
+</html>

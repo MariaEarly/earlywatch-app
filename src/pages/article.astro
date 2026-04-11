@@ -1,0 +1,218 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+const base = import.meta.env.BASE_URL;
+---
+
+<AppLayout title="Early Watch — Article">
+  <div class="content-inner" id="content">
+    <div class="loading-overlay"><div class="spinner"></div> Chargement de l'article...</div>
+  </div>
+</AppLayout>
+
+<script>
+  import { api, formatDate, statusBadge, actionBadge, scoreBar, toast, renderMarkdown, initExpandables } from '../scripts/api';
+
+  const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
+
+  const articleId: string | null = new URLSearchParams(window.location.search).get('id');
+  if (!articleId) { window.location.href = `${BASE}dashboard`; throw new Error('no id'); }
+
+  let article: any = null;
+  let actionResult: any = null;
+
+  function escHtml(s: string): string {
+    if (!s) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  async function init(): Promise<void> {
+    try {
+      article = await api(`/api/v1/articles/${articleId}`);
+    } catch (e: any) {
+      document.getElementById('content')!.innerHTML =
+        `<div class="empty-state"><p>${e.message}</p><a href="${BASE}dashboard" class="btn btn-secondary" style="margin-top:12px">Retour</a></div>`;
+      return;
+    }
+    render();
+  }
+
+  function render(): void {
+    const a: any = article;
+    document.title = `Early Watch \u2014 ${a.title || 'Article'}`;
+
+    document.getElementById('content')!.innerHTML = `
+      <a href="${BASE}dashboard" class="btn btn-ghost btn-sm" style="margin-bottom:16px">&larr; Retour a l'inbox</a>
+
+      <div class="card" style="padding:20px; margin-bottom:16px">
+        <div class="article-meta" style="margin-bottom:8px">
+          <span>${a.source_name || 'Source inconnue'}</span>
+          <span>&middot;</span>
+          <span>${formatDate(a.published_at || a.created_at)}</span>
+          ${statusBadge(a.status)}
+        </div>
+        <h1 style="font-size:18px; margin-bottom:8px">${escHtml(a.title || 'Sans titre')}</h1>
+        ${scoreBar(a.score)}
+        <p style="margin-top:12px; font-size:13px; color:var(--color-text-secondary); line-height:1.7">
+          ${escHtml(a.summary || a.content || 'Aucun contenu disponible.')}
+        </p>
+        ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="margin-top:12px">Voir la source &rarr;</a>` : ''}
+
+        <div style="margin-top:16px; padding-top:16px; border-top:0.5px solid var(--color-border-tertiary)">
+          <div class="flex gap-8">
+            <button class="btn btn-sm btn-success" data-triage-action="reviewed">Valider</button>
+            <button class="btn btn-sm btn-secondary" data-triage-action="pending_review">En revue</button>
+            <button class="btn btn-sm btn-danger" data-triage-action="dismissed">Ignorer</button>
+          </div>
+        </div>
+      </div>
+
+      ${a.detected_action_type ? renderActionPanel(a) : ''}
+
+      <div id="action-result"></div>
+    `;
+
+    document.querySelectorAll('[data-triage-action]').forEach((btn: any) => {
+      btn.addEventListener('click', () => triageArticle(btn.dataset.triageAction));
+    });
+
+    const execBtn: HTMLElement | null = document.getElementById('executeBtn');
+    if (execBtn) {
+      execBtn.addEventListener('click', executeAction);
+    }
+  }
+
+  function renderActionPanel(a: any): string {
+    const typeLabels: any = {
+      sanctions_update: 'Mise \u00e0 jour des sanctions',
+      doctrine_update: '\u00c9volution de la doctrine',
+      obligation_update: 'Nouvelles obligations',
+    };
+    return `
+      <div class="action-panel" style="margin-bottom:16px">
+        <div class="flex items-center justify-between" style="margin-bottom:12px">
+          <div>
+            <h3 style="color:var(--color-accent-text)">Action d\u00e9tect\u00e9e</h3>
+            <p class="text-sm" style="color:var(--color-accent); margin-top:2px">
+              ${typeLabels[a.detected_action_type] || a.detected_action_type}
+            </p>
+          </div>
+          ${actionBadge(a.detected_action_type)}
+        </div>
+        <button class="btn btn-primary" id="executeBtn">
+          Ex\u00e9cuter l'action
+        </button>
+      </div>`;
+  }
+
+  async function executeAction(): Promise<void> {
+    const btn: HTMLButtonElement = document.getElementById('executeBtn') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:1.5px"></div> Ex\u00e9cution...';
+
+    try {
+      actionResult = await api(`/api/v1/articles/${articleId}/execute-action`, { method: 'POST' });
+      renderActionResult();
+      toast('Action ex\u00e9cut\u00e9e');
+    } catch (e: any) {
+      toast(e.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Ex\u00e9cuter l\'action';
+    }
+  }
+
+  function renderActionResult(): void {
+    if (!actionResult) return;
+    const r: any = actionResult;
+    const output: any = r.output || {};
+
+    let sections: string = '';
+
+    if (output.entities) {
+      sections += expandableSection('Entit\u00e9s d\u00e9tect\u00e9es', `
+        <ul>${output.entities.map((e: string) => `<li>${escHtml(e)}</li>`).join('')}</ul>
+        ${output.source_url ? `<p style="margin-top:8px"><a href="${output.source_url}" target="_blank">Source officielle</a></p>` : ''}
+      `);
+    }
+
+    if (output.obligations) {
+      sections += expandableSection('Obligations extraites', `
+        ${output.obligations.map((o: any) => `
+          <div style="padding:8px 0; border-bottom:0.5px solid var(--color-border-tertiary)">
+            <strong>Article ${escHtml(o.article_number || '?')}</strong>
+            ${o.lien_legifrance ? `<a href="${o.lien_legifrance}" target="_blank" class="text-sm text-accent" style="margin-left:8px">Legifrance</a>` : ''}
+            <ul style="margin-top:4px">${(o.relevant_paragraphs || []).map((p: string) => `<li class="text-sm">${escHtml(p)}</li>`).join('')}</ul>
+          </div>
+        `).join('')}
+      `);
+    }
+
+    if (output.diff_sections) {
+      sections += expandableSection('Diff doctrine', `
+        ${output.diff_sections.map((d: any) => `
+          <div style="padding:6px 0">
+            <span class="badge ${d.change_type === 'added' ? 'badge-success' : d.change_type === 'removed' ? 'badge-danger' : 'badge-warning'}">
+              ${d.change_type}
+            </span>
+            <pre style="font-size:12px; margin-top:4px; white-space:pre-wrap; background:var(--color-background-tertiary); padding:8px; border-radius:4px">${escHtml(d.content || '')}</pre>
+          </div>
+        `).join('')}
+      `);
+    }
+
+    if (output.current_content_preview) {
+      sections += expandableSection('Contenu actuel', `<div class="text-sm">${escHtml(output.current_content_preview)}</div>`);
+    }
+
+    if (r.source_url) {
+      sections += expandableSection('Sources cit\u00e9es', `<a href="${r.source_url}" target="_blank">${r.source_url}</a>`);
+    }
+
+    if (output.provenance) {
+      sections += expandableSection('Provenance', `<p class="text-sm">${escHtml(output.provenance)}</p>`);
+    }
+
+    document.getElementById('action-result')!.innerHTML = `
+      <div class="card" style="padding:20px; margin-bottom:16px">
+        <div class="flex items-center justify-between" style="margin-bottom:16px">
+          <h2>R\u00e9sultat de l'action</h2>
+          ${statusBadge(r.status)}
+        </div>
+        ${sections}
+        <div class="warning-box" style="margin-top:16px">
+          <span>&#9888;</span>
+          <div>
+            <strong>Avertissement Compliance Officer</strong><br>
+            ${escHtml(r.warning || r.confidence_note || 'Ce contenu est g\u00e9n\u00e9r\u00e9 automatiquement. Validation obligatoire avant usage.')}
+          </div>
+        </div>
+      </div>`;
+
+    initExpandables();
+    const first: Element | null = document.querySelector('#action-result .expandable');
+    if (first) first.classList.add('open');
+  }
+
+  function expandableSection(title: string, content: string): string {
+    return `
+      <div class="expandable">
+        <button class="expandable-header">
+          <span>${title}</span>
+          <span class="arrow">&#9654;</span>
+        </button>
+        <div class="expandable-body">${content}</div>
+      </div>`;
+  }
+
+  async function triageArticle(status: string): Promise<void> {
+    try {
+      await api(`/api/v1/articles/${articleId}/triage`, { method: 'PATCH', body: { status } });
+      article.status = status;
+      render();
+      toast(`Article ${status === 'reviewed' ? 'valid\u00e9' : status === 'dismissed' ? 'ignor\u00e9' : 'en revue'}`);
+    } catch (e: any) {
+      toast(e.message, 'error');
+    }
+  }
+
+  init();
+</script>

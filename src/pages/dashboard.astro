@@ -1,0 +1,319 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+const base = import.meta.env.BASE_URL;
+---
+
+<AppLayout title="Early Watch — Dashboard" activePage="dashboard">
+  <div class="flex">
+    <aside class="sidebar" id="sidebar-left"></aside>
+    <main class="content-main" id="article-list">
+      <div class="loading-overlay"><div class="spinner"></div> Chargement des articles...</div>
+    </main>
+    <aside class="sidebar sidebar-right" id="sidebar-right"></aside>
+  </div>
+</AppLayout>
+
+<script>
+  import { api, formatDate, statusBadge, actionBadge, scoreBar, toast, getUser } from '../scripts/api';
+
+  const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
+
+  let articles: any[] = [];
+  let sources: any[] = [];
+  let activeFilter: string = 'all';
+  let scoreFilter: string = 'all';
+  let newsletterCounts: any = null;
+
+  function newsletterEnabled(): boolean {
+    return !!getUser()?.tenant_newsletter_enabled;
+  }
+
+  async function init(): Promise<void> {
+    try {
+      const [articlesData, sourcesData, countsData]: any[] = await Promise.all([
+        api('/api/v1/articles'),
+        api('/api/v1/sources/health').catch(() => []),
+        newsletterEnabled() ? api('/api/v1/articles/newsletter/counts').catch(() => null) : Promise.resolve(null),
+      ]);
+      articles = Array.isArray(articlesData) ? articlesData : (articlesData?.items || []);
+      sources = Array.isArray(sourcesData) ? sourcesData : (sourcesData?.items || []);
+      newsletterCounts = countsData;
+    } catch (e: any) {
+      document.getElementById('article-list')!.innerHTML =
+        `<div class="empty-state"><div class="icon">!</div><p>${e.message}</p></div>`;
+      return;
+    }
+
+    renderSidebar();
+    renderArticles();
+    renderRightPanel();
+  }
+
+  function renderSidebar(): void {
+    const counts: any = { all: articles.length, nouveau: 0, quotidien: 0, hebdo: 0, ignorer: 0 };
+    articles.forEach((a: any) => { if (counts[a.status] !== undefined) counts[a.status]++; });
+
+    const scoreCounts: any = { all: articles.length, high: 0, med: 0, low: 0 };
+    articles.forEach((a: any) => {
+      if ((a.score || 0) >= 50) scoreCounts.high++;
+      else if ((a.score || 0) >= 25) scoreCounts.med++;
+      else scoreCounts.low++;
+    });
+
+    const srcCounts: any = {};
+    articles.forEach((a: any) => {
+      const s: string = a.source_name || 'Autre';
+      srcCounts[s] = (srcCounts[s] || 0) + 1;
+    });
+
+    document.getElementById('sidebar-left')!.innerHTML = `
+      <div class="sidebar-section">
+        <h3>Statut</h3>
+        <div class="filter-group">
+          ${filterBtn('all', 'Tous', counts.all)}
+          ${filterBtn('nouveau', 'Nouveaux', counts.nouveau)}
+          ${filterBtn('quotidien', 'Quotidien', counts.quotidien)}
+          ${filterBtn('hebdo', 'Hebdo', counts.hebdo)}
+          ${filterBtn('ignorer', 'Ignor\u00e9s', counts.ignorer)}
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Score</h3>
+        <div class="filter-group">
+          ${scoreFilterBtn('all', 'Tous', scoreCounts.all)}
+          ${scoreFilterBtn('high', 'Prioritaire (50+)', scoreCounts.high)}
+          ${scoreFilterBtn('med', 'Moyen (25-49)', scoreCounts.med)}
+          ${scoreFilterBtn('low', 'Faible (<25)', scoreCounts.low)}
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Source</h3>
+        <div class="filter-group" style="max-height:200px;overflow-y:auto">
+          ${Object.entries(srcCounts).sort((a: any, b: any) => b[1] - a[1]).slice(0, 10).map(([name, count]: any) =>
+            `<div class="filter-item text-sm"><span style="flex:1;overflow:hidden;text-overflow:ellipsis">${name}</span><span class="filter-count">${count}</span></div>`
+          ).join('')}
+        </div>
+      </div>`;
+
+    document.querySelectorAll('[data-filter]').forEach((el: any) => {
+      el.addEventListener('click', () => {
+        activeFilter = el.dataset.filter;
+        renderSidebar();
+        renderArticles();
+      });
+    });
+    document.querySelectorAll('[data-score-filter]').forEach((el: any) => {
+      el.addEventListener('click', () => {
+        scoreFilter = el.dataset.scoreFilter;
+        renderSidebar();
+        renderArticles();
+      });
+    });
+  }
+
+  function filterBtn(key: string, label: string, count: number): string {
+    const active: string = activeFilter === key ? 'active' : '';
+    return `<button class="filter-item ${active}" data-filter="${key}">
+      <span>${label}</span><span class="filter-count">${count}</span>
+    </button>`;
+  }
+  function scoreFilterBtn(key: string, label: string, count: number): string {
+    const active: string = scoreFilter === key ? 'active' : '';
+    return `<button class="filter-item ${active}" data-score-filter="${key}">
+      <span>${label}</span><span class="filter-count">${count}</span>
+    </button>`;
+  }
+
+  function renderArticles(): void {
+    let filtered: any[] = [...articles];
+    if (activeFilter !== 'all') {
+      filtered = filtered.filter((a: any) => a.status === activeFilter);
+    }
+    if (scoreFilter === 'high') filtered = filtered.filter((a: any) => (a.score || 0) >= 50);
+    else if (scoreFilter === 'med') filtered = filtered.filter((a: any) => (a.score || 0) >= 25 && (a.score || 0) < 50);
+    else if (scoreFilter === 'low') filtered = filtered.filter((a: any) => (a.score || 0) < 25);
+
+    if (filtered.length === 0) {
+      document.getElementById('article-list')!.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">&#128196;</div>
+          <p>Aucun article dans cette vue</p>
+        </div>`;
+      return;
+    }
+
+    document.getElementById('article-list')!.innerHTML = filtered.map((a: any) => `
+      <div class="article-card" data-article-nav="${a.id}">
+        <div class="article-meta">
+          <span>${a.source_name || 'Source inconnue'}</span>
+          <span>&middot;</span>
+          <span>${formatDate(a.published_at || a.created_at)}</span>
+          ${a.detected_action_type ? actionBadge(a.detected_action_type) : ''}
+          <span style="margin-left:auto">${statusBadge(a.status)}</span>
+        </div>
+        <div class="article-title">${escHtml(a.title || 'Sans titre')}</div>
+        ${scoreBar(a.score)}
+        <div class="article-actions">
+          <button class="btn btn-sm btn-triage${a.status === 'quotidien' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="quotidien">Quotidien</button>
+          <button class="btn btn-sm btn-triage${a.status === 'hebdo' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo</button>
+          <button class="btn btn-sm btn-triage${a.status === 'ignorer' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="ignorer">Ignorer</button>
+          ${newsletterEnabled() && (a.status === 'quotidien' || a.status === 'hebdo') ? `
+            <button class="btn btn-sm ${a.published_to_newsletter ? 'btn-primary' : 'btn-secondary'}"
+                    data-publish="${a.id}"
+                    ${a.published_to_newsletter ? 'disabled title="Publi\u00e9 le ' + formatDate(a.published_to_newsletter_at) + '"' : ''}>
+              ${a.published_to_newsletter ? '\u2713 Publi\u00e9' : 'Publier'}
+            </button>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    // Bind events
+    document.querySelectorAll('[data-article-nav]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        if (e.target.closest('button')) return;
+        window.location.href = `${BASE}article?id=${el.dataset.articleNav}`;
+      });
+    });
+    document.querySelectorAll('[data-triage]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        e.stopPropagation();
+        triage(el.dataset.triage, el.dataset.triageStatus);
+      });
+    });
+    document.querySelectorAll('[data-publish]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        e.stopPropagation();
+        publishArticle(el.dataset.publish);
+      });
+    });
+  }
+
+  async function publishArticle(id: string): Promise<void> {
+    try {
+      const res: any = await api(`/api/v1/articles/${id}/published`, { method: 'POST', body: {} });
+      const idx: number = articles.findIndex((a: any) => a.id === id);
+      if (idx !== -1) {
+        articles[idx].published_to_newsletter = true;
+        articles[idx].published_to_newsletter_at = res.published_to_newsletter_at;
+      }
+      if (newsletterEnabled()) {
+        newsletterCounts = await api('/api/v1/articles/newsletter/counts').catch(() => newsletterCounts);
+      }
+      renderArticles();
+      renderRightPanel();
+      toast('Article publi\u00e9 dans la newsletter');
+    } catch (e: any) {
+      toast(e.message, 'error');
+    }
+  }
+
+  async function triage(id: string, status: string): Promise<void> {
+    try {
+      await api(`/api/v1/articles/${id}/triage`, { method: 'PATCH', body: { status } });
+      const idx: number = articles.findIndex((a: any) => a.id === id);
+      if (idx !== -1) articles[idx].status = status;
+      renderSidebar();
+      renderArticles();
+      toast(`Article \u2192 ${status === 'quotidien' ? 'Quotidien' : status === 'hebdo' ? 'Hebdo' : 'Ignor\u00e9'}`);
+    } catch (e: any) {
+      toast(e.message, 'error');
+    }
+  }
+
+  function renderRightPanel(): void {
+    const now: Date = new Date();
+    const today: Date = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo: Date = new Date(today.getTime() - 7 * 86400000);
+
+    const daily: number = articles.filter((a: any) => new Date(a.created_at) >= today).length;
+    const weekly: number = articles.filter((a: any) => new Date(a.created_at) >= weekAgo).length;
+
+    const srcList: any[] = Array.isArray(sources) ? sources : [];
+
+    const nc: any = newsletterCounts;
+    const newsletterBlock: string = (newsletterEnabled() && nc) ? `
+      <div class="sidebar-section">
+        <h3>Newsletter</h3>
+        <div class="stat-card">
+          <div class="stat-value">${nc.quotidien_published} / ${nc.quotidien_total}</div>
+          <div class="stat-label">Quotidien publi\u00e9</div>
+        </div>
+        <div class="stat-card" style="margin-top:8px">
+          <div class="stat-value">${nc.hebdo_published} / ${nc.hebdo_total}</div>
+          <div class="stat-label">Hebdo publi\u00e9</div>
+        </div>
+        <div class="flex flex-col gap-4" style="margin-top:12px">
+          <button class="btn btn-secondary btn-sm" data-export="markdown" data-export-type="quotidien">Export Markdown — Quotidien</button>
+          <button class="btn btn-secondary btn-sm" data-export="markdown" data-export-type="hebdo">Export Markdown — Hebdo</button>
+        </div>
+      </div>` : '';
+
+    document.getElementById('sidebar-right')!.innerHTML = `
+      ${newsletterBlock}
+      <div class="sidebar-section">
+        <h3>Quotidien</h3>
+        <div class="stat-card">
+          <div class="stat-value">${daily}</div>
+          <div class="stat-label">articles aujourd'hui</div>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Hebdomadaire</h3>
+        <div class="stat-card">
+          <div class="stat-value">${weekly}</div>
+          <div class="stat-label">articles cette semaine</div>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Export</h3>
+        <div class="flex flex-col gap-4">
+          <button class="btn btn-secondary btn-sm" data-export="json">Export JSON</button>
+          <button class="btn btn-secondary btn-sm" data-export="markdown">Export Markdown</button>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Sources</h3>
+        <div id="sources-health">
+          ${srcList.length ? srcList.slice(0, 12).map((s: any) => `
+            <div class="source-row">
+              <span class="flex items-center">
+                <span class="source-dot ${s.status === 'OK' || s.status === 'ok' ? 'ok' : s.status === 'warning' ? 'warn' : 'err'}"></span>
+                <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name || s.slug}</span>
+              </span>
+              <span class="text-xs text-tertiary">${s.article_count || 0}</span>
+            </div>`).join('') : '<p class="text-sm text-tertiary">Aucune source</p>'}
+        </div>
+      </div>`;
+
+    document.querySelectorAll('[data-export]').forEach((el: any) => {
+      el.addEventListener('click', () => {
+        exportArticles(el.dataset.export, el.dataset.exportType);
+      });
+    });
+  }
+
+  async function exportArticles(format: string, type?: string): Promise<void> {
+    try {
+      let path: string = format === 'markdown' ? '/api/v1/articles/export/markdown' : '/api/v1/articles/export';
+      if (type) path += `?type=${type}`;
+      const data: any = await api(path);
+      const blob: Blob = new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], { type: 'text/plain' });
+      const url: string = URL.createObjectURL(blob);
+      const a: HTMLAnchorElement = document.createElement('a');
+      a.href = url;
+      const suffix: string = type ? `-${type}` : '';
+      a.download = `earlywatch-export${suffix}.${format === 'markdown' ? 'md' : 'json'}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('Export t\u00e9l\u00e9charg\u00e9');
+    } catch (e: any) {
+      toast(e.message, 'error');
+    }
+  }
+
+  function escHtml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  init();
+</script>

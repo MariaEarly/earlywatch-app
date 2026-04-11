@@ -1,0 +1,83 @@
+---
+interface Props {
+  activePage?: string;
+}
+const { activePage = '' } = Astro.props;
+const base = import.meta.env.BASE_URL;
+
+const links = [
+  { href: 'conformite', label: 'Conformite' },
+  { href: 'dashboard', label: 'Inbox' },
+  { href: 'procedure', label: 'Procedures' },
+  { href: 'mes-procedures', label: 'Mes Procedures' },
+  { href: 'bibliotheque', label: 'Bibliotheque' },
+  { href: 'situations', label: 'Fiches Reflexes' },
+  { href: 'roadmap', label: 'Roadmap' },
+  { href: 'pays-risque', label: 'Pays a risque' },
+  { href: 'settings', label: 'Parametres' },
+  { href: 'controle', label: 'Controle', hasBadge: true },
+];
+---
+
+<header class="header">
+  <div class="flex items-center gap-16">
+    <a href={`${base}conformite`} class="logo">Early <span>Watch</span></a>
+    <nav class="flex gap-4">
+      {links.map(link => (
+        <a
+          href={`${base}${link.href}`}
+          class:list={['btn', 'btn-ghost', 'btn-sm', { active: activePage === link.href }]}
+          style={link.hasBadge ? 'position:relative' : undefined}
+        >
+          {link.label}
+          {link.hasBadge && (
+            <span
+              id="nav-badge-ctrl"
+              style="display:none;position:absolute;top:-4px;right:-10px;background:#8B2F1F;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;line-height:18px;text-align:center;border-radius:9px;padding:0 5px;border:1.5px solid var(--noir)"
+            />
+          )}
+        </a>
+      ))}
+    </nav>
+  </div>
+  <div class="flex items-center gap-12">
+    <span id="nav-tenant" class="badge badge-accent" style="display:none"></span>
+    <a id="nav-avatar" href={`${base}account`} class="avatar" style="text-decoration:none">?</a>
+  </div>
+</header>
+
+<script>
+  import { getUser, loadReminderBadge } from '../scripts/api';
+
+  function initNav() {
+    const user = getUser();
+    if (!user) return;
+
+    const initials = (user.first_name?.[0] || '') + (user.last_name?.[0] || '');
+    const avatar = document.getElementById('nav-avatar');
+    if (avatar) {
+      avatar.textContent = initials || '?';
+      avatar.title = `${user.email || ''} — Mon compte`;
+    }
+
+    const tenant = document.getElementById('nav-tenant');
+    if (tenant && user.tenant_id) {
+      tenant.textContent = 'Demo';
+      tenant.style.display = 'inline-flex';
+    }
+
+    loadReminderBadge();
+  }
+
+  // Run on initial load and on Astro page transitions
+  initNav();
+  document.addEventListener('astro:after-swap', initNav);
+</script>
+
+<style>
+  .btn-ghost.active {
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+    font-weight: 500;
+  }
+</style>

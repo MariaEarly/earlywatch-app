@@ -1,0 +1,219 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+const base = import.meta.env.BASE_URL;
+---
+
+<AppLayout title="Roadmap Reglementaire — Early Watch" activePage="roadmap">
+  <div class="container" style="max-width:1000px;margin:0 auto;padding:32px 24px;">
+    <div class="page-title">Roadmap Reglementaire</div>
+    <div class="page-sub">Calendrier des echeances LCB-FT — AMLR · DORA · AI Act · MiCA</div>
+
+    <div class="stats-row" id="stats-row"></div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#8B2F1F"></div> Critique</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--terra)"></div> Eleve</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--kaki)"></div> Moyen</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--border)"></div> Passe</div>
+    </div>
+
+    <div class="filters" id="filters">
+      <button class="fbtn active" data-f="reg" data-v="">Toutes</button>
+      <button class="fbtn" data-f="reg" data-v="AMLR">AMLR</button>
+      <button class="fbtn" data-f="reg" data-v="DORA">DORA</button>
+      <button class="fbtn" data-f="reg" data-v="AI Act">AI Act</button>
+      <button class="fbtn" data-f="reg" data-v="MiCA">MiCA</button>
+    </div>
+
+    <div id="timeline" class="timeline">
+      <div class="loading">Chargement de la roadmap...</div>
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .page-title{font-size:22px;font-weight:600;margin-bottom:4px;}
+  .page-sub{font-size:14px;color:var(--muted);margin-bottom:28px;}
+
+  .stats-row{display:flex;gap:12px;margin-bottom:28px;}
+  .legend{display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+  .legend-dot{width:10px;height:10px;border-radius:50%;}
+
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+  .fbtn{padding:6px 14px;border-radius:20px;border:1.5px solid var(--noir);background:var(--beige);font-size:13px;color:var(--noir);cursor:pointer;font-family:inherit;transition:all .15s;}
+  .fbtn:hover{background:var(--beige2);}
+  .fbtn.active{background:var(--kaki);border-color:var(--kaki);color:var(--white);}
+
+  .timeline{position:relative;padding-left:28px;}
+  .timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border);}
+
+  .loading{text-align:center;padding:60px;color:var(--muted);font-size:14px;}
+
+  @media(max-width:700px){
+    .stats-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  }
+</style>
+
+<style is:global>
+  .rm-stat{flex:1;background:var(--white);border:1.5px solid var(--noir);border-radius:12px;padding:16px 18px;box-shadow:3px 3px 0 var(--noir);}
+  .rm-stat-val{font-size:28px;font-weight:600;line-height:1;margin-bottom:4px;}
+  .rm-stat-lbl{font-size:12px;color:var(--muted);}
+  .rm-stat.red .rm-stat-val{color:#8B2F1F;}
+  .rm-stat.orange .rm-stat-val{color:var(--terra);}
+  .rm-stat.kaki .rm-stat-val{color:var(--kaki);}
+
+  .tl-year{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin:28px 0 14px -28px;}
+
+  .tl-item{position:relative;margin-bottom:12px;}
+  .tl-dot{position:absolute;left:-24px;top:18px;width:12px;height:12px;border-radius:50%;border:2px solid var(--white);z-index:1;}
+  .tl-dot.critical{background:#8B2F1F;}
+  .tl-dot.high{background:var(--terra);}
+  .tl-dot.medium{background:var(--kaki);}
+  .tl-dot.low{background:#059669;}
+  .tl-dot.passed{background:var(--border);}
+
+  .rm-card{background:var(--white);border:1.5px solid var(--noir);border-radius:12px;padding:18px 20px;transition:all .15s;cursor:pointer;box-shadow:3px 3px 0 var(--noir);}
+  .rm-card:hover{border-color:var(--kaki);}
+  .rm-card.passed{opacity:.55;}
+  .rm-card.imminent{border-left:4px solid #8B2F1F;}
+  .rm-card.soon{border-left:4px solid var(--terra);}
+
+  .rm-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
+  .rm-card-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .rm-card-ref{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--terra);background:var(--terra-l, #F2DDD5);padding:3px 7px;border-radius:3px;}
+  .rm-card-reg{font-size:12px;font-weight:500;color:var(--noir);}
+  .rm-card-type{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
+
+  .rm-card-date{text-align:right;flex-shrink:0;}
+  .date-main{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--noir);}
+  .date-delta{font-size:11px;margin-top:2px;}
+  .date-delta.imminent{color:#8B2F1F;}
+  .date-delta.soon{color:var(--terra);}
+  .date-delta.upcoming{color:var(--muted);}
+  .date-delta.passed{color:var(--muted);}
+
+  .rm-card-title{font-size:14px;font-weight:600;line-height:1.35;margin-bottom:6px;}
+  .rm-card-desc{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:10px;display:none;}
+  .rm-card.open .rm-card-desc{display:block;}
+
+  .rm-card-bottom{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .proc-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 7px;border-radius:3px;background:var(--terra-l, #F2DDD5);color:var(--terra);border:1px solid rgba(196,96,58,.2);}
+  .fresh-badge{font-size:11px;color:var(--terra);margin-left:auto;}
+</style>
+
+<script>
+  import { api } from '../scripts/api';
+
+  let allDeadlines: any[] = [];
+  let regFilter: string = '';
+  let openIds: Set<string> = new Set();
+
+  async function load(): Promise<void> {
+    try {
+      const d: any = await api('/api/v1/deadlines?include_passed=true');
+      allDeadlines = d.deadlines || [];
+      renderStats(d.stats || {});
+      render();
+    } catch (e: any) {
+      document.getElementById('timeline')!.innerHTML = '<div class="loading">Erreur de chargement.</div>';
+    }
+  }
+
+  function renderStats(s: any): void {
+    document.getElementById('stats-row')!.innerHTML = `
+      <div class="rm-stat red"><div class="rm-stat-val">${s.critical || 0}</div><div class="rm-stat-lbl">Echeances critiques a venir</div></div>
+      <div class="rm-stat orange"><div class="rm-stat-val">${s.imminent || 0}</div><div class="rm-stat-lbl">Dans les 30 prochains jours</div></div>
+      <div class="rm-stat kaki"><div class="rm-stat-val">${s.upcoming || 0}</div><div class="rm-stat-lbl">Echeances a venir</div></div>`;
+  }
+
+  function getFiltered(): any[] {
+    return allDeadlines.filter((d: any) => !regFilter || d.regulation === regFilter);
+  }
+
+  function render(): void {
+    const items: any[] = getFiltered();
+    const tl: HTMLElement = document.getElementById('timeline')!;
+    if (!items.length) { tl.innerHTML = '<div class="loading">Aucune echeance pour ce filtre.</div>'; return; }
+    const byYear: any = {};
+    items.forEach((d: any) => {
+      const yr: string = d.deadline_date.slice(0, 4);
+      if (!byYear[yr]) byYear[yr] = [];
+      byYear[yr].push(d);
+    });
+    let html: string = '';
+    Object.keys(byYear).sort().forEach((yr: string) => {
+      const isCurrent: boolean = yr === new Date().getFullYear().toString();
+      html += `<div class="tl-year">${yr}${isCurrent ? ' \u2014 en cours' : ''}</div>`;
+      byYear[yr].forEach((d: any) => { html += renderItem(d); });
+    });
+    tl.innerHTML = html;
+    bindItemClicks();
+  }
+
+  function deltaLabel(d: any): string {
+    if (d.status === 'passed') return `<span class="date-delta passed">Passee</span>`;
+    const delta: number = d.delta_days;
+    if (delta <= 0) return `<span class="date-delta imminent">Aujourd'hui</span>`;
+    if (delta <= 30) return `<span class="date-delta imminent">Dans ${delta}j</span>`;
+    if (delta <= 90) return `<span class="date-delta soon">Dans ${delta}j</span>`;
+    return `<span class="date-delta upcoming">Dans ~${Math.round(delta / 30)} mois</span>`;
+  }
+
+  function renderItem(d: any): string {
+    const isOpen: boolean = openIds.has(d.reference);
+    const dotClass: string = d.status === 'passed' ? 'passed' : d.priority;
+    const cardClass: string = d.status === 'passed' ? 'passed' : d.urgency === 'imminent' ? 'imminent' : d.urgency === 'soon' ? 'soon' : '';
+    const dateStr: string = new Date(d.deadline_date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const procs: string = (d.impacted_procedures || []).slice(0, 4).map((p: string) => `<span class="proc-chip">${p}</span>`).join('');
+    const fresh: string = d.articles_count_30d > 0 ? `<span class="fresh-badge">${d.articles_count_30d} article${d.articles_count_30d > 1 ? 's' : ''} recent${d.articles_count_30d > 1 ? 's' : ''}</span>` : '';
+    const desc: string = isOpen && d.description
+      ? `<div class="rm-card-desc" style="display:block">${d.description}${d.notes ? `<br><br><strong>Note :</strong> ${d.notes}` : ''}${d.source_url ? `<br><a href="${d.source_url}" target="_blank" style="color:var(--kaki);font-size:12px;">Source officielle</a>` : ''}</div>`
+      : `<div class="rm-card-desc">${d.description || ''}</div>`;
+    return `
+    <div class="tl-item">
+      <div class="tl-dot ${dotClass}"></div>
+      <div class="rm-card ${cardClass} ${isOpen ? 'open' : ''}" data-toggle-item="${d.reference}">
+        <div class="rm-card-top">
+          <div class="rm-card-left">
+            <span class="rm-card-ref">${d.reference}</span>
+            <span class="rm-card-reg">${d.regulation}</span>
+            <span class="rm-card-type">${d.deadline_type_label || d.deadline_type}</span>
+          </div>
+          <div class="rm-card-date">
+            <div class="date-main">${dateStr}</div>
+            ${deltaLabel(d)}
+          </div>
+        </div>
+        <div class="rm-card-title">${d.title}</div>
+        ${desc}
+        <div class="rm-card-bottom">${procs}${fresh}</div>
+      </div>
+    </div>`;
+  }
+
+  function bindItemClicks(): void {
+    document.querySelectorAll('[data-toggle-item]').forEach((card: any) => {
+      card.addEventListener('click', () => {
+        toggleItem(card.dataset.toggleItem);
+      });
+    });
+  }
+
+  function toggleItem(ref: string): void {
+    if (openIds.has(ref)) openIds.delete(ref);
+    else openIds.add(ref);
+    render();
+  }
+
+  document.querySelectorAll('.fbtn').forEach((btn: any) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-f="reg"]').forEach((b: any) => b.classList.remove('active'));
+      btn.classList.add('active');
+      regFilter = btn.dataset.v;
+      render();
+    });
+  });
+
+  load();
+</script>

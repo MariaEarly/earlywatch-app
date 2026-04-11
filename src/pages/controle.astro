@@ -1,0 +1,402 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+const base = import.meta.env.BASE_URL;
+---
+
+<AppLayout title="Controle — Early Watch" activePage="controle">
+  <div class="ctrl-layout">
+    <div class="ctrl-main">
+      <div class="page-title">Controle reglementaire</div>
+      <div class="page-subtitle">Actions a prendre suite aux evolutions reglementaires recentes</div>
+
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card critical">
+          <div class="stat-value" id="count-critical">--</div>
+          <div class="stat-label">Critique</div>
+        </div>
+        <div class="stat-card high">
+          <div class="stat-value" id="count-high">--</div>
+          <div class="stat-label">Eleve</div>
+        </div>
+        <div class="stat-card medium">
+          <div class="stat-value" id="count-medium">--</div>
+          <div class="stat-label">Moyen</div>
+        </div>
+        <div class="stat-card total-card">
+          <div class="stat-value" id="count-total">--</div>
+          <div class="stat-label">Total actifs</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="filters">
+          <button class="filter-btn active" data-sev="">Tous</button>
+          <button class="filter-btn" data-sev="critical">Critique</button>
+          <button class="filter-btn" data-sev="high">Eleve</button>
+          <button class="filter-btn" data-sev="medium">Moyen</button>
+        </div>
+        <button class="btn-mark-all" id="btn-mark-all">Tout marquer comme vu</button>
+      </div>
+
+      <div id="reminders-list" class="reminders-list">
+        <div class="loading">Chargement des reminders...</div>
+      </div>
+
+      <div style="margin-top:40px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--terra);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Analyse des textes</div>
+            <h2 style="font-size:20px;font-weight:600;color:var(--noir);letter-spacing:-.3px;">Gap Analysis — Evolutions reglementaires N vs N-1</h2>
+          </div>
+          <div style="font-size:12px;color:var(--color-text-tertiary);">Comparaison automatique via OpenLegi</div>
+        </div>
+        <div id="gap-list"></div>
+      </div>
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .ctrl-layout { min-height: 100vh; display: flex; flex-direction: column; }
+  .ctrl-main { flex: 1; max-width: 900px; margin: 0 auto; padding: 32px 24px; width: 100%; }
+  .page-title { font-size: 22px; font-weight: 600; color: var(--noir); margin-bottom: 4px; }
+  .page-subtitle { font-size: 14px; color: var(--color-text-tertiary); margin-bottom: 28px; }
+
+  .stats-row { display: flex; gap: 12px; margin-bottom: 24px; }
+  .stat-card {
+    flex: 1; padding: 16px 20px; border-radius: 12px;
+    border: 1.5px solid var(--noir); display: flex; flex-direction: column; gap: 4px;
+    box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+  }
+  .stat-card.critical { background: #fde8e4; }
+  .stat-card.high { background: #fdf0e0; }
+  .stat-card.medium { background: var(--beige2); }
+  .stat-card.total-card { background: var(--beige); }
+  .stat-value { font-size: 28px; font-weight: 700; }
+  .stat-label { font-size: 12px; color: var(--color-text-secondary); }
+  .critical .stat-value { color: #8B2F1F; }
+  .high .stat-value { color: var(--terra); }
+  .medium .stat-value { color: var(--kaki); }
+  .total-card .stat-value { color: var(--noir); }
+
+  .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; justify-content: space-between; }
+  .filters { display: flex; gap: 8px; }
+  .filter-btn {
+    padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--noir);
+    background: var(--beige); font-size: 13px; color: var(--noir);
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+  }
+  .filter-btn:hover { background: var(--beige2); }
+  .filter-btn.active { background: var(--kaki); border-color: var(--noir); color: var(--beige); }
+  .btn-mark-all {
+    padding: 7px 16px; border-radius: 20px; border: 1.5px solid var(--noir);
+    background: var(--beige); font-size: 13px; color: var(--noir);
+    cursor: pointer; font-family: inherit; box-shadow: 2px 2px 0 rgba(26,26,23,0.3);
+  }
+  .btn-mark-all:hover { background: var(--beige2); }
+
+  .reminders-list { display: flex; flex-direction: column; gap: 12px; }
+  .empty { text-align: center; padding: 60px; color: var(--color-text-tertiary); font-size: 14px; }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .loading { text-align: center; padding: 60px; color: var(--color-text-tertiary); font-size: 14px; }
+</style>
+
+<style is:global>
+  .reminder-card {
+    background: var(--beige); border-radius: 12px; border: 1.5px solid var(--noir);
+    border-left: 5px solid; overflow: hidden;
+    box-shadow: 3px 3px 0 rgba(26,26,23,0.35); transition: box-shadow 0.15s;
+  }
+  .reminder-card:hover { box-shadow: 4px 4px 0 rgba(26,26,23,0.45); }
+  .reminder-card.critical { border-left-color: #8B2F1F; }
+  .reminder-card.high { border-left-color: var(--terra); }
+  .reminder-card.medium { border-left-color: var(--kaki); }
+  .reminder-card.low { border-left-color: var(--beige3); }
+  .reminder-card.done, .reminder-card.dismissed { opacity: 0.5; }
+
+  .reminder-body { padding: 16px 20px; }
+  .reminder-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+  .reminder-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+  .severity-badge {
+    font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.3px; border: 1px solid;
+  }
+  .severity-badge.critical { background: #fde8e4; color: #8B2F1F; border-color: #8B2F1F; }
+  .severity-badge.high { background: #fdf0e0; color: var(--terra); border-color: var(--terra); }
+  .severity-badge.medium { background: var(--beige2); color: var(--kaki); border-color: var(--kaki); }
+  .severity-badge.low { background: var(--beige2); color: var(--color-text-tertiary); border-color: var(--beige3); }
+
+  .impact-badge {
+    font-size: 11px; padding: 3px 8px; border-radius: 20px;
+    background: var(--beige2); color: var(--color-text-secondary); border: 1px solid var(--beige3);
+  }
+  .proc-badge {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    padding: 3px 8px; border-radius: 4px;
+    background: var(--beige2); color: var(--kaki); border: 1px solid var(--beige3);
+  }
+
+  .reminder-message { font-size: 14px; line-height: 1.6; color: var(--noir); margin-bottom: 12px; font-weight: 500; }
+
+  .reminder-article {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 10px 12px; background: var(--beige2); border-radius: 6px; margin-bottom: 12px;
+  }
+  .article-source { font-size: 11px; color: var(--color-text-tertiary); white-space: nowrap; }
+  .article-link { font-size: 13px; color: var(--noir); text-decoration: none; font-weight: 500; }
+  .article-link:hover { color: var(--kaki); }
+  .article-info { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+
+  .obligations-list { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .obligation-tag {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    padding: 2px 7px; border-radius: 4px;
+    background: var(--beige2); color: var(--kaki); border: 1px solid var(--beige3);
+  }
+
+  .reminder-footer { display: flex; align-items: center; justify-content: space-between; }
+  .reminder-date { font-size: 12px; color: var(--color-text-tertiary); }
+  .reminder-actions { display: flex; gap: 8px; }
+  .btn-action {
+    padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--noir);
+    background: var(--beige); font-size: 12px; color: var(--noir);
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+    box-shadow: 2px 2px 0 rgba(26,26,23,0.3);
+  }
+  .btn-action:hover { background: var(--beige2); }
+  .btn-action.done-btn { background: #e8f0e4; border-color: #2d5016; color: #2d5016; }
+
+  .gap-card {
+    background: var(--beige); border: 1.5px solid var(--noir);
+    border-left: 5px solid; border-radius: 12px; margin-bottom: 12px;
+    overflow: hidden; box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+  }
+  .gap-card.critical { border-left-color: #8B2F1F; }
+  .gap-card.high { border-left-color: var(--terra); }
+  .gap-card.medium { border-left-color: var(--kaki); }
+  .gap-card.low { border-left-color: var(--beige3); }
+  .gap-body { padding: 16px 20px; }
+  .gap-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; }
+  .gap-ref { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--kaki); background:var(--beige2); padding:4px 9px; border-radius:4px; border:1px solid var(--beige3); }
+  .gap-impact { font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; white-space:nowrap; border:1px solid; }
+  .gap-impact.critical { background:#fde8e4; color:#8B2F1F; border-color:#8B2F1F; }
+  .gap-impact.high { background:#fdf0e0; color:var(--terra); border-color:var(--terra); }
+  .gap-impact.medium { background:var(--beige2); color:var(--kaki); border-color:var(--kaki); }
+  .gap-impact.low { background:var(--beige2); color:var(--color-text-tertiary); border-color:var(--beige3); }
+  .gap-summary { font-size:14px; font-weight:500; line-height:1.6; margin-bottom:14px; }
+  .gap-changes { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+  .change-item { display:flex; gap:8px; align-items:flex-start; font-size:13px; line-height:1.5; }
+  .change-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+  .change-dot.new { background:#16A34A; }
+  .change-dot.modified { background:#D97706; }
+  .change-dot.removed { background:#DC2626; }
+  .gap-procs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+  .gap-proc-badge { font-family:'IBM Plex Mono',monospace; font-size:10px; padding:3px 8px; border-radius:4px; background:var(--beige2); color:var(--kaki); border:1px solid var(--beige3); }
+  .gap-article { font-size:12px; color:var(--color-text-tertiary); padding-top:12px; border-top:1px solid var(--beige3); }
+  .gap-article a { color:var(--kaki); text-decoration:none; }
+  .gap-article a:hover { text-decoration:underline; }
+</style>
+
+<script>
+  import { api, toast } from '../scripts/api';
+
+  let allReminders: any[] = [];
+  let activeSev: string = '';
+
+  async function load(): Promise<void> {
+    try {
+      const [data, counts]: any[] = await Promise.all([
+        api('/api/v1/reminders'),
+        api('/api/v1/reminders/counts'),
+      ]);
+
+      allReminders = data.reminders || [];
+
+      document.getElementById('count-critical')!.textContent = counts.critical || 0;
+      document.getElementById('count-high')!.textContent = counts.high || 0;
+      document.getElementById('count-medium')!.textContent = counts.medium || 0;
+      document.getElementById('count-total')!.textContent = counts.total || 0;
+
+      render();
+    } catch (e: any) {
+      document.getElementById('reminders-list')!.innerHTML =
+        '<div class="loading">Erreur de chargement.</div>';
+    }
+  }
+
+  function render(): void {
+    const filtered: any[] = activeSev
+      ? allReminders.filter((r: any) => r.severity === activeSev)
+      : allReminders;
+
+    const list: HTMLElement = document.getElementById('reminders-list')!;
+
+    if (!filtered.length) {
+      list.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">OK</div>
+          <div>Aucun reminder actif${activeSev ? ' pour ce niveau de severite' : ''}.</div>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map(renderCard).join('');
+    bindReminderActions();
+  }
+
+  function renderCard(r: any): string {
+    const date: string = r.created_at
+      ? new Date(r.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+      : '';
+
+    const obligations: string = (r.article.obligations_cited || []).map((o: string) =>
+      `<span class="obligation-tag">${o}</span>`).join('');
+
+    const isDone: boolean = r.status === 'done';
+
+    return `
+    <div class="reminder-card ${r.severity} ${isDone ? 'done' : ''}" id="reminder-${r.id}">
+      <div class="reminder-body">
+        <div class="reminder-top">
+          <div class="reminder-badges">
+            <span class="severity-badge ${r.severity}">${r.severity_label}</span>
+            <span class="impact-badge">${r.impact_label}</span>
+            ${r.procedure_ref ? `<span class="proc-badge">${r.procedure_ref}</span>` : ''}
+          </div>
+        </div>
+        <div class="reminder-message">${r.message}</div>
+        <div class="reminder-article">
+          <div class="article-info">
+            <a href="${r.article.url}" target="_blank" class="article-link">${r.article.title}</a>
+            <div style="display:flex; gap:10px; margin-top:3px;">
+              <span class="article-source">${r.article.source || ''}</span>
+              <span class="article-source">${r.article.published_at ? new Date(r.article.published_at).toLocaleDateString('fr-FR') : ''}</span>
+            </div>
+          </div>
+        </div>
+        ${obligations ? `<div class="obligations-list">${obligations}</div>` : ''}
+        <div class="reminder-footer">
+          <span class="reminder-date">Cree le ${date}</span>
+          <div class="reminder-actions">
+            ${!isDone ? `
+            <button class="btn-action" data-reminder-action="${r.id}" data-action-status="dismissed">Ignorer</button>
+            <button class="btn-action done-btn" data-reminder-action="${r.id}" data-action-status="done">Traite</button>
+            ` : `<span style="font-size:12px; color:#2d5016">Traite le ${r.done_at ? new Date(r.done_at).toLocaleDateString('fr-FR') : ''}</span>`}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function bindReminderActions(): void {
+    document.querySelectorAll('[data-reminder-action]').forEach((btn: any) => {
+      btn.addEventListener('click', () => {
+        updateReminder(parseInt(btn.dataset.reminderAction), btn.dataset.actionStatus);
+      });
+    });
+  }
+
+  async function updateReminder(id: number, status: string): Promise<void> {
+    try {
+      await api(`/api/v1/reminders/${id}`, {
+        method: 'PATCH',
+        body: { status },
+      });
+      const r: any = allReminders.find((r: any) => r.id === id);
+      if (r) r.status = status;
+      render();
+      toast(status === 'done' ? 'Marque comme traite' : 'Reminder ignore', 'success');
+    } catch (e: any) {
+      toast('Erreur lors de la mise a jour', 'error');
+    }
+  }
+
+  async function markAllSeen(): Promise<void> {
+    try {
+      await api('/api/v1/reminders/bulk/mark-seen', { method: 'PATCH' });
+      allReminders.forEach((r: any) => { if (r.status === 'pending') r.status = 'seen'; });
+      toast('Tous les reminders marques comme vus', 'success');
+    } catch (e: any) {
+      toast('Erreur', 'error');
+    }
+  }
+
+  // Filters
+  document.querySelectorAll('[data-sev]').forEach((btn: any) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-sev]').forEach((b: any) => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeSev = btn.dataset.sev;
+      render();
+    });
+  });
+
+  document.getElementById('btn-mark-all')!.addEventListener('click', markAllSeen);
+
+  // Gap Analysis
+  async function loadGapAnalyses(): Promise<void> {
+    const el: HTMLElement | null = document.getElementById('gap-list');
+    if (!el) return;
+    try {
+      const data: any = await api('/api/v1/gap-analysis/auto?limit=10');
+      const gaps: any[] = data.gap_analyses || [];
+      if (!gaps.length) {
+        el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--color-text-tertiary);font-size:14px;">
+          Aucun gap analysis disponible — les analyses apparaissent automatiquement<br>
+          quand des articles citant des textes CMF sont ingeres.
+        </div>`;
+        return;
+      }
+      el.innerHTML = gaps.map(renderGap).join('');
+    } catch (e: any) { if (el) el.innerHTML = ''; }
+  }
+
+  function renderGap(g: any): string {
+    const LABELS: any = { critical: 'Critique', high: 'Eleve', medium: 'Moyen', low: 'Faible' };
+    const allChanges: any[] = [
+      ...(g.changes_new || []).map((c: string) => ({ type: 'new', text: c, label: 'Nouveau' })),
+      ...(g.changes_modified || []).map((c: string) => ({ type: 'modified', text: c, label: 'Modifie' })),
+      ...(g.changes_removed || []).map((c: string) => ({ type: 'removed', text: c, label: 'Supprime' })),
+    ];
+    const changesHtml: string = allChanges.length ? `
+      <div class="gap-changes">
+        ${allChanges.map((c: any) => `
+          <div class="change-item">
+            <span class="change-dot ${c.type}"></span>
+            <span><strong>${c.label} :</strong> ${c.text}</span>
+          </div>`).join('')}
+      </div>` : '';
+    const procsHtml: string = (g.impacted_procedures || []).length ? `
+      <div class="gap-procs">
+        ${g.impacted_procedures.map((p: string) => `<span class="gap-proc-badge">${p}</span>`).join('')}
+      </div>` : '';
+    const articleHtml: string = g.article ? `
+      <div class="gap-article">
+        Source : <a href="${g.article.url}" target="_blank">${g.article.title}</a>
+        ${g.article.published_at ? ' \u00b7 ' + new Date(g.article.published_at).toLocaleDateString('fr-FR') : ''}
+      </div>` : '';
+    const verHtml: string = (g.version_current || g.version_previous) ? `
+      <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:12px;">
+        ${g.version_previous ? `Version N-1 : ${g.version_previous}` : ''}
+        ${g.version_current ? ` \u2192 Version N : ${g.version_current}` : ''}
+      </div>` : '';
+    return `
+    <div class="gap-card ${g.impact_level}">
+      <div class="gap-body">
+        <div class="gap-top">
+          <span class="gap-ref">${g.obligation_ref}</span>
+          <span class="gap-impact ${g.impact_level}">${LABELS[g.impact_level] || g.impact_level}</span>
+        </div>
+        ${verHtml}
+        <div class="gap-summary">${g.summary}</div>
+        ${changesHtml}
+        ${procsHtml}
+        ${articleHtml}
+      </div>
+    </div>`;
+  }
+
+  load();
+  loadGapAnalyses();
+</script>

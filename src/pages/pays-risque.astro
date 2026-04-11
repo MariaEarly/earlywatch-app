@@ -1,0 +1,349 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+const base = import.meta.env.BASE_URL;
+---
+
+<AppLayout title="Pays a risque — Early Watch" activePage="pays-risque">
+  <div class="cr-layout">
+    <div class="cr-main">
+      <div class="page-title">Pays a risque LCB-FT</div>
+      <div class="page-subtitle">FATF (noire/grise) + EU high-risk + ACPR — croisement automatique avec la veille</div>
+
+      <div id="stats-bar" class="stats-bar" style="display:none">
+        <div class="stat-item stat-black">
+          <div class="stat-value" id="stat-black">--</div>
+          <div class="stat-label">Liste noire FATF</div>
+        </div>
+        <div class="stat-item stat-grey">
+          <div class="stat-value" id="stat-grey">--</div>
+          <div class="stat-label">Liste grise FATF</div>
+        </div>
+        <div class="stat-item stat-eu">
+          <div class="stat-value" id="stat-eu">--</div>
+          <div class="stat-label">EU high-risk seul</div>
+        </div>
+        <div class="stat-item stat-edd">
+          <div class="stat-value" id="stat-edd">--</div>
+          <div class="stat-label">EDD obligatoire</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stat-total">--</div>
+          <div class="stat-label">Pays total</div>
+        </div>
+      </div>
+
+      <div class="filters">
+        <span class="filter-label">Filtrer :</span>
+        <button class="filter-btn active" data-filter="all">Tous</button>
+        <button class="filter-btn" data-filter="black_list">Liste noire</button>
+        <button class="filter-btn" data-filter="grey_list">Liste grise</button>
+        <button class="filter-btn" data-filter="eu">EU high-risk</button>
+        <button class="filter-btn" data-filter="acpr">ACPR vigilance</button>
+        <button class="filter-btn" data-filter="hot">Articles recents</button>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot dot-black"></span> Liste noire FATF</div>
+        <div class="legend-item"><span class="legend-dot dot-grey"></span> Liste grise FATF</div>
+        <div class="legend-item"><span class="legend-dot dot-eu"></span> EU high-risk</div>
+        <div class="legend-item"><span class="legend-dot dot-hot"></span> Articles &lt;7j</div>
+        <div class="legend-item"><span class="legend-dot dot-warm"></span> Articles &lt;30j</div>
+      </div>
+
+      <div id="table-container">
+        <div class="loading">Chargement des pays a risque...</div>
+      </div>
+
+      <div id="detail-panel" class="detail-panel">
+        <div class="detail-title" id="detail-title"></div>
+        <div class="detail-articles" id="detail-articles"></div>
+      </div>
+
+      <div class="update-info">
+        Sources : FATF (fatf-gafi.org) — Plenaire fev. 2026 | Commission europeenne — Regl. delegue 2016/1675 modifie dec. 2025 | ACPR<br>
+        Prochaine mise a jour : apres le Plenaire FATF de juin 2026
+      </div>
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .cr-layout { min-height: 100vh; display: flex; flex-direction: column; }
+  .cr-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
+  .page-title { font-size: 22px; font-weight: 600; color: var(--noir); margin-bottom: 4px; }
+  .page-subtitle { font-size: 14px; color: var(--color-text-tertiary); margin-bottom: 28px; }
+
+  .stats-bar {
+    display: flex; gap: 24px; margin-bottom: 24px; padding: 16px 20px;
+    background: var(--beige); border: 1.5px solid var(--noir);
+    border-radius: 12px; box-shadow: 3px 3px 0 rgba(26,26,23,0.35); flex-wrap: wrap;
+  }
+  .stat-item { display: flex; flex-direction: column; gap: 2px; }
+  .stat-value { font-size: 20px; font-weight: 600; color: var(--noir); }
+  .stat-label { font-size: 12px; color: var(--color-text-tertiary); }
+  .stat-black .stat-value { color: #1A1A17; }
+  .stat-grey .stat-value { color: #8B6914; }
+  .stat-eu .stat-value { color: #2E5090; }
+  .stat-edd .stat-value { color: #8B2F1F; }
+
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
+  .filter-label { font-size: 13px; color: var(--color-text-tertiary); font-weight: 500; }
+  .filter-btn {
+    padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--noir);
+    background: var(--beige); font-size: 13px; color: var(--noir);
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+  }
+  .filter-btn:hover { background: var(--beige2); }
+  .filter-btn.active { background: var(--kaki); border-color: var(--noir); color: var(--beige); }
+
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
+    font-size: 12px; color: var(--color-text-tertiary);
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--noir); }
+  .dot-black { background: #1A1A17; }
+  .dot-grey { background: #D4A843; }
+  .dot-eu { background: #2E5090; }
+  .dot-hot { background: #8B2F1F; }
+  .dot-warm { background: var(--terra); }
+
+  .detail-panel {
+    display: none; margin-top: 20px; padding: 20px;
+    background: var(--beige); border: 1.5px solid var(--noir);
+    border-radius: 12px; box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+  }
+  :global(.detail-panel.open) { display: block; }
+  .detail-title { font-size: 16px; font-weight: 600; color: var(--noir); margin-bottom: 12px; }
+  .detail-articles { display: flex; flex-direction: column; gap: 8px; }
+
+  .update-info {
+    margin-top: 20px; padding: 12px 16px; font-size: 12px;
+    color: var(--color-text-tertiary); background: var(--beige);
+    border: 1px solid var(--color-border); border-radius: 8px;
+  }
+  .loading { padding: 40px; text-align: center; color: var(--color-text-tertiary); font-size: 14px; }
+</style>
+
+<style is:global>
+  .cr-table {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    border: 1.5px solid var(--noir); border-radius: 12px; overflow: hidden;
+    box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+  }
+  .cr-table thead th {
+    background: var(--kaki); color: var(--beige); font-size: 12px;
+    font-weight: 600; text-align: left; padding: 10px 14px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .cr-table tbody tr { transition: background 0.1s; }
+  .cr-table tbody tr:nth-child(even) { background: rgba(246,241,233,0.5); }
+  .cr-table tbody tr:hover { background: var(--beige); }
+  .cr-table td { padding: 10px 14px; font-size: 13px; color: var(--noir); border-top: 1px solid var(--color-border); }
+  .cr-table td:first-child { font-weight: 600; }
+
+  .country-cell { display: flex; align-items: center; gap: 8px; }
+  .country-flag { font-size: 18px; }
+  .country-name { font-weight: 600; }
+
+  .fatf-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; border: 1px solid; }
+  .fatf-black { background: #1A1A17; color: #fff; border-color: #1A1A17; }
+  .fatf-grey { background: #FFF3D0; color: #8B6914; border-color: #D4A843; }
+  .fatf-clean { background: #E8F5E9; color: #2E7D32; border-color: #81C784; }
+
+  .eu-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .eu-yes { background: #E3ECFA; color: #2E5090; border: 1px solid #7DA0D0; }
+  .eu-no { color: #aaa; font-size: 11px; }
+
+  .edd-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;
+    background: #FDECEA; color: #8B2F1F; border: 1px solid #E0A09A;
+  }
+
+  .cr-freshness-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer;
+  }
+  .cr-freshness-hot { background: #FDECEA; color: #8B2F1F; border: 1px solid #E0A09A; }
+  .cr-freshness-warm { background: #FFF3E0; color: #B36B00; border: 1px solid #FFCC80; }
+  .cr-freshness-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .cr-freshness-hot .cr-freshness-dot { background: #8B2F1F; }
+  .cr-freshness-warm .cr-freshness-dot { background: #B36B00; }
+
+  .acpr-badge {
+    display: inline-block; font-size: 11px; padding: 2px 8px;
+    border-radius: 12px; background: #F3E8FF; color: #6A1B9A; border: 1px solid #CE93D8;
+  }
+
+  .legal-cell { font-size: 11px; color: var(--color-text-tertiary); max-width: 200px; }
+  .notes-row td { padding: 6px 14px 12px; font-size: 12px; color: var(--color-text-tertiary); background: var(--beige); }
+
+  .cr-detail-article {
+    padding: 10px 14px; background: #fff; border: 1px solid var(--color-border);
+    border-radius: 8px; font-size: 13px;
+  }
+  .cr-detail-article a { color: var(--kaki); font-weight: 500; text-decoration: none; }
+  .cr-detail-article a:hover { text-decoration: underline; }
+  .cr-detail-meta { font-size: 11px; color: var(--color-text-tertiary); margin-top: 3px; }
+</style>
+
+<script>
+  import { api } from '../scripts/api';
+
+  let allCountries: any[] = [];
+  let currentFilter: string = 'all';
+
+  async function loadCountries(): Promise<void> {
+    try {
+      const data: any = await api('/api/v1/countries');
+      allCountries = data.countries || [];
+
+      const s: any = data.stats || {};
+      document.getElementById('stat-black')!.textContent = s.black_list || 0;
+      document.getElementById('stat-grey')!.textContent = s.grey_list || 0;
+      document.getElementById('stat-eu')!.textContent = s.eu_only || 0;
+      document.getElementById('stat-edd')!.textContent = s.edd_required || 0;
+      document.getElementById('stat-total')!.textContent = s.total || 0;
+      document.getElementById('stats-bar')!.style.display = '';
+
+      renderTable();
+    } catch (e: any) {
+      document.getElementById('table-container')!.innerHTML =
+        `<div class="loading">Erreur : ${e.message}</div>`;
+    }
+  }
+
+  function getFiltered(): any[] {
+    return allCountries.filter((c: any) => {
+      if (currentFilter === 'all') return true;
+      if (currentFilter === 'black_list') return c.fatf_status === 'black_list';
+      if (currentFilter === 'grey_list') return c.fatf_status === 'grey_list';
+      if (currentFilter === 'eu') return c.eu_high_risk;
+      if (currentFilter === 'acpr') return c.acpr_vigilance;
+      if (currentFilter === 'hot') return c.freshness === 'hot' || c.freshness === 'warm';
+      return true;
+    });
+  }
+
+  function renderTable(): void {
+    const countries: any[] = getFiltered();
+    if (!countries.length) {
+      document.getElementById('table-container')!.innerHTML =
+        '<div class="loading">Aucun pays pour ce filtre.</div>';
+      return;
+    }
+
+    let html: string = `<table class="cr-table">
+      <thead><tr>
+        <th>Pays</th><th>FATF</th><th>EU</th><th>ACPR</th><th>EDD</th><th>Base legale</th><th>Veille</th>
+      </tr></thead><tbody>`;
+
+    for (const c of countries) {
+      let fatfBdg: string = '';
+      if (c.fatf_status === 'black_list') fatfBdg = '<span class="fatf-badge fatf-black">Liste noire</span>';
+      else if (c.fatf_status === 'grey_list') fatfBdg = '<span class="fatf-badge fatf-grey">Liste grise</span>';
+      else fatfBdg = '<span class="fatf-badge fatf-clean">Clean</span>';
+
+      const euBdg: string = c.eu_high_risk
+        ? '<span class="eu-badge eu-yes">EU high-risk</span>'
+        : '<span class="eu-no">\u2014</span>';
+
+      const acprBdg: string = c.acpr_vigilance
+        ? '<span class="acpr-badge">ACPR</span>'
+        : '<span class="eu-no">\u2014</span>';
+
+      const eddBdg: string = c.edd_required
+        ? '<span class="edd-badge">EDD obligatoire</span>'
+        : '\u2014';
+
+      let freshBdg: string = '';
+      if (c.freshness === 'hot') {
+        freshBdg = `<span class="cr-freshness-badge cr-freshness-hot" data-show-country="${c.iso3}">
+          <span class="cr-freshness-dot"></span>${c.articles_count_7d} article${c.articles_count_7d > 1 ? 's' : ''} &lt;7j</span>`;
+      } else if (c.freshness === 'warm') {
+        freshBdg = `<span class="cr-freshness-badge cr-freshness-warm" data-show-country="${c.iso3}">
+          <span class="cr-freshness-dot"></span>${c.articles_count_30d} &lt;30j</span>`;
+      } else {
+        freshBdg = '<span class="eu-no">\u2014</span>';
+      }
+
+      html += `<tr data-show-country="${c.iso3}" style="cursor:pointer">
+        <td><div class="country-cell">
+          <span class="country-flag">${c.flag_emoji || ''}</span>
+          <span class="country-name">${c.country_name}</span>
+        </div></td>
+        <td>${fatfBdg}</td>
+        <td>${euBdg}</td>
+        <td>${acprBdg}</td>
+        <td>${eddBdg}</td>
+        <td class="legal-cell">${c.legal_basis || '\u2014'}</td>
+        <td>${freshBdg}</td>
+      </tr>`;
+
+      if (c.notes) {
+        html += `<tr class="notes-row"><td colspan="7">${c.flag_emoji || ''} ${c.notes}</td></tr>`;
+      }
+    }
+
+    html += '</tbody></table>';
+    document.getElementById('table-container')!.innerHTML = html;
+
+    document.querySelectorAll('[data-show-country]').forEach((el: any) => {
+      el.addEventListener('click', () => {
+        showDetail(el.dataset.showCountry);
+      });
+    });
+  }
+
+  async function showDetail(iso3: string): Promise<void> {
+    const panel: HTMLElement = document.getElementById('detail-panel')!;
+    const titleEl: HTMLElement = document.getElementById('detail-title')!;
+    const articlesEl: HTMLElement = document.getElementById('detail-articles')!;
+
+    const c: any = allCountries.find((x: any) => x.iso3 === iso3);
+    if (!c) return;
+
+    titleEl.textContent = `${c.flag_emoji || ''} ${c.country_name} \u2014 articles de veille (90 jours)`;
+    articlesEl.innerHTML = '<div class="loading" style="padding:12px 0;font-size:13px">Chargement...</div>';
+    panel.classList.add('open');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    try {
+      const data: any = await api(`/api/v1/countries/${iso3}`);
+      const articles: any[] = data.articles || [];
+
+      if (!articles.length) {
+        articlesEl.innerHTML = '<div style="font-size:13px;color:var(--color-text-tertiary)">Aucun article mentionne ce pays sur les 90 derniers jours.</div>';
+        return;
+      }
+
+      articlesEl.innerHTML = articles.map((a: any) => {
+        const date: string = a.published_at
+          ? new Date(a.published_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+          : '';
+        const themes: string = (a.themes || []).slice(0, 3).map((t: string) =>
+          `<span style="background:var(--beige2);padding:1px 6px;border-radius:8px;font-size:10px;border:1px solid var(--color-border)">${t}</span>`
+        ).join(' ');
+        return `<div class="cr-detail-article">
+          <a href="${a.original_url || '#'}" target="_blank">${a.title}</a>
+          <div class="cr-detail-meta">${a.source_name || ''} \u2014 ${date} ${themes}</div>
+        </div>`;
+      }).join('');
+    } catch (e: any) {
+      articlesEl.innerHTML = '<div style="color:#8B2F1F;font-size:13px">Erreur de chargement.</div>';
+    }
+  }
+
+  // Filter UI
+  document.querySelectorAll('.filter-btn').forEach((btn: any) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach((b: any) => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderTable();
+    });
+  });
+
+  loadCountries();
+</script>
