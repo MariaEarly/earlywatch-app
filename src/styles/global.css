@@ -398,12 +398,13 @@ label {
 /* ---- Article card ---- */
 .article-card {
   padding: 14px 16px;
-  border-bottom: 1px solid var(--border-light);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  margin-bottom: 8px;
   cursor: pointer;
   transition: background 0.1s;
 }
 .article-card:hover { background: var(--bg-surface); }
-.article-card:last-child { border-bottom: none; }
 
 .article-meta {
   display: flex;

@@ -6,7 +6,7 @@ const base = import.meta.env.BASE_URL;
 <AppLayout title="Early Watch — Dashboard" activePage="dashboard">
   <div class="flex">
     <aside class="sidebar" id="sidebar-left"></aside>
-    <main class="content-main" id="article-list">
+    <main class="content-main" id="article-list" style="padding:12px">
       <div class="loading-overlay"><div class="spinner"></div> Chargement des articles...</div>
     </main>
     <aside class="sidebar sidebar-right" id="sidebar-right"></aside>
@@ -14,7 +14,7 @@ const base = import.meta.env.BASE_URL;
 </AppLayout>
 
 <script>
-  import { api, formatDate, statusBadge, actionBadge, scoreBar, toast, getUser } from '../scripts/api';
+  import { api, formatDate, statusBadge, actionBadge, toast, getUser } from '../scripts/api';
 
   const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
 
@@ -152,7 +152,6 @@ const base = import.meta.env.BASE_URL;
           <span style="margin-left:auto">${statusBadge(a.status)}</span>
         </div>
         <div class="article-title">${escHtml(a.title || 'Sans titre')}</div>
-        ${scoreBar(a.score)}
         <div class="article-actions">
           <button class="btn btn-sm btn-triage${a.status === 'quotidien' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="quotidien">Quotidien</button>
           <button class="btn btn-sm btn-triage${a.status === 'hebdo' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo</button>
