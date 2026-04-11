@@ -1,80 +1,505 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Early Watch — Connexion</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Early Watch — Veille LCB-FT pour PSP, CASP et fintechs</title>
+<meta name="description" content="Le seul outil FR/EU qui fait le lien entre la veille réglementaire et vos procédures LCB-FT. 27 sources surveillées en continu.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◉</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,300&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:    #F5F0E8;
+  --ink:   #1C1C19;
+  --dim:   #6B6860;
+  --line:  rgba(28,28,25,0.12);
+  --terra: #C4603A;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'IBM Plex Sans', sans-serif;
+  background: var(--bg); color: var(--ink);
+  font-size: 16px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { text-decoration: none; color: inherit; }
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  padding: 0 60px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(245,240,232,0.94);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.logo { font-size: 14px; font-weight: 500; letter-spacing: 0.02em; }
+.logo em { color: var(--terra); font-style: normal; }
+.nav-links { display: flex; gap: 32px; }
+.nav-links a {
+  font-size: 13px; color: var(--dim);
+  letter-spacing: 0.01em; transition: color .15s;
+}
+.nav-links a:hover { color: var(--ink); }
+.nav-cta {
+  font-size: 13px; color: var(--dim);
+  border-bottom: 1px solid var(--dim);
+  padding-bottom: 1px; transition: all .15s;
+}
+.nav-cta:hover { color: var(--ink); border-color: var(--ink); }
+
+/* ── SECTIONS ── */
+.w { max-width: 1200px; margin: 0 auto; padding: 0 60px; }
+
+/* ── HERO ── */
+.hero {
+  padding: 120px 60px 100px;
+  max-width: 1200px; margin: 0 auto;
+  border-bottom: 1px solid var(--line);
+}
+.hero h1 {
+  font-size: clamp(44px, 5.5vw, 76px);
+  font-weight: 300; line-height: 1.05;
+  letter-spacing: -2.5px;
+  max-width: 820px;
+  margin-bottom: 40px;
+}
+.hero h1 strong { font-weight: 500; }
+.hero-body {
+  display: grid; grid-template-columns: 1fr 340px;
+  gap: 80px; align-items: end;
+}
+.hero-sub {
+  font-size: 16px; color: var(--dim);
+  line-height: 1.85; font-weight: 300;
+  max-width: 500px;
+}
+.hero-actions { display: flex; flex-direction: column; gap: 14px; }
+.hero-note {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; color: var(--dim); line-height: 1.7;
+}
+.link-underline {
+  font-size: 14px; font-weight: 400;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 1px; display: inline-block;
+  transition: opacity .15s;
+}
+.link-underline:hover { opacity: .6; }
+
+/* ── FIGURES ── */
+.figures {
+  border-bottom: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(3,1fr);
+}
+.fig {
+  padding: 64px 60px;
+  border-right: 1px solid var(--line);
+}
+.fig:last-child { border-right: none; }
+.fig-n {
+  font-size: 64px; font-weight: 300;
+  letter-spacing: -3px; line-height: 1;
+  margin-bottom: 16px;
+}
+.fig-lbl {
+  font-size: 14px; color: var(--dim);
+  line-height: 1.75; font-weight: 300;
+  max-width: 280px;
+}
+.fig-src {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; color: var(--dim);
+  margin-top: 12px; opacity: .55;
+}
+
+/* ── TEXT SECTIONS ── */
+.text-sec {
+  padding: 100px 60px;
+  border-bottom: 1px solid var(--line);
+  max-width: 1200px; margin: 0 auto;
+}
+.text-sec-grid {
+  display: grid; grid-template-columns: 260px 1fr;
+  gap: 80px;
+}
+.sec-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; color: var(--dim);
+  letter-spacing: 0.5px; padding-top: 4px;
+}
+.sec-content h2 {
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 300; letter-spacing: -1.2px;
+  line-height: 1.15; margin-bottom: 48px;
+}
+.sec-content h2 strong { font-weight: 500; }
+
+/* ── LISTE FEATURES ── */
+.feat-list { display: flex; flex-direction: column; }
+.feat-item {
+  padding: 32px 0;
+  border-top: 1px solid var(--line);
+}
+.feat-item:last-child { border-bottom: 1px solid var(--line); }
+.feat-item h3 {
+  font-size: 16px; font-weight: 400;
+  margin-bottom: 10px; letter-spacing: -0.2px;
+}
+.feat-item p {
+  font-size: 14px; color: var(--dim);
+  line-height: 1.8; font-weight: 300;
+  max-width: 600px;
+}
+
+/* ── PIPELINE ── */
+.pipeline { display: flex; flex-direction: column; }
+.pipeline-item {
+  display: grid; grid-template-columns: 48px 1fr;
+  gap: 28px; padding: 28px 0;
+  border-top: 1px solid var(--line);
+}
+.pipeline-item:last-child { border-bottom: 1px solid var(--line); }
+.p-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px; color: var(--dim); padding-top: 3px;
+}
+.p-body h3 { font-size: 15px; font-weight: 400; margin-bottom: 6px; }
+.p-body p { font-size: 14px; color: var(--dim); line-height: 1.75; font-weight: 300; }
+
+/* ── PROCEDURES ── */
+.proc-item {
+  display: grid; grid-template-columns: 1fr 100px;
+  padding: 18px 0; border-top: 1px solid var(--line);
+  gap: 16px;
+}
+.proc-item:last-of-type { border-bottom: 1px solid var(--line); }
+.proc-name { font-size: 14px; font-weight: 300; }
+.proc-ref {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; color: var(--dim); text-align: right;
+  padding-top: 3px;
+}
+.proc-more {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; color: var(--dim);
+  padding: 20px 0; border-top: 1px solid var(--line);
+}
+
+/* ── PRICING ── */
+.pricing { display: flex; flex-direction: column; }
+.price-item {
+  display: grid;
+  grid-template-columns: 200px 1fr 200px;
+  gap: 48px; padding: 40px 0;
+  border-top: 1px solid var(--line);
+  align-items: start;
+}
+.price-item:last-of-type { border-bottom: 1px solid var(--line); }
+.price-tier {
+  font-size: 12px; color: var(--dim);
+  font-weight: 400; letter-spacing: 0.02em;
+  margin-bottom: 10px;
+}
+.price-amount {
+  font-size: 40px; font-weight: 300;
+  letter-spacing: -2px; line-height: 1;
+}
+.price-mo { font-size: 13px; color: var(--dim); margin-top: 4px; }
+.price-feats {
+  list-style: none; display: flex; flex-direction: column; gap: 10px;
+}
+.price-feats li {
+  font-size: 14px; color: var(--dim); font-weight: 300; line-height: 1.5;
+  padding-left: 16px; position: relative;
+}
+.price-feats li::before {
+  content: '—'; position: absolute; left: 0;
+  font-size: 11px; color: var(--dim);
+}
+.price-cta {
+  display: inline-block;
+  font-size: 13px; padding-bottom: 1px;
+  border-bottom: 1px solid var(--ink);
+}
+.price-cta:hover { opacity: .6; }
+
+/* ── ENGAGEMENTS ── */
+.engage-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 48px; margin-top: 64px; padding-top: 56px;
+  border-top: 1px solid var(--line);
+}
+.engage-item h4 {
+  font-size: 15px; font-weight: 400;
+  margin-bottom: 10px;
+}
+.engage-item p { font-size: 14px; color: var(--dim); line-height: 1.8; font-weight: 300; }
+
+/* ── CTA FINAL ── */
+.cta-final {
+  padding: 100px 60px;
+  max-width: 1200px; margin: 0 auto;
+  border-bottom: 1px solid var(--line);
+}
+.cta-final h2 {
+  font-size: clamp(32px, 4vw, 54px);
+  font-weight: 300; letter-spacing: -2px;
+  line-height: 1.1; margin-bottom: 40px;
+  max-width: 640px;
+}
+.cta-final h2 strong { font-weight: 500; }
+.cta-links { display: flex; gap: 36px; align-items: center; }
+.cta-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; color: var(--dim);
+}
+
+/* ── FOOTER ── */
+footer {
+  padding: 28px 60px;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+footer .left { font-size: 13px; }
+footer .left em { color: var(--terra); font-style: normal; }
+footer .right { display: flex; gap: 28px; }
+footer .right a { font-size: 12px; color: var(--dim); }
+footer .right a:hover { color: var(--ink); }
+.foot-infra {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; color: var(--dim); width: 100%;
+}
+
+@media (max-width: 900px) {
+  nav, .hero, .text-sec, .cta-final, footer { padding-left: 24px; padding-right: 24px; }
+  .hero h1 { letter-spacing: -1.5px; }
+  .hero-body { grid-template-columns: 1fr; gap: 40px; }
+  .figures { grid-template-columns: 1fr; }
+  .fig { border-right: none; border-bottom: 1px solid var(--line); padding: 48px 24px; }
+  .text-sec-grid { grid-template-columns: 1fr; gap: 32px; }
+  .price-item { grid-template-columns: 1fr; gap: 24px; }
+  .engage-grid { grid-template-columns: 1fr; gap: 32px; }
+  .cta-links { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .nav-links { display: none; }
+}
+</style>
 </head>
 <body>
-  <div class="login-wrapper">
-    <div class="login-card">
-      <div class="login-logo">Early <span>Watch</span></div>
 
-      <div id="error" class="login-error"></div>
+<nav>
+  <span class="logo">Early<em>Watch</em></span>
+  <div class="nav-links">
+    <a href="#fonctionnalites">Fonctionnalit&#233;s</a>
+    <a href="#procedures">Proc&#233;dures</a>
+    <a href="#tarifs">Tarifs</a>
+  </div>
+  <a href="mailto:maria@early.consulting" class="nav-cta">Demander une d&#233;mo</a>
+</nav>
 
-      <form id="loginForm" autocomplete="on">
-        <div class="login-field">
-          <label for="email">Email</label>
-          <input id="email" type="email" class="input" placeholder="vous@entreprise.com" required autofocus>
-        </div>
-        <div class="login-field">
-          <label for="password">Mot de passe</label>
-          <input id="password" type="password" class="input" placeholder="Votre mot de passe" required>
-        </div>
-        <button type="submit" id="submitBtn" class="btn btn-primary login-btn">Connexion</button>
-      </form>
-
-      <p style="text-align:center; margin-top:24px; font-size:12px; color:var(--color-text-tertiary)">
-        Plateforme de veille réglementaire
+<!-- HERO -->
+<div class="hero">
+  <h1>Le seul outil FR/EU qui fait le lien entre la veille et <strong>vos proc&#233;dures LCB-FT.</strong></h1>
+  <div class="hero-body">
+    <p class="hero-sub">27 sources r&#233;glementaires surveill&#233;es en continu. Chaque &#233;volution mapp&#233;e sur vos proc&#233;dures internes. Un reminder actionnable avant que l'ACPR ne l'exige. Pour PSP, CASP, EME et fintechs.</p>
+    <div class="hero-actions">
+      <a href="mailto:maria@early.consulting" class="link-underline">Demander une d&#233;mo</a>
+      <p class="hero-note">
+        1 500 &#224; 3 000 EUR / mois<br>
+        Scaleway Paris &middot; RGPD-compliant
       </p>
     </div>
   </div>
+</div>
 
-  <script>
-    const API = 'https://earlybriefp7hwqsga-earlybrief-api.functions.fnc.fr-par.scw.cloud';
+<!-- FIGURES -->
+<div class="figures">
+  <div class="fig">
+    <div class="fig-n">0</div>
+    <p class="fig-lbl">Acteur FR/EU combine veille r&#233;glementaire et proc&#233;dures LCB-FT pour assujettis de taille moyenne.</p>
+    <p class="fig-src">Benchmark 15 acteurs — Avril 2026</p>
+  </div>
+  <div class="fig">
+    <div class="fig-n">75K+</div>
+    <p class="fig-lbl">Euros par an — prix minimum des solutions enterprise. Hors port&#233;e pour les PSP et fintechs.</p>
+    <p class="fig-src">CUBE &middot; Ascent &middot; Corlytics &middot; Wolters Kluwer</p>
+  </div>
+  <div class="fig">
+    <div class="fig-n">15</div>
+    <p class="fig-lbl">Mois avant l'application directe de l'AMLR. Vos proc&#233;dures doivent &#234;tre conformes.</p>
+    <p class="fig-src">R&#232;g. EU 2024/1624 — 10 juillet 2027</p>
+  </div>
+</div>
 
-    // Already logged in?
-    if (sessionStorage.getItem('ew_token')) {
-      window.location.href = 'dashboard.html';
-    }
+<!-- FEATURES -->
+<div class="text-sec" id="fonctionnalites">
+  <div class="text-sec-grid">
+    <div class="sec-label">01 — Ce qu'on fait</div>
+    <div class="sec-content">
+      <h2>De la publication officielle &#224; l'action, <strong>en quelques minutes.</strong></h2>
+      <div class="feat-list">
+        <div class="feat-item">
+          <h3>Veille 27 sources en continu</h3>
+          <p>ACPR, AMF, EBA, AMLA, Tracfin, DG Tr&#233;sor, GAFI, ESMA, CNIL. Chaque article scor&#233;, tagu&#233; par th&#232;me r&#233;glementaire et class&#233; par niveau d'impact sur vos obligations.</p>
+        </div>
+        <div class="feat-item">
+          <h3>Reminders automatiques sur vos proc&#233;dures</h3>
+          <p>Quand l'ACPR sanctionne pour d&#233;faut de monitoring, vous recevez un reminder cibl&#233; sur EB-MON-001 avec l'article source, les obligations CMF cit&#233;es et le niveau de s&#233;v&#233;rit&#233;.</p>
+        </div>
+        <div class="feat-item">
+          <h3>19 proc&#233;dures LCB-FT incluses</h3>
+          <p>Templates fact-check&#233;s sur sources primaires Legifrance. Format Word pr&#234;t &#224; personnaliser. Badge d'alerte si une proc&#233;dure valid&#233;e est impact&#233;e par un nouvel article.</p>
+        </div>
+        <div class="feat-item">
+          <h3>Suivi des validations et piste d'audit</h3>
+          <p>Chaque proc&#233;dure porte un statut. L'historique des validations constitue votre piste d'audit en cas de contr&#244;le ACPR ou AMF. Export PDF en un clic.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('submitBtn');
-      const errEl = document.getElementById('error');
-      errEl.style.display = 'none';
+<!-- PIPELINE -->
+<div class="text-sec">
+  <div class="text-sec-grid">
+    <div class="sec-label">02 — Comment &#231;a marche</div>
+    <div class="sec-content">
+      <h2>Du texte r&#233;glementaire &#224; <strong>l'action pr&#233;cise.</strong></h2>
+      <div class="pipeline">
+        <div class="pipeline-item">
+          <div class="p-num">01</div>
+          <div class="p-body"><h3>Ingestion horaire</h3><p>27 sources surveill&#233;es toutes les heures. RSS natif ou scraper. Aucune publication ne passe.</p></div>
+        </div>
+        <div class="pipeline-item">
+          <div class="p-num">02</div>
+          <div class="p-body"><h3>Analyse des obligations</h3><p>Extraction des articles CMF cit&#233;s (L.561-32, L.561-6...), du type d'impact, de la s&#233;v&#233;rit&#233; et des proc&#233;dures concern&#233;es.</p></div>
+        </div>
+        <div class="pipeline-item">
+          <div class="p-num">03</div>
+          <div class="p-body"><h3>Mapping sur vos proc&#233;dures</h3><p>Les obligations extraites sont mapp&#233;es automatiquement sur les proc&#233;dures de votre biblioth&#232;que.</p></div>
+        </div>
+        <div class="pipeline-item">
+          <div class="p-num">04</div>
+          <div class="p-body"><h3>Reminder dans votre dashboard</h3><p>Message clair, proc&#233;dure concern&#233;e, article source. Alerte email imm&#233;diate si s&#233;v&#233;rit&#233; critique ou &#233;lev&#233;e.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-      btn.disabled = true;
-      btn.textContent = 'Connexion...';
+<!-- PROCEDURES -->
+<div class="text-sec" id="procedures">
+  <div class="text-sec-grid">
+    <div class="sec-label">03 — Biblioth&#232;que LCB-FT</div>
+    <div class="sec-content">
+      <h2>19 proc&#233;dures <strong>fact-check&#233;es</strong> sur sources primaires.</h2>
+      <div class="proc-item"><span class="proc-name">Politique g&#233;n&#233;rale LCB-FT</span><span class="proc-ref">EB-POL-001 v1.2</span></div>
+      <div class="proc-item"><span class="proc-name">Classification des risques LCB-FT</span><span class="proc-ref">EB-RISK-001 v1.2</span></div>
+      <div class="proc-item"><span class="proc-name">Entr&#233;e en relation — Personne physique</span><span class="proc-ref">EB-KYC-001 v1.0</span></div>
+      <div class="proc-item"><span class="proc-name">Entr&#233;e en relation — Personne morale</span><span class="proc-ref">EB-KYC-002 v1.0</span></div>
+      <div class="proc-item"><span class="proc-name">Criblage sanctions et PPE</span><span class="proc-ref">EB-SCR-001 v1.1</span></div>
+      <div class="proc-item"><span class="proc-name">Monitoring transactionnel</span><span class="proc-ref">EB-MON-001 v1.1</span></div>
+      <div class="proc-item"><span class="proc-name">D&#233;claration de soup&#231;on Tracfin</span><span class="proc-ref">EB-TRC-001 v1.1</span></div>
+      <div class="proc-item"><span class="proc-name">LCB-FT sp&#233;cifique CASP / PSAN</span><span class="proc-ref">EB-CASP-001 v1.1</span></div>
+      <div class="proc-item"><span class="proc-name">Contr&#244;le permanent LCB-FT</span><span class="proc-ref">EB-CTRL-001 v1.3</span></div>
+      <div class="proc-item"><span class="proc-name">Agents et distributeurs LCB-FT</span><span class="proc-ref">EB-AGT-001 v1.3</span></div>
+      <p class="proc-more">+ 9 autres — UBO &middot; EDD &middot; PEP &middot; Gel des avoirs &middot; Archivage &middot; Travel Rule &middot; Chargeback &middot; Formation</p>
+    </div>
+  </div>
+</div>
 
-      try {
-        const res = await fetch(`${API}/api/v1/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: document.getElementById('email').value,
-            password: document.getElementById('password').value,
-          }),
-        });
+<!-- PRICING -->
+<div class="text-sec" id="tarifs">
+  <div class="text-sec-grid">
+    <div class="sec-label">04 — Tarifs</div>
+    <div class="sec-content">
+      <h2>Simple <strong>et pr&#233;visible.</strong></h2>
+      <div class="pricing">
+        <div class="price-item">
+          <div>
+            <div class="price-tier">Essentiel</div>
+            <div class="price-amount">1 500</div>
+            <div class="price-mo">EUR / mois HT</div>
+          </div>
+          <ul class="price-feats">
+            <li>Dashboard veille 27 sources</li>
+            <li>Scoring et tagging automatique</li>
+            <li>Filtres par type d'assujetti</li>
+            <li>Module newsletter optionnel</li>
+            <li>1 utilisateur</li>
+          </ul>
+          <div><a href="mailto:maria@early.consulting" class="price-cta">Commencer</a></div>
+        </div>
+        <div class="price-item">
+          <div>
+            <div class="price-tier">Proc&#233;dures — Recommand&#233;</div>
+            <div class="price-amount">2 000</div>
+            <div class="price-mo">EUR / mois HT</div>
+          </div>
+          <ul class="price-feats">
+            <li>Tout le niveau Essentiel</li>
+            <li>19 proc&#233;dures LCB-FT incluses</li>
+            <li>Reminders automatiques par proc&#233;dure</li>
+            <li>Suivi des validations et statuts</li>
+            <li>Module Contr&#244;le et badge d'alerte</li>
+            <li>3 utilisateurs</li>
+          </ul>
+          <div><a href="mailto:maria@early.consulting" class="price-cta">Demander une d&#233;mo</a></div>
+        </div>
+        <div class="price-item">
+          <div>
+            <div class="price-tier">Premium</div>
+            <div class="price-amount">3 000</div>
+            <div class="price-mo">EUR / mois HT</div>
+          </div>
+          <ul class="price-feats">
+            <li>Tout le niveau Proc&#233;dures</li>
+            <li>G&#233;n&#233;ration de proc&#233;dures sur mesure</li>
+            <li>DORA &middot; AI Act &middot; PSD3</li>
+            <li>Piste d'audit exportable PDF</li>
+            <li>Support prioritaire et onboarding</li>
+            <li>Utilisateurs illimit&#233;s</li>
+          </ul>
+          <div><a href="mailto:maria@early.consulting" class="price-cta">Nous contacter</a></div>
+        </div>
+      </div>
+      <div class="engage-grid">
+        <div class="engage-item">
+          <h4>Human-in-the-loop</h4>
+          <p>Aucun output IA n'atteint vos utilisateurs sans validation humaine. Principe non n&#233;gociable.</p>
+        </div>
+        <div class="engage-item">
+          <h4>Souverainet&#233; europ&#233;enne</h4>
+          <p>H&#233;berg&#233; sur Scaleway Paris. RGPD-compliant. Aucune donn&#233;e hors Union europ&#233;enne.</p>
+        </div>
+        <div class="engage-item">
+          <h4>Fact-check&#233; sur Legifrance</h4>
+          <p>Chaque proc&#233;dure v&#233;rifi&#233;e sur sources primaires. CMF, arr&#234;t&#233; 6 jan. 2021, AMLR.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.detail || 'Identifiants incorrects');
-        }
+<!-- CTA -->
+<div class="cta-final">
+  <h2>Pr&#234;t &#224; savoir exactement ce que vous devez faire <strong>quand la r&#233;glementation bouge ?</strong></h2>
+  <div class="cta-links">
+    <a href="mailto:maria@early.consulting" class="link-underline">Demander une d&#233;mo</a>
+    <span class="cta-sub">R&#233;ponse sous 24h &middot; D&#233;mo en visio 30 min</span>
+  </div>
+</div>
 
-        const data = await res.json();
-        sessionStorage.setItem('ew_token', data.access_token);
-        sessionStorage.setItem('ew_user', JSON.stringify(data.user));
-        window.location.href = 'dashboard.html';
-      } catch (err) {
-        errEl.textContent = err.message;
-        errEl.style.display = 'block';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Connexion';
-      }
-    });
-  </script>
+<footer>
+  <div class="left">Early<em>Watch</em> — par Early Brief</div>
+  <div class="right">
+    <a href="#">Mentions l&#233;gales</a>
+    <a href="#">RGPD</a>
+    <a href="login.html">Acc&#232;s client</a>
+  </div>
+  <p class="foot-infra">Scaleway Paris &middot; Souverainet&#233; europ&#233;enne &middot; RGPD-compliant</p>
+</footer>
+
 </body>
 </html>
