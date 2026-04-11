@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanctions — Early Watch</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .enf-layout { min-height: 100vh; display: flex; flex-direction: column; }
+  .enf-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
+
+  .page-title { font-size: 22px; font-weight: 600; color: var(--noir); margin-bottom: 4px; }
+  .page-subtitle { font-size: 14px; color: var(--color-text-tertiary); margin-bottom: 28px; }
+
+  /* ── STATS ── */
+  .stats-bar {
+    display: flex; gap: 24px; margin-bottom: 24px; padding: 16px 20px;
+    background: var(--beige); border: 1.5px solid var(--noir);
+    border-radius: 12px; box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+    flex-wrap: wrap;
+  }
+  .stat-item { display: flex; flex-direction: column; gap: 2px; }
+  .stat-value { font-size: 20px; font-weight: 600; color: var(--noir); }
+  .stat-label { font-size: 12px; color: var(--color-text-tertiary); }
+  .stat-critical .stat-value { color: #8B2F1F; }
+  .stat-high .stat-value { color: #C4603A; }
+  .stat-recent .stat-value { color: #4A5240; }
+
+  /* ── FILTERS ── */
+  .filters-bar {
+    display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;
+  }
+  .filters-bar select, .filters-bar input {
+    padding: 8px 12px; border: 1.5px solid var(--noir);
+    border-radius: 8px; background: #fff; font-size: 13px;
+    font-family: inherit; color: var(--noir);
+  }
+
+  /* ── TABLE ── */
+  .enf-table {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    border: 1.5px solid var(--noir); border-radius: 12px;
+    overflow: hidden; box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+    background: #fff;
+  }
+  .enf-table th {
+    background: var(--beige); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 12px 14px; text-align: left; color: var(--noir);
+    border-bottom: 1.5px solid var(--noir);
+  }
+  .enf-table td {
+    padding: 14px; font-size: 13px; border-bottom: 1px solid var(--color-border);
+    vertical-align: top;
+  }
+  .enf-table tr:last-child td { border-bottom: none; }
+  .enf-table tr:hover td { background: rgba(245,240,232,0.5); }
+
+  .enf-title {
+    font-weight: 500; color: var(--noir); line-height: 1.4;
+    max-width: 400px; display: block;
+  }
+  .enf-title a { color: inherit; text-decoration: none; }
+  .enf-title a:hover { text-decoration: underline; }
+  .enf-summary { font-size: 12px; color: var(--color-text-tertiary); margin-top: 4px; line-height: 1.5; }
+
+  .sev-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+  }
+  .sev-critical { background: #8B2F1F; color: #fff; }
+  .sev-high { background: #C4603A; color: #fff; }
+  .sev-medium { background: #D4A843; color: #1A1A17; }
+  .sev-low { background: #E5E0D8; color: #6B6860; }
+
+  .source-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 500; background: var(--beige);
+    border: 1px solid var(--color-border);
+  }
+
+  .proc-tag {
+    display: inline-block; padding: 1px 6px; border-radius: 3px;
+    font-size: 10px; font-weight: 500; background: #4A5240; color: #F6F1E9;
+    margin: 1px 2px;
+  }
+
+  .enf-date { font-size: 12px; color: var(--color-text-tertiary); white-space: nowrap; }
+
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--color-text-tertiary);
+    font-size: 14px;
+  }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    display: none; position: fixed; top: 0; right: 0;
+    width: 480px; height: 100vh; background: #fff;
+    border-left: 1.5px solid var(--noir);
+    box-shadow: -4px 0 12px rgba(0,0,0,0.1);
+    z-index: 200; overflow-y: auto; padding: 24px;
+  }
+  .detail-panel.open { display: block; }
+  .detail-close {
+    position: absolute; top: 12px; right: 16px;
+    background: none; border: none; font-size: 20px; cursor: pointer;
+    color: var(--noir);
+  }
+  .detail-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; line-height: 1.3; padding-right: 32px; }
+  .detail-meta { font-size: 12px; color: var(--color-text-tertiary); margin-bottom: 16px; }
+  .detail-summary { font-size: 14px; line-height: 1.7; margin-bottom: 20px; color: var(--noir); }
+  .detail-section { margin-bottom: 16px; }
+  .detail-section h4 { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--color-text-tertiary); margin-bottom: 8px; }
+  .detail-link {
+    display: inline-block; padding: 10px 20px; background: var(--kaki);
+    color: #F6F1E9; border-radius: 8px; font-size: 13px; font-weight: 600;
+    text-decoration: none; border: 1.5px solid var(--noir);
+    box-shadow: 3px 3px 0 rgba(26,26,23,0.35); margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="enf-layout">
+  <header id="main-header"></header>
+
+  <main class="enf-main">
+    <h1 class="page-title">Sanctions et decisions disciplinaires</h1>
+    <p class="page-subtitle">Decisions ACPR, AMF, EBA, ESMA — impact sur vos procedures LCB-FT</p>
+
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat-item"><div class="stat-value" id="stat-total">-</div><div class="stat-label">Total sanctions</div></div>
+      <div class="stat-item stat-critical"><div class="stat-value" id="stat-critical">-</div><div class="stat-label">Critiques</div></div>
+      <div class="stat-item stat-high"><div class="stat-value" id="stat-high">-</div><div class="stat-label">Elevees</div></div>
+      <div class="stat-item stat-recent"><div class="stat-value" id="stat-7d">-</div><div class="stat-label">7 derniers jours</div></div>
+      <div class="stat-item"><div class="stat-value" id="stat-30d">-</div><div class="stat-label">30 derniers jours</div></div>
+    </div>
+
+    <div class="filters-bar">
+      <select id="filter-source"><option value="">Toutes les sources</option></select>
+      <select id="filter-severity">
+        <option value="">Toutes severites</option>
+        <option value="critical">Critique</option>
+        <option value="high">Elevee</option>
+        <option value="medium">Moyenne</option>
+      </select>
+    </div>
+
+    <table class="enf-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Source</th>
+          <th>Decision</th>
+          <th>Severite</th>
+          <th>Procedures impactees</th>
+        </tr>
+      </thead>
+      <tbody id="enf-body">
+        <tr><td colspan="5" class="empty-state">Chargement...</td></tr>
+      </tbody>
+    </table>
+  </main>
+</div>
+
+<!-- Detail panel -->
+<div class="detail-panel" id="detail-panel">
+  <button class="detail-close" onclick="closeDetail()">&times;</button>
+  <div id="detail-content"></div>
+</div>
+
+<script src="app.js"></script>
+<script>
+requireAuth();
+renderHeader();
+loadReminderBadge();
+
+let allItems = [];
+
+async function loadData() {
+  try {
+    const [statsRes, itemsRes] = await Promise.allSettled([
+      api('/enforcement/stats'),
+      api('/enforcement?limit=100')
+    ]);
+
+    if (statsRes.status === 'fulfilled') {
+      const s = statsRes.value;
+      document.getElementById('stat-total').textContent = s.total || 0;
+      document.getElementById('stat-critical').textContent = s.critical || 0;
+      document.getElementById('stat-high').textContent = s.high || 0;
+      document.getElementById('stat-7d').textContent = s.last_7d || 0;
+      document.getElementById('stat-30d').textContent = s.last_30d || 0;
+
+      // Populate source filter
+      const sourceSelect = document.getElementById('filter-source');
+      if (s.by_source) {
+        Object.entries(s.by_source).sort((a,b) => b[1]-a[1]).forEach(([src, cnt]) => {
+          const opt = document.createElement('option');
+          opt.value = src;
+          opt.textContent = `${src} (${cnt})`;
+          sourceSelect.appendChild(opt);
+        });
+      }
+    }
+
+    if (itemsRes.status === 'fulfilled') {
+      allItems = itemsRes.value.items || [];
+      renderTable(allItems);
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function renderTable(items) {
+  const tbody = document.getElementById('enf-body');
+  if (!items.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Aucune sanction trouvee</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = items.map(item => {
+    const date = item.published_at ? new Date(item.published_at).toLocaleDateString('fr-FR') : '-';
+    const sevClass = `sev-${item.severity || 'low'}`;
+    const procs = (item.impacted_procedures || []).map(p => `<span class="proc-tag">${p}</span>`).join('');
+    const summary = (item.summary || '').substring(0, 120);
+
+    return `<tr onclick="showDetail('${item.id}')" style="cursor:pointer">
+      <td class="enf-date">${date}</td>
+      <td><span class="source-badge">${item.source_name || '-'}</span></td>
+      <td>
+        <span class="enf-title">${item.title || '-'}</span>
+        <div class="enf-summary">${summary}${summary.length >= 120 ? '...' : ''}</div>
+      </td>
+      <td><span class="sev-badge ${sevClass}">${item.severity || '-'}</span></td>
+      <td>${procs || '<span style="color:var(--color-text-tertiary);font-size:12px">-</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function applyFilters() {
+  const source = document.getElementById('filter-source').value;
+  const severity = document.getElementById('filter-severity').value;
+  let filtered = allItems;
+  if (source) filtered = filtered.filter(i => i.source_name === source);
+  if (severity) filtered = filtered.filter(i => i.severity === severity);
+  renderTable(filtered);
+}
+
+document.getElementById('filter-source').addEventListener('change', applyFilters);
+document.getElementById('filter-severity').addEventListener('change', applyFilters);
+
+function showDetail(id) {
+  const item = allItems.find(i => i.id === id);
+  if (!item) return;
+
+  const date = item.published_at ? new Date(item.published_at).toLocaleDateString('fr-FR') : '-';
+  const sevClass = `sev-${item.severity || 'low'}`;
+  const procs = (item.impacted_procedures || []).map(p => `<span class="proc-tag">${p}</span>`).join(' ');
+  const obls = (item.obligations_cited || []).map(o => `<li>${o}</li>`).join('');
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-title">${item.title}</div>
+    <div class="detail-meta">
+      <span class="source-badge">${item.source_name}</span>
+      <span class="sev-badge ${sevClass}" style="margin-left:8px">${item.severity}</span>
+      <span style="margin-left:12px">${date}</span>
+    </div>
+    <div class="detail-summary">${item.summary || ''}</div>
+    ${obls ? `<div class="detail-section"><h4>Obligations citees</h4><ul style="padding-left:16px;font-size:13px;line-height:1.8">${obls}</ul></div>` : ''}
+    ${procs ? `<div class="detail-section"><h4>Procedures impactees</h4><div>${procs}</div></div>` : ''}
+    ${item.original_url ? `<a href="${item.original_url}" target="_blank" class="detail-link">Voir la source</a>` : ''}
+  `;
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+loadData();
+</script>
+</body>
+</html>
