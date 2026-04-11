@@ -1,87 +1,148 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Early Watch — Connexion</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Early Watch — Connexion</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --beige: #F5F0E8; --kaki: #4A5240; --terra: #C4603A;
+  --ink: #1A1A17; --muted: #6B6860; --border: rgba(28,28,26,0.12);
+  --red: #DC2626; --white: #FFFFFF;
+}
+html, body { height: 100%; }
+body {
+  font-family: 'IBM Plex Sans', sans-serif;
+  background: var(--beige); color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 24px;
+}
+.card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 12px; padding: 40px;
+  width: 100%; max-width: 360px;
+}
+.brand {
+  font-size: 17px; font-weight: 600; color: var(--kaki);
+  margin-bottom: 32px;
+}
+.brand span { color: var(--terra); }
+label {
+  display: block; font-size: 13px; font-weight: 500;
+  margin-bottom: 6px;
+}
+input {
+  width: 100%; padding: 11px 14px;
+  border: 1px solid var(--border); border-radius: 7px;
+  font-size: 14px; font-family: inherit; color: var(--ink);
+  outline: none; margin-bottom: 16px; transition: border-color .15s;
+}
+input:focus { border-color: var(--kaki); }
+input.error { border-color: var(--red); margin-bottom: 6px; }
+.error-msg {
+  font-size: 12px; color: var(--red);
+  margin-bottom: 16px; display: none;
+}
+.error-msg.show { display: block; }
+button {
+  width: 100%; padding: 13px;
+  background: var(--kaki); color: var(--white);
+  border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 500;
+  font-family: inherit; cursor: pointer;
+  transition: background .15s;
+}
+button:hover { background: #3a4130; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.footer {
+  margin-top: 20px; text-align: center;
+  font-size: 12px; color: var(--muted);
+}
+.footer a { color: var(--kaki); text-decoration: none; }
+.spinner {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white; border-radius: 50%;
+  animation: spin .8s linear infinite; margin-right: 6px; vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 </head>
 <body>
-  <div class="login-wrapper">
-    <div class="login-card">
-      <div class="login-logo">Early <span>Watch</span></div>
+<div class="card">
+  <div class="brand">Early<span>Watch</span></div>
+  <form onsubmit="login(event)">
+    <label for="email">Email</label>
+    <input type="email" id="email" autocomplete="email" required>
+    <label for="password">Mot de passe</label>
+    <input type="password" id="password" autocomplete="current-password" required>
+    <div class="error-msg" id="err">Email ou mot de passe incorrect.</div>
+    <button type="submit" id="btn">Se connecter</button>
+  </form>
+  <div class="footer"><a href="mailto:maria@early.consulting">Besoin d'acces ?</a></div>
+</div>
 
-      <div id="error" class="login-error"></div>
+<script>
+const API = (() => {
+  const h = window.location.hostname;
+  if (h === 'localhost' || h === '127.0.0.1' || h === '') return 'http://127.0.0.1:8000';
+  return 'https://earlybriefp7hwqsga-earlybrief-api.functions.fnc.fr-par.scw.cloud';
+})();
 
-      <form id="loginForm" autocomplete="on">
-        <div class="login-field">
-          <label for="email">Email</label>
-          <input id="email" type="email" class="input" placeholder="vous@entreprise.com" required autofocus>
-        </div>
-        <div class="login-field">
-          <label for="password">Mot de passe</label>
-          <input id="password" type="password" class="input" placeholder="Votre mot de passe" required>
-        </div>
-        <button type="submit" id="submitBtn" class="btn btn-primary login-btn">Connexion</button>
-      </form>
+// Already logged in?
+const t = sessionStorage.getItem('ew_token');
+if (t) fetch(`${API}/api/v1/auth/me`, { headers: { 'Authorization': `Bearer ${t}` } })
+  .then(r => { if (r.ok) return r.json(); throw 0; })
+  .then(u => { window.location.href = u.role === 'superadmin' ? 'superadmin.html' : 'conformite.html'; })
+  .catch(() => {});
 
-      <p style="text-align:center; margin-top:24px; font-size:12px; color:var(--color-text-tertiary)">
-        Plateforme de veille réglementaire
-      </p>
-    </div>
-  </div>
+async function login(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn');
+  const err = document.getElementById('err');
+  const email = document.getElementById('email');
+  const pwd = document.getElementById('password');
 
-  <script>
-    // Detection dev local vs prod (meme regle que app.js)
-    const API = (() => {
-      const h = window.location.hostname;
-      if (h === 'localhost' || h === '127.0.0.1' || h === '') {
-        return 'http://127.0.0.1:8000';
-      }
-      return 'https://earlybriefp7hwqsga-earlybrief-api.functions.fnc.fr-par.scw.cloud';
-    })();
+  email.classList.remove('error');
+  pwd.classList.remove('error');
+  err.classList.remove('show');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Connexion...';
 
-    // Already logged in?
-    if (sessionStorage.getItem('ew_token')) {
-      window.location.href = 'dashboard.html';
+  try {
+    const r = await fetch(`${API}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: email.value.trim(),
+        password: pwd.value,
+      }),
+    });
+
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      throw new Error(d.detail || 'Identifiants incorrects');
     }
 
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('submitBtn');
-      const errEl = document.getElementById('error');
-      errEl.style.display = 'none';
+    const d = await r.json();
+    sessionStorage.setItem('ew_token', d.access_token);
+    sessionStorage.setItem('ew_user', JSON.stringify(d.user));
 
-      btn.disabled = true;
-      btn.textContent = 'Connexion...';
+    // Redirect based on role
+    const role = d.user?.role;
+    window.location.href = role === 'superadmin' ? 'superadmin.html' : 'conformite.html';
 
-      try {
-        const res = await fetch(`${API}/api/v1/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: document.getElementById('email').value,
-            password: document.getElementById('password').value,
-          }),
-        });
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.detail || 'Identifiants incorrects');
-        }
-
-        const data = await res.json();
-        sessionStorage.setItem('ew_token', data.access_token);
-        sessionStorage.setItem('ew_user', JSON.stringify(data.user));
-        window.location.href = 'dashboard.html';
-      } catch (err) {
-        errEl.textContent = err.message;
-        errEl.style.display = 'block';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Connexion';
-      }
-    });
-  </script>
+  } catch (ex) {
+    email.classList.add('error');
+    pwd.classList.add('error');
+    err.textContent = ex.message || 'Erreur de connexion';
+    err.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Se connecter';
+  }
+}
+</script>
 </body>
 </html>
