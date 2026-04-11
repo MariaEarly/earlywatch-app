@@ -63,8 +63,8 @@ const base = import.meta.env.BASE_URL;
   .stat-item { display: flex; flex-direction: column; gap: 2px; }
   .stat-value { font-size: 20px; font-weight: 600; color: var(--noir); }
   .stat-label { font-size: 12px; color: var(--color-text-tertiary); }
-  .stat-hot .stat-value { color: #8B2F1F; }
-  .stat-warm .stat-value { color: var(--terra); }
+  .stat-hot .stat-value { color: var(--noir); }
+  .stat-warm .stat-value { color: var(--noir); }
 
   .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
   .filter-label { font-size: 13px; color: var(--color-text-tertiary); font-weight: 500; }
@@ -106,9 +106,9 @@ const base = import.meta.env.BASE_URL;
     display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500;
     padding: 4px 10px; border-radius: 20px; white-space: nowrap; cursor: pointer; border: 1px solid transparent;
   }
-  .bib-freshness-badge.hot { background: #fde8e4; color: #8B2F1F; border-color: #8B2F1F; }
-  .bib-freshness-badge.warm { background: #fdf0e0; color: var(--terra); border-color: var(--terra); }
-  .bib-freshness-badge.ok { background: var(--beige2); color: var(--kaki); border-color: var(--kaki); }
+  .bib-freshness-badge.hot { background: rgba(107,122,94,0.15); color: #6B7A5E; border-color: #6B7A5E; }
+  .bib-freshness-badge.warm { background: rgba(107,122,94,0.1); color: #6B7A5E; border-color: #6B7A5E; }
+  .bib-freshness-badge.ok { background: rgba(107,122,94,0.1); color: #6B7A5E; border-color: #6B7A5E; }
   .bib-freshness-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
   .bib-card-title { font-size: 15px; font-weight: 600; color: var(--noir); line-height: 1.4; }

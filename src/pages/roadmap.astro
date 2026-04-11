@@ -11,10 +11,10 @@ const base = import.meta.env.BASE_URL;
     <div class="stats-row" id="stats-row"></div>
 
     <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#8B2F1F"></div> Critique</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--terra)"></div> Eleve</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--kaki)"></div> Moyen</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--border)"></div> Passe</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#6B7A5E"></div> Critique</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(107,122,94,0.6)"></div> Eleve</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(107,122,94,0.3)"></div> Moyen</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--beige3)"></div> Passe</div>
     </div>
 
     <div class="filters" id="filters">
@@ -59,29 +59,29 @@ const base = import.meta.env.BASE_URL;
   .rm-stat{flex:1;background:var(--white);border:1.5px solid var(--noir);border-radius:12px;padding:16px 18px;box-shadow:3px 3px 0 var(--noir);}
   .rm-stat-val{font-size:28px;font-weight:600;line-height:1;margin-bottom:4px;}
   .rm-stat-lbl{font-size:12px;color:var(--muted);}
-  .rm-stat.red .rm-stat-val{color:#8B2F1F;}
-  .rm-stat.orange .rm-stat-val{color:var(--terra);}
-  .rm-stat.kaki .rm-stat-val{color:var(--kaki);}
+  .rm-stat.red .rm-stat-val{color:var(--noir);}
+  .rm-stat.orange .rm-stat-val{color:var(--noir);}
+  .rm-stat.kaki .rm-stat-val{color:var(--noir);}
 
   .tl-year{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin:28px 0 14px -28px;}
 
   .tl-item{position:relative;margin-bottom:12px;}
   .tl-dot{position:absolute;left:-24px;top:18px;width:12px;height:12px;border-radius:50%;border:2px solid var(--white);z-index:1;}
-  .tl-dot.critical{background:#8B2F1F;}
-  .tl-dot.high{background:var(--terra);}
-  .tl-dot.medium{background:var(--kaki);}
-  .tl-dot.low{background:#059669;}
-  .tl-dot.passed{background:var(--border);}
+  .tl-dot.critical{background:#6B7A5E;}
+  .tl-dot.high{background:rgba(107,122,94,0.7);}
+  .tl-dot.medium{background:rgba(107,122,94,0.4);}
+  .tl-dot.low{background:rgba(107,122,94,0.3);}
+  .tl-dot.passed{background:var(--beige3);}
 
   .rm-card{background:var(--white);border:1.5px solid var(--noir);border-radius:12px;padding:18px 20px;transition:all .15s;cursor:pointer;box-shadow:3px 3px 0 var(--noir);}
   .rm-card:hover{border-color:var(--kaki);}
   .rm-card.passed{opacity:.55;}
-  .rm-card.imminent{border-left:4px solid #8B2F1F;}
-  .rm-card.soon{border-left:4px solid var(--terra);}
+  .rm-card.imminent{border-left:4px solid #6B7A5E;}
+  .rm-card.soon{border-left:4px solid rgba(107,122,94,0.5);}
 
   .rm-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
   .rm-card-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-  .rm-card-ref{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--terra);background:var(--terra-l, #F2DDD5);padding:3px 7px;border-radius:3px;}
+  .rm-card-ref{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6B7A5E;background:rgba(107,122,94,0.1);padding:3px 7px;border-radius:3px;}
   .rm-card-reg{font-size:12px;font-weight:500;color:var(--noir);}
   .rm-card-type{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
 
@@ -89,7 +89,7 @@ const base = import.meta.env.BASE_URL;
   .date-main{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--noir);}
   .date-delta{font-size:11px;margin-top:2px;}
   .date-delta.imminent{color:#8B2F1F;}
-  .date-delta.soon{color:var(--terra);}
+  .date-delta.soon{color:#6B7A5E;}
   .date-delta.upcoming{color:var(--muted);}
   .date-delta.passed{color:var(--muted);}
 
@@ -98,8 +98,8 @@ const base = import.meta.env.BASE_URL;
   .rm-card.open .rm-card-desc{display:block;}
 
   .rm-card-bottom{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-  .proc-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 7px;border-radius:3px;background:var(--terra-l, #F2DDD5);color:var(--terra);border:1px solid rgba(196,96,58,.2);}
-  .fresh-badge{font-size:11px;color:var(--terra);margin-left:auto;}
+  .proc-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 7px;border-radius:3px;background:rgba(107,122,94,0.1);color:#6B7A5E;border:1px solid rgba(107,122,94,0.2);}
+  .fresh-badge{font-size:11px;color:#6B7A5E;margin-left:auto;}
 </style>
 
 <script>

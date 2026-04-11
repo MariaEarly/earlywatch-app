@@ -8,10 +8,10 @@
   --beige: #F6F1E9;
   --beige2: #EDE5D5;
   --beige3: #E2D8C6;
-  --kaki: #4A5240;
-  --kaki-hover: #3a4132;
-  --terra: #C4603A;
-  --terra-hover: #a8502f;
+  --kaki: #6B7A5E;
+  --kaki-hover: #5A6A4E;
+  --terra: #6B7A5E;
+  --terra-hover: #5A6A4E;
   --noir: #1A1A17;
 
   /* Design-system aliases */
@@ -30,7 +30,7 @@
   --color-text-tertiary: #8A877C;
   --color-success: var(--kaki);
   --color-success-bg: var(--beige2);
-  --color-warning: var(--terra);
+  --color-warning: #8B6914;
   --color-warning-bg: var(--beige2);
   --color-danger: #8B2F1F;
   --color-danger-bg: var(--beige2);
@@ -143,11 +143,11 @@ h3 { font-size: 14px; font-weight: 500; }
 .btn-icon { padding: 6px; width: 32px; height: 32px; }
 
 .btn-success { background: var(--color-success); color: #fff; }
-.btn-success:hover:not(:disabled) { background: #047857; }
+.btn-success:hover:not(:disabled) { background: var(--kaki-hover); }
 .btn-danger { background: transparent; color: var(--color-danger); border: 0.5px solid var(--color-danger); }
 .btn-danger:hover:not(:disabled) { background: var(--color-danger-bg); }
 .btn-warning { background: var(--color-warning); color: #fff; }
-.btn-warning:hover:not(:disabled) { background: #b45309; }
+.btn-warning:hover:not(:disabled) { background: #6B5412; }
 
 /* Triage buttons */
 .btn-triage {
@@ -161,7 +161,7 @@ h3 { font-size: 14px; font-weight: 500; }
   color: var(--noir);
 }
 .article-actions .btn-triage:nth-child(1).btn-triage-active {
-  background: var(--terra);
+  background: var(--kaki);
   color: var(--beige);
   border-color: var(--noir);
   font-weight: 500;

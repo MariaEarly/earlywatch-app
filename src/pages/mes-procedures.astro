@@ -72,9 +72,9 @@ const base = import.meta.env.BASE_URL;
   .stat-item { display: flex; flex-direction: column; gap: 2px; }
   .stat-value { font-size: 20px; font-weight: 600; color: var(--noir); }
   .stat-label { font-size: 12px; color: var(--color-text-tertiary); }
-  .stat-hot .stat-value { color: #8B2F1F; }
-  .stat-warn .stat-value { color: var(--terra); }
-  .stat-ok .stat-value { color: var(--kaki); }
+  .stat-hot .stat-value { color: var(--noir); }
+  .stat-warn .stat-value { color: var(--noir); }
+  .stat-ok .stat-value { color: var(--noir); }
 
   .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
   .filter-label { font-size: 13px; color: var(--color-text-tertiary); font-weight: 500; }
@@ -100,7 +100,7 @@ const base = import.meta.env.BASE_URL;
     box-shadow: 3px 3px 0 rgba(26,26,23,0.35); transition: box-shadow 0.15s;
   }
   .mp-card:hover { box-shadow: 4px 4px 0 rgba(26,26,23,0.45); }
-  .mp-card.alert-border { border-color: #8B2F1F; }
+  .mp-card.alert-border { border-color: #6B7A5E; }
 
   .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
   .card-ref {
@@ -113,15 +113,15 @@ const base = import.meta.env.BASE_URL;
     display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500;
     padding: 4px 10px; border-radius: 20px; border: 1px solid; white-space: nowrap;
   }
-  .status-badge.a_valider { background: #fdf0e0; color: var(--terra); border-color: var(--terra); }
-  .status-badge.en_cours { background: var(--beige2); color: var(--kaki); border-color: var(--kaki); }
-  .status-badge.valide { background: #e8f0e4; color: #2d5016; border-color: #2d5016; }
-  .status-badge.obsolete { background: #fde8e4; color: #8B2F1F; border-color: #8B2F1F; }
+  .status-badge.a_valider { background: rgba(107,122,94,0.1); color: #6B7A5E; border-color: #6B7A5E; }
+  .status-badge.en_cours { background: rgba(107,122,94,0.1); color: #6B7A5E; border-color: #6B7A5E; }
+  .status-badge.valide { background: rgba(107,122,94,0.1); color: #6B7A5E; border-color: #6B7A5E; }
+  .status-badge.obsolete { background: rgba(107,122,94,0.1); color: #6B7A5E; border-color: #6B7A5E; }
   .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
   .alert-ribbon {
-    font-size: 11px; font-weight: 500; color: #8B2F1F; background: #fde8e4;
-    padding: 6px 10px; border-radius: 6px; border: 1px solid #8B2F1F;
+    font-size: 11px; font-weight: 500; color: #6B7A5E; background: rgba(107,122,94,0.1);
+    padding: 6px 10px; border-radius: 6px; border: 1px solid #6B7A5E;
     display: flex; align-items: center; gap: 6px;
   }
 
@@ -130,9 +130,9 @@ const base = import.meta.env.BASE_URL;
     padding: 4px 10px; border-radius: 20px; white-space: nowrap; cursor: pointer;
     border: 1px solid transparent;
   }
-  .freshness-badge.hot { background: #fde8e4; color: #8B2F1F; border-color: #8B2F1F; }
-  .freshness-badge.warm { background: #fdf0e0; color: var(--terra); border-color: var(--terra); }
-  .freshness-badge.ok { background: var(--beige2); color: var(--kaki); border-color: var(--kaki); }
+  .freshness-badge.hot { background: rgba(107,122,94,0.15); color: #6B7A5E; border-color: #6B7A5E; }
+  .freshness-badge.warm { background: rgba(107,122,94,0.1); color: #6B7A5E; border-color: #6B7A5E; }
+  .freshness-badge.ok { background: rgba(107,122,94,0.1); color: #6B7A5E; border-color: #6B7A5E; }
   .freshness-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
   .card-title { font-size: 15px; font-weight: 600; color: var(--noir); line-height: 1.4; }
@@ -152,8 +152,8 @@ const base = import.meta.env.BASE_URL;
   }
   .status-opt:hover { background: var(--beige2); }
   .status-opt.active { background: var(--kaki); color: var(--beige); }
-  .status-opt.active-valide { background: #2d5016; color: #e8f0e4; }
-  .status-opt.active-obsolete { background: #8B2F1F; color: #fde8e4; }
+  .status-opt.active-valide { background: var(--kaki); color: var(--beige); }
+  .status-opt.active-obsolete { background: var(--kaki); color: var(--beige); }
 
   .linked-articles { border-top: 1px solid var(--beige3); padding-top: 12px; display: none; }
   .linked-articles.open { display: block; }

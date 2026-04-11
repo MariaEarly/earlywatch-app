@@ -79,7 +79,7 @@ const base = import.meta.env.BASE_URL;
   .sa-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
   .sa-title { font-size: 22px; font-weight: 700; color: var(--noir); }
   .sa-subtitle { font-size: 13px; color: var(--color-text-tertiary); margin-bottom: 24px; }
-  .sa-badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; background: #8B2F1F; color: #fff; margin-left: 8px; vertical-align: middle; }
+  .sa-badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; background: transparent; color: #6B7A5E; border: 1px solid #6B7A5E; margin-left: 8px; vertical-align: middle; }
 
   .stats-bar {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;
@@ -117,8 +117,8 @@ const base = import.meta.env.BASE_URL;
     box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
   }
   .result-box {
-    margin-top: 12px; padding: 12px 16px; background: #E8F5E9;
-    border: 1px solid #81C784; border-radius: 8px; font-size: 13px; display: none;
+    margin-top: 12px; padding: 12px 16px; background: rgba(107,122,94,0.1);
+    border: 1px solid #6B7A5E; border-radius: 8px; font-size: 13px; display: none;
   }
   :global(.result-box.visible) { display: block; }
   .loading { padding: 40px; text-align: center; color: var(--color-text-tertiary); font-size: 14px; }
@@ -131,9 +131,10 @@ const base = import.meta.env.BASE_URL;
     box-shadow: 3px 3px 0 rgba(26,26,23,0.35); background: var(--beige);
   }
   .tenant-table thead th {
-    background: var(--kaki); color: var(--beige); font-size: 11px;
+    background: var(--beige); color: var(--noir); font-size: 11px;
     font-weight: 600; text-align: left; padding: 10px 12px;
     text-transform: uppercase; letter-spacing: 0.4px;
+    border-bottom: 2px solid #1A1A17;
   }
   .tenant-table tbody tr { transition: background 0.1s; }
   .tenant-table tbody tr:nth-child(even) { background: rgba(246,241,233,0.5); }
@@ -141,9 +142,9 @@ const base = import.meta.env.BASE_URL;
   .tenant-table td { padding: 10px 12px; font-size: 13px; color: var(--noir); border-top: 1px solid var(--color-border); }
 
   .plan-badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-  .plan-demo { background: #FFF3E0; color: #B36B00; }
-  .plan-starter { background: #E3ECFA; color: #2E5090; }
-  .plan-pro { background: var(--kaki); color: var(--beige); }
+  .plan-demo { background: rgba(107,122,94,0.1); color: #6B7A5E; }
+  .plan-starter { background: rgba(107,122,94,0.15); color: #6B7A5E; }
+  .plan-pro { background: rgba(107,122,94,0.25); color: #6B7A5E; font-weight: 700; }
 
   .module-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 3px; }
   .dot-on { background: var(--kaki); }
@@ -224,7 +225,7 @@ const base = import.meta.env.BASE_URL;
         <td><span class="plan-badge ${planCls}">${t.plan}</span></td>
         <td>${t.users_count}</td>
         <td>${t.procedures_validated}/${t.procedures_count} <span style="font-size:11px;color:var(--color-text-tertiary)">(${procPct}%)</span></td>
-        <td>${t.reminders_pending > 0 ? '<b style="color:#8B2F1F">' + t.reminders_pending + '</b>' : '0'}</td>
+        <td>${t.reminders_pending > 0 ? '<b style="color:#6B7A5E">' + t.reminders_pending + '</b>' : '0'}</td>
         <td>${moduleDots}</td>
         <td>
           <button class="sa-btn-sm" data-toggle-module="${t.id}" data-module="procedures_enabled" data-enabled="${!t.procedures_enabled}">

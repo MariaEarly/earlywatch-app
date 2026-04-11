@@ -64,9 +64,9 @@ const base = import.meta.env.BASE_URL;
   .stat-item { display: flex; flex-direction: column; gap: 2px; }
   .stat-value { font-size: 20px; font-weight: 600; color: var(--noir); }
   .stat-label { font-size: 12px; color: var(--color-text-tertiary); }
-  .stat-critical .stat-value { color: #8B2F1F; }
-  .stat-high .stat-value { color: #C4603A; }
-  .stat-recent .stat-value { color: #4A5240; }
+  .stat-critical .stat-value { color: var(--noir); }
+  .stat-high .stat-value { color: var(--noir); }
+  .stat-recent .stat-value { color: var(--noir); }
 
   .filters-bar {
     display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;
@@ -86,7 +86,7 @@ const base = import.meta.env.BASE_URL;
     background: var(--beige); font-size: 11px; font-weight: 600;
     text-transform: uppercase; letter-spacing: 0.5px;
     padding: 12px 14px; text-align: left; color: var(--noir);
-    border-bottom: 1.5px solid var(--noir);
+    border-bottom: 2px solid #1A1A17;
   }
   .enf-table td {
     padding: 14px; font-size: 13px; border-bottom: 1px solid var(--color-border); vertical-align: top;
@@ -117,10 +117,10 @@ const base = import.meta.env.BASE_URL;
   .enf-summary { font-size: 12px; color: var(--color-text-tertiary); margin-top: 4px; line-height: 1.5; }
 
   .sev-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-  .sev-critical { background: #8B2F1F; color: #fff; }
-  .sev-high { background: #C4603A; color: #fff; }
-  .sev-medium { background: #D4A843; color: #1A1A17; }
-  .sev-low { background: #E5E0D8; color: #6B6860; }
+  .sev-critical { background: rgba(107,122,94,0.15); color: #6B7A5E; }
+  .sev-high { background: rgba(107,122,94,0.1); color: #6B7A5E; }
+  .sev-medium { background: rgba(107,122,94,0.1); color: #6B7A5E; }
+  .sev-low { background: rgba(107,122,94,0.05); color: #6B7A5E; }
 
   .source-badge {
     display: inline-block; padding: 2px 8px; border-radius: 4px;
@@ -129,7 +129,7 @@ const base = import.meta.env.BASE_URL;
 
   .proc-tag {
     display: inline-block; padding: 1px 6px; border-radius: 3px;
-    font-size: 10px; font-weight: 500; background: #4A5240; color: #F6F1E9; margin: 1px 2px;
+    font-size: 10px; font-weight: 500; background: rgba(107,122,94,0.1); color: #6B7A5E; margin: 1px 2px;
   }
 
   .enf-date { font-size: 12px; color: var(--color-text-tertiary); white-space: nowrap; }
