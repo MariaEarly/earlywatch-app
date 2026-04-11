@@ -8,9 +8,9 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --beige: #F5F0E8; --kaki: #4A5240; --terra: #C4603A;
+  --beige: #F5F0E8; --kaki: #6B7A5E;
   --ink: #1A1A17; --muted: #6B6860; --border: rgba(28,28,26,0.12);
-  --red: #DC2626; --white: #FFFFFF;
+  --red: #DC2626;
 }
 html, body { height: 100%; }
 body {
@@ -20,24 +20,24 @@ body {
   min-height: 100vh; padding: 24px;
 }
 .card {
-  background: var(--white); border: 1px solid var(--border);
-  border-radius: 12px; padding: 40px;
-  width: 100%; max-width: 360px;
+  width: 100%; max-width: 340px;
 }
 .brand {
-  font-size: 17px; font-weight: 600; color: var(--kaki);
-  margin-bottom: 32px;
+  font-size: 16px; font-weight: 500; color: var(--ink);
+  margin-bottom: 36px;
 }
-.brand span { color: var(--terra); }
+.brand span { color: var(--kaki); }
 label {
-  display: block; font-size: 13px; font-weight: 500;
-  margin-bottom: 6px;
+  display: block; font-size: 13px; font-weight: 400;
+  color: var(--muted); margin-bottom: 6px;
 }
 input {
-  width: 100%; padding: 11px 14px;
-  border: 1px solid var(--border); border-radius: 7px;
-  font-size: 14px; font-family: inherit; color: var(--ink);
-  outline: none; margin-bottom: 16px; transition: border-color .15s;
+  width: 100%; padding: 11px 0;
+  border: none; border-bottom: 1px solid var(--border);
+  background: transparent;
+  font-size: 15px; font-family: inherit; color: var(--ink);
+  outline: none; margin-bottom: 24px; transition: border-color .15s;
+  border-radius: 0;
 }
 input:focus { border-color: var(--kaki); }
 input.error { border-color: var(--red); margin-bottom: 6px; }
@@ -48,16 +48,16 @@ input.error { border-color: var(--red); margin-bottom: 6px; }
 .error-msg.show { display: block; }
 button {
   width: 100%; padding: 13px;
-  background: var(--kaki); color: var(--white);
-  border: none; border-radius: 8px;
+  background: var(--kaki); color: #fff;
+  border: none; border-radius: 6px;
   font-size: 14px; font-weight: 500;
   font-family: inherit; cursor: pointer;
-  transition: background .15s;
+  transition: opacity .15s; margin-top: 8px;
 }
-button:hover { background: #3a4130; }
+button:hover { opacity: .85; }
 button:disabled { opacity: .5; cursor: not-allowed; }
 .footer {
-  margin-top: 20px; text-align: center;
+  margin-top: 24px; text-align: center;
   font-size: 12px; color: var(--muted);
 }
 .footer a { color: var(--kaki); text-decoration: none; }
@@ -81,7 +81,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
     <div class="error-msg" id="err">Email ou mot de passe incorrect.</div>
     <button type="submit" id="btn">Se connecter</button>
   </form>
-  <div class="footer"><a href="mailto:maria@early.consulting">Besoin d'acces ?</a></div>
+  <div class="footer"><a href="mailto:maria@early.consulting">Besoin d'acc&#232;s ?</a></div>
 </div>
 
 <script>
@@ -109,7 +109,7 @@ async function login(e) {
   pwd.classList.remove('error');
   err.classList.remove('show');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Connexion...';
+  btn.innerHTML = '<span class="spinner"></span>Connexion\u2026';
 
   try {
     const r = await fetch(`${API}/api/v1/auth/login`, {
