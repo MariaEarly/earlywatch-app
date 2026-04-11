@@ -24,10 +24,10 @@ const { title } = Astro.props;
     }
     .auth-card { width: 100%; max-width: 340px; }
     .auth-brand {
-      font-size: 13px; font-weight: 500; color: #1A1918;
+      font-size: 13px; font-weight: 400; color: #1A1918;
       margin-bottom: 36px; text-align: center;
     }
-    .auth-brand span { color: #5C6347; }
+    .auth-brand span { font-weight: 500; color: #5C6347; }
     .auth-subtitle {
       font-size: 13px; color: #8C8880; text-align: center;
       margin-bottom: 32px; line-height: 1.6;
@@ -46,10 +46,27 @@ const { title } = Astro.props;
     }
     .auth-card input:focus { border-color: #5C6347; }
     .auth-card input.error { border-color: #DC2626; margin-bottom: 6px; }
+    /* Chrome autofill fix */
+    .auth-card input:-webkit-autofill,
+    .auth-card input:-webkit-autofill:hover,
+    .auth-card input:-webkit-autofill:focus {
+      -webkit-box-shadow: 0 0 0 1000px #EDEAE3 inset !important;
+      -webkit-text-fill-color: #1A1918 !important;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+    /* Password toggle */
+    .pwd-wrapper { position: relative; }
+    .pwd-wrapper input { width: 100%; padding-right: 36px; }
+    .pwd-toggle {
+      position: absolute; right: 0; top: 50%; transform: translateY(-70%);
+      background: none; border: none; cursor: pointer; padding: 4px;
+      color: #8C8880; font-size: 18px; line-height: 1;
+    }
+    .pwd-toggle:hover { color: #1A1918; }
     .auth-btn {
       width: 100%; padding: 13px;
       background: #5C6347; color: #fff;
-      border: none; border-radius: 0;
+      border: none; border-radius: 4px;
       font-size: 14px; font-weight: 500;
       font-family: inherit; cursor: pointer;
       transition: opacity .15s; margin-top: 8px;
@@ -83,7 +100,7 @@ const { title } = Astro.props;
 </head>
 <body>
   <div class="auth-card">
-    <div class="auth-brand">Early<span>Watch</span></div>
+    <div class="auth-brand">Early <span style="font-weight:500">Watch</span></div>
     <slot />
   </div>
 </body>

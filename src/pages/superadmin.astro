@@ -108,7 +108,7 @@ const base = import.meta.env.BASE_URL;
   .form-group label { display: block; font-size: 11px; font-weight: 500; color: var(--noir); margin-bottom: 3px; text-transform: uppercase; }
   .form-group input, .form-group select {
     width: 100%; padding: 7px 10px; border: 1px solid var(--border-medium);
-    border-radius: 0; font-size: 13px; font-family: inherit; background: #fff;
+    border-radius: 0; font-size: 13px; font-family: inherit; background: #EDEAE3;
   }
   .btn-create {
     padding: 10px 24px; background: var(--kaki); color: var(--beige);
@@ -300,7 +300,7 @@ const base = import.meta.env.BASE_URL;
       box.innerHTML = `<b>Tenant cree !</b><br>
         ID : ${result.tenant_id}<br>
         Email : ${result.admin_email}<br>
-        Mot de passe temporaire : <code style="background:#fff;padding:2px 6px;border-radius:0;font-weight:500">${result.temp_password}</code><br>
+        Mot de passe temporaire : <code style="background:#EDEAE3;padding:2px 6px;border-radius:0;font-weight:500">${result.temp_password}</code><br>
         <span style="font-size:11px;color:#8C8880">Communiquer ce mot de passe au client — il devra le changer a la premiere connexion.</span>`;
       box.classList.add('visible');
 
