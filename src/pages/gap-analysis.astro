@@ -1,0 +1,629 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+const base = import.meta.env.BASE_URL;
+---
+
+<AppLayout title="Gap Analysis — Early Watch" activePage="gap-analysis">
+  <div class="ga-layout">
+    <div class="ga-main">
+
+      <!-- HEADER -->
+      <div class="ga-header">
+        <div>
+          <div class="ga-title">Gap Analysis</div>
+          <div class="ga-subtitle">Comparaison N vs N-1 des textes reglementaires et analyse des ecarts</div>
+        </div>
+      </div>
+
+      <!-- KPI BAR -->
+      <div class="ga-kpis">
+        <div class="ga-kpi">
+          <div class="ga-kpi-value" id="kpi-total">--</div>
+          <div class="ga-kpi-label">Analyses totales</div>
+        </div>
+        <div class="ga-kpi">
+          <div class="ga-kpi-value" id="kpi-pending">--</div>
+          <div class="ga-kpi-label">En attente</div>
+        </div>
+        <div class="ga-kpi">
+          <div class="ga-kpi-value" id="kpi-validated">--</div>
+          <div class="ga-kpi-label">Validees</div>
+        </div>
+        <div class="ga-kpi">
+          <div class="ga-kpi-value" id="kpi-critical">--</div>
+          <div class="ga-kpi-label">Impact critique</div>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="ga-tabs">
+        <button class="ga-tab active" id="tab-auto">Auto-generees</button>
+        <button class="ga-tab" id="tab-manual">Manuelles</button>
+      </div>
+
+      <!-- TABLE -->
+      <div class="ga-table-wrap" id="ga-table-wrap">
+        <div class="loading-overlay" style="padding:40px"><div class="spinner"></div></div>
+      </div>
+
+      <!-- DETAIL VIEW -->
+      <div class="ga-detail" id="ga-detail" style="display:none">
+        <div class="ga-detail-header" id="ga-detail-header"></div>
+        <div class="ga-detail-body" id="ga-detail-body"></div>
+      </div>
+
+    </div>
+  </div>
+</AppLayout>
+
+<script>
+  import { api, toast, formatDate, getToken, API } from '../scripts/api';
+
+  type GapTab = 'auto' | 'manual';
+  let currentTab: GapTab = 'auto';
+  let autoData: any[] = [];
+  let manualData: any[] = [];
+
+  function escHtml(s: string): string {
+    if (!s) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // ── TABS ──
+  document.getElementById('tab-auto')!.addEventListener('click', () => switchTab('auto'));
+  document.getElementById('tab-manual')!.addEventListener('click', () => switchTab('manual'));
+
+  function switchTab(tab: GapTab): void {
+    currentTab = tab;
+    document.querySelectorAll('.ga-tab').forEach((t: any) => t.classList.remove('active'));
+    document.getElementById(tab === 'auto' ? 'tab-auto' : 'tab-manual')!.classList.add('active');
+    document.getElementById('ga-detail')!.style.display = 'none';
+    renderTable();
+  }
+
+  // ── IMPACT BADGE ──
+  function impactBadge(level: string): string {
+    const map: any = {
+      critical: ['Critique', 'ga-impact-critical'],
+      high: ['Eleve', 'ga-impact-high'],
+      medium: ['Moyen', 'ga-impact-medium'],
+      low: ['Faible', 'ga-impact-low'],
+    };
+    const [label, cls] = map[level] || [level || '\u2014', 'ga-impact-low'];
+    return `<span class="ga-badge ${cls}">${label}</span>`;
+  }
+
+  // ── STATUS BADGE ──
+  function gapStatusBadge(status: string): string {
+    const map: any = {
+      pending: ['En attente', 'ga-status-pending'],
+      pending_validation: ['En attente', 'ga-status-pending'],
+      done: ['Termine', 'ga-status-done'],
+      validated: ['Valide', 'ga-status-validated'],
+      rejected: ['Rejete', 'ga-status-rejected'],
+      error: ['Erreur', 'ga-status-error'],
+    };
+    const [label, cls] = map[status] || [status || '\u2014', 'ga-status-pending'];
+    return `<span class="ga-badge ${cls}">${label}</span>`;
+  }
+
+  // ── LOAD DATA ──
+  async function loadAll(): Promise<void> {
+    const [autoResult, manualResult] = await Promise.allSettled([
+      loadAuto(),
+      loadManual(),
+    ]);
+    updateKPIs();
+    renderTable();
+  }
+
+  async function loadAuto(): Promise<void> {
+    try {
+      const data = await api('/api/v1/gap-analysis/auto');
+      autoData = data.analyses || data || [];
+    } catch (e: any) {
+      autoData = [];
+    }
+  }
+
+  async function loadManual(): Promise<void> {
+    try {
+      const data = await api('/api/v1/gap-analysis/reports');
+      manualData = data.reports || data || [];
+    } catch (e: any) {
+      manualData = [];
+    }
+  }
+
+  function updateKPIs(): void {
+    const all = [...autoData, ...manualData];
+    const total = all.length;
+    const pending = all.filter((r: any) => r.status === 'pending' || r.status === 'pending_validation').length;
+    const validated = all.filter((r: any) => r.status === 'validated' || r.status === 'done').length;
+    const critical = all.filter((r: any) => r.impact_level === 'critical').length;
+
+    document.getElementById('kpi-total')!.textContent = String(total);
+    document.getElementById('kpi-pending')!.textContent = String(pending);
+    document.getElementById('kpi-validated')!.textContent = String(validated);
+    document.getElementById('kpi-critical')!.textContent = String(critical);
+  }
+
+  // ── RENDER TABLE ──
+  function renderTable(): void {
+    const data = currentTab === 'auto' ? autoData : manualData;
+    const wrap = document.getElementById('ga-table-wrap')!;
+
+    if (!data.length) {
+      wrap.innerHTML = `<div class="empty-state" style="padding:40px">
+        <p>Aucune analyse ${currentTab === 'auto' ? 'auto-generee' : 'manuelle'}</p>
+      </div>`;
+      return;
+    }
+
+    if (currentTab === 'auto') {
+      wrap.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Ref. obligation</th>
+              <th>Version</th>
+              <th>Date</th>
+              <th>Impact</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map((r: any) => `
+              <tr data-id="${r.id}" class="ga-row">
+                <td><span class="ga-code">${escHtml(r.obligation_ref || '\u2014')}</span></td>
+                <td class="ga-code">${escHtml(r.version_previous || '?')} → ${escHtml(r.version_current || '?')}</td>
+                <td>${formatDate(r.created_at)}</td>
+                <td>${impactBadge(r.impact_level)}</td>
+                <td>${gapStatusBadge(r.status)}</td>
+                <td>
+                  <button class="btn btn-sm ga-view-btn" data-id="${r.id}" data-type="auto">Voir</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    } else {
+      wrap.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Code texte</th>
+              <th>Type</th>
+              <th>Profil</th>
+              <th>Date</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map((r: any) => `
+              <tr data-id="${r.id}" class="ga-row">
+                <td><span class="ga-code">${escHtml(r.text_id || '\u2014')}</span></td>
+                <td><span class="ga-badge ga-type-badge">${r.analysis_type === 'version_diff' ? 'N vs N-1' : 'Procedure'}</span></td>
+                <td>${escHtml(r.tenant_profile || '\u2014')}</td>
+                <td>${formatDate(r.created_at)}</td>
+                <td>${gapStatusBadge(r.status)}</td>
+                <td class="ga-actions">
+                  <button class="btn btn-sm ga-view-btn" data-id="${r.id}" data-type="manual">Voir</button>
+                  ${r.status === 'pending_validation' ? `<button class="btn btn-sm btn-success ga-validate-btn" data-id="${r.id}">Valider</button>` : ''}
+                  <button class="btn btn-sm ga-export-btn" data-id="${r.id}">PDF</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    // Bind view buttons
+    wrap.querySelectorAll('.ga-view-btn').forEach((btn: any) => {
+      btn.addEventListener('click', (e: Event) => {
+        e.stopPropagation();
+        loadDetail(btn.dataset.id, btn.dataset.type);
+      });
+    });
+
+    // Bind validate buttons
+    wrap.querySelectorAll('.ga-validate-btn').forEach((btn: any) => {
+      btn.addEventListener('click', (e: Event) => {
+        e.stopPropagation();
+        validateReport(btn.dataset.id);
+      });
+    });
+
+    // Bind export buttons
+    wrap.querySelectorAll('.ga-export-btn').forEach((btn: any) => {
+      btn.addEventListener('click', (e: Event) => {
+        e.stopPropagation();
+        exportPDF(btn.dataset.id);
+      });
+    });
+
+    // Bind row click
+    wrap.querySelectorAll('.ga-row').forEach((row: any) => {
+      row.addEventListener('click', () => {
+        const type = currentTab;
+        loadDetail(row.dataset.id, type);
+      });
+    });
+  }
+
+  // ── DETAIL VIEW ──
+  async function loadDetail(id: string, type: string): Promise<void> {
+    const detail = document.getElementById('ga-detail')!;
+    const header = document.getElementById('ga-detail-header')!;
+    const body = document.getElementById('ga-detail-body')!;
+
+    detail.style.display = 'block';
+    body.innerHTML = '<div class="loading-overlay" style="padding:40px"><div class="spinner"></div></div>';
+
+    try {
+      if (type === 'auto') {
+        const item = autoData.find((r: any) => String(r.id) === String(id));
+        if (!item) throw new Error('Analyse non trouvee');
+        renderAutoDetail(item, header, body);
+      } else {
+        const report = await api(`/api/v1/gap-analysis/${id}`);
+        renderManualDetail(report, header, body);
+      }
+    } catch (e: any) {
+      body.innerHTML = `<div class="empty-state"><p>${escHtml(e.message)}</p></div>`;
+    }
+
+    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderAutoDetail(item: any, header: HTMLElement, body: HTMLElement): void {
+    header.innerHTML = `
+      <div class="ga-detail-top">
+        <button class="btn btn-sm" id="ga-back">← Retour</button>
+        <div class="ga-detail-title-row">
+          <h2>${escHtml(item.obligation_ref || 'Analyse')}</h2>
+          ${impactBadge(item.impact_level)}
+          ${gapStatusBadge(item.status)}
+        </div>
+        <div class="ga-detail-meta">
+          Version <span class="ga-code">${escHtml(item.version_previous || '?')}</span> → <span class="ga-code">${escHtml(item.version_current || '?')}</span>
+          &middot; ${formatDate(item.created_at)}
+        </div>
+      </div>`;
+
+    const changesNew = item.changes_new || [];
+    const changesMod = item.changes_modified || [];
+    const changesRem = item.changes_removed || [];
+
+    body.innerHTML = `
+      ${item.summary ? `<div class="ga-summary">${escHtml(item.summary)}</div>` : ''}
+
+      ${changesNew.length ? `
+        <div class="ga-section">
+          <div class="ga-section-label">Nouvelles obligations</div>
+          ${changesNew.map((c: string) => `
+            <div class="ga-change ga-change-new">
+              <span class="ga-badge ga-impact-high">NOUVEAU</span>
+              <span>${escHtml(c)}</span>
+            </div>
+          `).join('')}
+        </div>` : ''}
+
+      ${changesMod.length ? `
+        <div class="ga-section">
+          <div class="ga-section-label">Obligations modifiees</div>
+          ${changesMod.map((c: string) => `
+            <div class="ga-change ga-change-mod">
+              <span class="ga-badge ga-status-pending">MODIFIE</span>
+              <span>${escHtml(c)}</span>
+            </div>
+          `).join('')}
+        </div>` : ''}
+
+      ${changesRem.length ? `
+        <div class="ga-section">
+          <div class="ga-section-label">Obligations supprimees</div>
+          ${changesRem.map((c: string) => `
+            <div class="ga-change ga-change-rem">
+              <span class="ga-badge ga-impact-low">SUPPRIME</span>
+              <span>${escHtml(c)}</span>
+            </div>
+          `).join('')}
+        </div>` : ''}
+
+      ${!changesNew.length && !changesMod.length && !changesRem.length ? `
+        <div class="empty-state" style="padding:24px"><p>Aucun changement detecte</p></div>` : ''}
+
+      ${item.impacted_procedures?.length ? `
+        <div class="ga-section">
+          <div class="ga-section-label">Procedures impactees</div>
+          <div class="ga-procedures-list">
+            ${item.impacted_procedures.map((p: string) => `<span class="ga-badge ga-type-badge">${escHtml(p)}</span>`).join('')}
+          </div>
+        </div>` : ''}
+    `;
+
+    document.getElementById('ga-back')!.addEventListener('click', () => {
+      document.getElementById('ga-detail')!.style.display = 'none';
+    });
+  }
+
+  function renderManualDetail(report: any, header: HTMLElement, body: HTMLElement): void {
+    const isVersionDiff = report.analysis_type === 'version_diff';
+
+    header.innerHTML = `
+      <div class="ga-detail-top">
+        <button class="btn btn-sm" id="ga-back">← Retour</button>
+        <div class="ga-detail-title-row">
+          <h2>${escHtml(report.text_id || 'Rapport')}</h2>
+          <span class="ga-badge ga-type-badge">${isVersionDiff ? 'N vs N-1' : 'Procedure'}</span>
+          ${gapStatusBadge(report.status)}
+        </div>
+        <div class="ga-detail-meta">
+          Profil : ${escHtml(report.tenant_profile || '\u2014')}
+          ${report.uploaded_filename ? ` &middot; Fichier : ${escHtml(report.uploaded_filename)}` : ''}
+          &middot; ${formatDate(report.created_at)}
+          ${report.validated_by ? ` &middot; Valide le ${formatDate(report.validated_at)}` : ''}
+        </div>
+        <div class="ga-detail-actions">
+          ${report.status === 'pending_validation' ? `<button class="btn btn-sm btn-success" id="ga-detail-validate" data-id="${report.id}">Valider</button>` : ''}
+          <button class="btn btn-sm" id="ga-detail-export" data-id="${report.id}">Export PDF</button>
+        </div>
+      </div>`;
+
+    const data = report.report || {};
+    const summary = report.summary || {};
+    const obligations = data.obligations || data.gaps || [];
+
+    const covered = obligations.filter((o: any) => o.status === 'covered' || o.status === 'couverte').length;
+    const partial = obligations.filter((o: any) => o.status === 'partial' || o.status === 'partielle').length;
+    const absent = obligations.filter((o: any) => o.status === 'absent' || o.status === 'absente').length;
+
+    body.innerHTML = `
+      ${summary.coverage_rate != null ? `
+        <div class="ga-coverage-bar">
+          <div class="ga-coverage-stats">
+            <span class="ga-badge ga-impact-high">${covered} couvertes</span>
+            <span class="ga-badge ga-status-pending">${partial} partielles</span>
+            <span class="ga-badge ga-impact-critical">${absent} absentes</span>
+          </div>
+          <div class="ga-coverage-pct">Couverture : ${summary.coverage_rate}%</div>
+        </div>` : ''}
+
+      ${obligations.length ? obligations.map((o: any, i: number) => {
+        const statusCls = (o.status === 'covered' || o.status === 'couverte') ? 'ga-obl-covered'
+          : (o.status === 'partial' || o.status === 'partielle') ? 'ga-obl-partial'
+          : 'ga-obl-absent';
+        return `
+          <div class="ga-obligation ${statusCls}">
+            <div class="ga-obl-header">
+              <span class="ga-code">${escHtml(o.article || o.obligation_ref || 'Obligation ' + (i + 1))}</span>
+              ${gapStatusBadge(o.status)}
+              ${o.confidence != null ? `<span class="ga-confidence">${o.confidence}%</span>` : ''}
+            </div>
+            <div class="ga-obl-text">${escHtml(o.obligation || o.text || '')}</div>
+            ${o.analysis || o.comment ? `<div class="ga-obl-analysis">${escHtml(o.analysis || o.comment)}</div>` : ''}
+            ${o.recommendation ? `<div class="ga-obl-reco"><strong>Recommandation :</strong> ${escHtml(o.recommendation)}</div>` : ''}
+          </div>`;
+      }).join('') : '<div class="empty-state" style="padding:24px"><p>Aucune obligation analysee</p></div>'}
+
+      ${report.provenance ? `<p class="ga-provenance">${escHtml(report.provenance)}</p>` : ''}
+    `;
+
+    document.getElementById('ga-back')!.addEventListener('click', () => {
+      document.getElementById('ga-detail')!.style.display = 'none';
+    });
+
+    document.getElementById('ga-detail-validate')?.addEventListener('click', () => {
+      validateReport(report.id);
+    });
+
+    document.getElementById('ga-detail-export')?.addEventListener('click', () => {
+      exportPDF(report.id);
+    });
+  }
+
+  // ── VALIDATE ──
+  async function validateReport(id: string): Promise<void> {
+    if (!confirm('Valider ce rapport gap analysis ?')) return;
+    try {
+      await api(`/api/v1/gap-analysis/${id}/validate`, {
+        method: 'PATCH',
+        body: { decision: 'validate' },
+      });
+      toast('Rapport valide');
+      await loadAll();
+    } catch (e: any) {
+      toast(e.message, 'error');
+    }
+  }
+
+  // ── EXPORT PDF ──
+  async function exportPDF(id: string): Promise<void> {
+    try {
+      const token = getToken();
+      const res = await fetch(`${API}/api/v1/gap-analysis/${id}/export`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Erreur export PDF');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gap-analysis-${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast('PDF telecharge');
+    } catch (e: any) {
+      toast(e.message, 'error');
+    }
+  }
+
+  // ── INIT ──
+  loadAll();
+</script>
+
+<style>
+  .ga-layout { min-height: 100vh; display: flex; flex-direction: column; }
+  .ga-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
+
+  .ga-header { margin-bottom: 28px; }
+  .ga-title { font-size: 15px; font-weight: 500; color: var(--text-primary); }
+  .ga-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+  /* KPI bar */
+  .ga-kpis {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border: 1px solid var(--border-light); margin-bottom: 28px;
+  }
+  .ga-kpi {
+    padding: 1.25rem 1.5rem;
+    border-right: 1px solid var(--border-light);
+  }
+  .ga-kpi:last-child { border-right: none; }
+  .ga-kpi-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 32px; font-weight: 300; line-height: 1;
+    color: var(--text-primary);
+  }
+  .ga-kpi-label {
+    font-size: 11px; color: var(--text-secondary);
+    letter-spacing: 0.02em; margin-top: 6px;
+  }
+
+  /* Tabs */
+  .ga-tabs {
+    display: flex; gap: 0; margin-bottom: 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .ga-tab {
+    padding: 10px 20px; font-family: inherit; font-size: 12px;
+    font-weight: 400; color: var(--text-secondary);
+    background: transparent; border: none; border-bottom: 2px solid transparent;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .ga-tab:hover { color: var(--text-primary); }
+  .ga-tab.active {
+    color: var(--kaki); font-weight: 500;
+    border-bottom-color: var(--kaki);
+  }
+
+  /* Table */
+  .ga-table-wrap { margin-bottom: 28px; }
+  .ga-row { cursor: pointer; }
+  .ga-row:hover td { background: var(--bg-surface); }
+  .ga-code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; color: var(--text-primary);
+  }
+  .ga-actions { display: flex; gap: 4px; }
+
+  /* Badges */
+  .ga-badge {
+    display: inline-flex; align-items: center;
+    padding: 1px 6px; font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; font-weight: 400; letter-spacing: 0.06em;
+    border: 1px solid var(--border-medium); color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .ga-impact-critical { color: var(--color-error); border-color: var(--color-error); }
+  .ga-impact-high { color: var(--kaki); border-color: var(--kaki); }
+  .ga-impact-medium { color: var(--text-secondary); border-color: var(--border-medium); }
+  .ga-impact-low { color: var(--text-muted); border-color: var(--border-light); }
+  .ga-status-pending { color: #8B6914; border-color: #8B6914; }
+  .ga-status-done { color: var(--kaki); border-color: var(--kaki); }
+  .ga-status-validated { color: var(--kaki); border-color: var(--kaki); }
+  .ga-status-rejected { color: var(--color-error); border-color: var(--color-error); }
+  .ga-status-error { color: var(--color-error); border-color: var(--color-error); }
+  .ga-type-badge { color: var(--text-secondary); border-color: var(--border-medium); }
+
+  /* Detail view */
+  .ga-detail {
+    border-top: 1px solid var(--border-light);
+    padding-top: 24px; margin-top: 8px;
+  }
+  .ga-detail-top { margin-bottom: 24px; }
+  .ga-detail-title-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 12px;
+  }
+  .ga-detail-title-row h2 { font-size: 15px; font-weight: 500; }
+  .ga-detail-meta {
+    font-size: 12px; color: var(--text-secondary); margin-top: 4px;
+  }
+  .ga-detail-actions {
+    display: flex; gap: 6px; margin-top: 12px;
+  }
+
+  .ga-summary {
+    font-size: 13px; color: var(--text-secondary);
+    padding: 14px 0; border-bottom: 1px solid var(--border-light);
+    margin-bottom: 20px; line-height: 1.6;
+  }
+
+  /* Sections */
+  .ga-section {
+    border-top: 1px solid var(--border-light);
+    padding-top: 20px; margin-top: 20px;
+  }
+  .ga-section-label {
+    font-size: 10px; font-weight: 500; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--kaki); margin-bottom: 12px;
+  }
+
+  .ga-change {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border-light);
+    font-size: 13px; color: var(--text-primary); line-height: 1.5;
+  }
+  .ga-change:last-child { border-bottom: none; }
+  .ga-change .ga-badge { flex-shrink: 0; margin-top: 2px; }
+
+  .ga-procedures-list { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  /* Coverage bar */
+  .ga-coverage-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid var(--border-light);
+    margin-bottom: 20px;
+  }
+  .ga-coverage-stats { display: flex; gap: 8px; }
+  .ga-coverage-pct {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px; font-weight: 500; color: var(--text-primary);
+  }
+
+  /* Obligations */
+  .ga-obligation {
+    padding: 14px 0; border-bottom: 1px solid var(--border-light);
+  }
+  .ga-obligation:last-child { border-bottom: none; }
+  .ga-obl-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+  }
+  .ga-obl-text { font-size: 13px; color: var(--text-primary); line-height: 1.5; }
+  .ga-obl-analysis {
+    font-size: 12px; color: var(--text-secondary);
+    margin-top: 6px; line-height: 1.5;
+  }
+  .ga-obl-reco {
+    font-size: 12px; color: var(--text-secondary);
+    margin-top: 6px; padding: 8px 12px;
+    background: var(--bg-surface); border-left: 2px solid var(--kaki);
+  }
+  .ga-confidence {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--text-muted);
+  }
+  .ga-obl-covered .ga-obl-header .ga-code { color: var(--kaki); }
+  .ga-obl-absent .ga-obl-header .ga-code { color: var(--color-error); }
+
+  .ga-provenance {
+    font-size: 11px; color: var(--text-muted);
+    margin-top: 20px; font-style: italic;
+  }
+</style>
