@@ -191,6 +191,7 @@ function renderHeader() {
           <a href="bibliotheque.html" class="btn btn-ghost btn-sm">Bibliotheque</a>
           <a href="situations.html" class="btn btn-ghost btn-sm">Fiches Reflexes</a>
           <a href="roadmap.html" class="btn btn-ghost btn-sm">Roadmap</a>
+          <a href="pays-risque.html" class="btn btn-ghost btn-sm">Pays a risque</a>
           <a href="controle.html" class="btn btn-ghost btn-sm" style="position:relative">Controle <span id="nav-badge-ctrl" style="display:none;position:absolute;top:-4px;right:-10px;background:#8B2F1F;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;line-height:18px;text-align:center;border-radius:9px;padding:0 5px;border:1.5px solid var(--noir)"></span></a>
         </nav>
       </div>
