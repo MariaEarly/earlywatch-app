@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Early Watch — Procédures</title>
+  <title>Early Watch — Proc&eacute;dures</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,45 +14,138 @@
     if (!requireAuth()) throw new Error('redirect');
 
     let procedures = [];
+    let mode = 'scratch'; // 'scratch' | 'gap'
 
     async function init() {
       document.getElementById('app').innerHTML = renderHeader() + `
         <div class="flex">
           <!-- Left: Generator form -->
-          <div style="width:380px; min-width:380px; border-right:0.5px solid var(--color-border-tertiary); height:calc(100vh - 52px); overflow-y:auto; padding:24px; background:var(--color-background-primary)">
-            <h2 style="margin-bottom:20px">Générer une procédure</h2>
+          <div style="width:400px; min-width:400px; border-right:1.5px solid var(--noir, var(--color-border-tertiary)); height:calc(100vh - 52px); overflow-y:auto; padding:24px; background:var(--beige, var(--color-background-primary))">
 
-            <div style="margin-bottom:16px">
-              <label for="textId">Identifiant Legifrance</label>
-              <input id="textId" class="input" placeholder="ex: cmf, LEGITEXT000..." value="cmf">
-              <p class="text-xs text-tertiary" style="margin-top:4px">
-                Utilisez <strong>cmf</strong> pour le Code monétaire et financier
+            <!-- Mode switcher -->
+            <div class="flex gap-4" style="margin-bottom:20px">
+              <button id="tab-scratch" class="btn btn-sm" style="flex:1; border-radius:20px" onclick="switchMode('scratch')">
+                G&eacute;n&eacute;rer from scratch
+              </button>
+              <button id="tab-gap" class="btn btn-sm" style="flex:1; border-radius:20px" onclick="switchMode('gap')">
+                Mettre &agrave; jour
+              </button>
+            </div>
+
+            <!-- Mode scratch: questionnaire 5 champs -->
+            <div id="form-scratch">
+              <h2 style="margin-bottom:4px">G&eacute;n&eacute;rer une proc&eacute;dure</h2>
+              <p class="text-xs text-tertiary" style="margin-bottom:16px">
+                Pas de proc&eacute;dure existante ? R&eacute;pondez au questionnaire, on g&eacute;n&egrave;re une proc&eacute;dure op&eacute;rationnelle compl&egrave;te.
               </p>
+
+              <div style="margin-bottom:16px">
+                <label for="textId">Identifiant Legifrance</label>
+                <input id="textId" class="input" placeholder="ex: cmf, LEGITEXT000..." value="cmf">
+                <p class="text-xs text-tertiary" style="margin-top:4px">
+                  <strong>cmf</strong> = Code mon&eacute;taire et financier
+                </p>
+              </div>
+
+              <div style="margin-bottom:16px">
+                <label for="profile">Profil r&eacute;glementaire</label>
+                <select id="profile" class="select">
+                  <option value="banque">Banque (&Eacute;tablissement de cr&eacute;dit)</option>
+                  <option value="psp">PSP (Prestataire de services de paiement)</option>
+                  <option value="casp">CASP (Crypto-actifs / PSAN)</option>
+                </select>
+              </div>
+
+              <div style="margin-bottom:16px">
+                <label for="teamSize">&Eacute;quipe compliance</label>
+                <select id="teamSize" class="select">
+                  <option value="solo">1 personne (RCSI seul)</option>
+                  <option value="small">2-5 personnes</option>
+                  <option value="medium">6-15 personnes</option>
+                  <option value="large">16+ personnes</option>
+                </select>
+              </div>
+
+              <div style="margin-bottom:16px">
+                <label for="tools">Outils KYC / screening utilis&eacute;s</label>
+                <input id="tools" class="input" placeholder="ex: Ondorse, ComplyAdvantage, World-Check...">
+              </div>
+
+              <div style="margin-bottom:16px">
+                <label for="clientTypes">Types de clients</label>
+                <select id="clientTypes" class="select">
+                  <option value="b2c">B2C (particuliers)</option>
+                  <option value="b2b">B2B (entreprises)</option>
+                  <option value="mixte">Mixte B2B + B2C</option>
+                </select>
+              </div>
+
+              <div style="margin-bottom:16px">
+                <label for="products">Produits / services propos&eacute;s</label>
+                <input id="products" class="input" placeholder="ex: paiement, cr&eacute;dit, &eacute;pargne, crypto...">
+              </div>
+
+              <div style="margin-bottom:20px">
+                <label for="channel">Canal d'entr&eacute;e en relation</label>
+                <select id="channel" class="select">
+                  <option value="digital">100% digital</option>
+                  <option value="face">Face &agrave; face</option>
+                  <option value="mixte">Mixte</option>
+                </select>
+              </div>
+
+              <button class="btn btn-primary" id="generateBtn" onclick="generateScratch()" style="width:100%; border-radius:20px">
+                G&eacute;n&eacute;rer la proc&eacute;dure
+              </button>
             </div>
 
-            <div style="margin-bottom:16px">
-              <label for="profile">Profil réglementaire</label>
-              <select id="profile" class="select">
-                <option value="banque">Banque (Établissement de crédit)</option>
-                <option value="psp">PSP (Prestataire de services de paiement)</option>
-                <option value="casp">CASP (Crypto-actifs / PSAN)</option>
-              </select>
-            </div>
+            <!-- Mode gap: upload + text_id -->
+            <div id="form-gap" style="display:none">
+              <h2 style="margin-bottom:4px">Mettre &agrave; jour une proc&eacute;dure</h2>
+              <p class="text-xs text-tertiary" style="margin-bottom:16px">
+                Uploadez votre proc&eacute;dure existante. On l'analyse vs les obligations r&eacute;glementaires et on identifie les &eacute;carts.
+              </p>
 
-            <div style="margin-bottom:20px">
-              <label for="context">Contexte client <span class="text-tertiary">(optionnel)</span></label>
-              <textarea id="context" class="textarea" placeholder="Ex: Banque de détail, 150 employés, clientèle PME..."></textarea>
-            </div>
+              <div style="margin-bottom:16px">
+                <label for="gapTextId">Identifiant Legifrance</label>
+                <input id="gapTextId" class="input" placeholder="ex: cmf, LEGITEXT000..." value="cmf">
+              </div>
 
-            <button class="btn btn-primary" id="generateBtn" onclick="generate()" style="width:100%">
-              Générer la procédure
-            </button>
+              <div style="margin-bottom:16px">
+                <label for="gapProfile">Profil r&eacute;glementaire</label>
+                <select id="gapProfile" class="select">
+                  <option value="banque">Banque (&Eacute;tablissement de cr&eacute;dit)</option>
+                  <option value="psp">PSP (Prestataire de services de paiement)</option>
+                  <option value="casp">CASP (Crypto-actifs / PSAN)</option>
+                </select>
+              </div>
+
+              <div style="margin-bottom:20px">
+                <label for="gapFile">Proc&eacute;dure existante (PDF, DOCX ou TXT)</label>
+                <div id="drop-zone" style="border:1.5px dashed var(--noir, var(--color-border-primary)); border-radius:12px; padding:24px; text-align:center; cursor:pointer; transition: background 0.15s"
+                     onclick="document.getElementById('gapFile').click()"
+                     ondragover="event.preventDefault(); this.style.background='var(--beige2, var(--color-background-tertiary))'"
+                     ondragleave="this.style.background=''"
+                     ondrop="event.preventDefault(); this.style.background=''; handleFileDrop(event)">
+                  <input id="gapFile" type="file" accept=".pdf,.docx,.doc,.txt" style="display:none" onchange="handleFileSelect(this)">
+                  <div id="drop-label">
+                    <div style="font-size:24px; margin-bottom:8px">&#128196;</div>
+                    <p class="text-sm">Glissez un fichier ici ou <strong>cliquez</strong></p>
+                    <p class="text-xs text-tertiary">PDF, DOCX ou TXT &middot; Max 10 Mo</p>
+                  </div>
+                </div>
+              </div>
+
+              <button class="btn btn-primary" id="gapBtn" onclick="generateGap()" style="width:100%; border-radius:20px" disabled>
+                Lancer le gap analysis
+              </button>
+            </div>
 
             <div id="generate-error" style="display:none; margin-top:12px" class="warning-box"></div>
 
             <!-- Previous procedures -->
-            <div style="margin-top:32px; padding-top:20px; border-top:0.5px solid var(--color-border-tertiary)">
-              <h3 style="margin-bottom:12px">Procédures générées</h3>
+            <div style="margin-top:32px; padding-top:20px; border-top:1.5px solid var(--noir, var(--color-border-tertiary))">
+              <h3 style="margin-bottom:12px">Proc&eacute;dures g&eacute;n&eacute;r&eacute;es</h3>
               <div id="procedure-list">
                 <div class="loading-overlay" style="padding:20px"><div class="spinner"></div></div>
               </div>
@@ -63,18 +156,73 @@
           <main class="content-main" id="result-area">
             <div class="empty-state" style="height:100%">
               <div class="icon">&#128221;</div>
-              <p>Configurez les paramètres et cliquez sur<br>"Générer la procédure"</p>
+              <p>Choisissez un mode et configurez les param&egrave;tres</p>
               <p class="text-xs text-tertiary" style="margin-top:8px">
-                La procédure sera générée à partir des obligations<br>
-                extraites de Legifrance via Claude AI
+                <strong>From scratch</strong> &mdash; g&eacute;n&eacute;ration compl&egrave;te &agrave; partir de vos r&eacute;ponses<br>
+                <strong>Mise &agrave; jour</strong> &mdash; gap analysis de votre proc&eacute;dure existante
               </p>
             </div>
           </main>
         </div>`;
 
+      switchMode('scratch');
       loadProcedures();
     }
 
+    function switchMode(m) {
+      mode = m;
+      document.getElementById('form-scratch').style.display = m === 'scratch' ? 'block' : 'none';
+      document.getElementById('form-gap').style.display = m === 'gap' ? 'block' : 'none';
+      // Tab styling
+      const tabS = document.getElementById('tab-scratch');
+      const tabG = document.getElementById('tab-gap');
+      if (m === 'scratch') {
+        tabS.style.background = 'var(--kaki, var(--color-accent))';
+        tabS.style.color = 'var(--beige, #fff)';
+        tabS.style.border = '1.5px solid var(--noir, var(--color-accent))';
+        tabG.style.background = 'transparent';
+        tabG.style.color = 'var(--noir, var(--color-text-primary))';
+        tabG.style.border = '1.5px solid var(--noir, var(--color-border-primary))';
+      } else {
+        tabG.style.background = 'var(--kaki, var(--color-accent))';
+        tabG.style.color = 'var(--beige, #fff)';
+        tabG.style.border = '1.5px solid var(--noir, var(--color-accent))';
+        tabS.style.background = 'transparent';
+        tabS.style.color = 'var(--noir, var(--color-text-primary))';
+        tabS.style.border = '1.5px solid var(--noir, var(--color-border-primary))';
+      }
+    }
+
+    // ---- File handling for gap analysis ----
+    let selectedFile = null;
+
+    function handleFileSelect(input) {
+      if (input.files && input.files[0]) setFile(input.files[0]);
+    }
+    function handleFileDrop(e) {
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+    }
+    function setFile(f) {
+      const allowed = ['.pdf', '.docx', '.doc', '.txt'];
+      const ext = '.' + f.name.split('.').pop().toLowerCase();
+      if (!allowed.includes(ext)) {
+        toast('Format non support\u00e9. Utilisez PDF, DOCX ou TXT.', 'error');
+        return;
+      }
+      if (f.size > 10 * 1024 * 1024) {
+        toast('Fichier trop volumineux (max 10 Mo).', 'error');
+        return;
+      }
+      selectedFile = f;
+      document.getElementById('drop-label').innerHTML = `
+        <div style="font-size:24px; margin-bottom:8px">&#9989;</div>
+        <p class="text-sm fw-500">${escHtml(f.name)}</p>
+        <p class="text-xs text-tertiary">${(f.size / 1024).toFixed(0)} Ko &middot; Cliquez pour changer</p>
+      `;
+      document.getElementById('gapBtn').disabled = false;
+    }
+
+    // ---- Procedure list ----
     async function loadProcedures() {
       try {
         procedures = await api('/api/v1/procedures');
@@ -88,7 +236,7 @@
     function renderProcedureList() {
       const list = document.getElementById('procedure-list');
       if (!procedures.length) {
-        list.innerHTML = '<p class="text-sm text-tertiary">Aucune procédure</p>';
+        list.innerHTML = '<p class="text-sm text-tertiary">Aucune proc\u00e9dure</p>';
         return;
       }
       list.innerHTML = procedures.map(p => `
@@ -104,14 +252,73 @@
       `).join('');
     }
 
-    async function generate() {
+    // ---- Generate from scratch (mode scratch) ----
+    async function generateScratch() {
       const btn = document.getElementById('generateBtn');
       const errEl = document.getElementById('generate-error');
       errEl.style.display = 'none';
 
       const textId = document.getElementById('textId').value.trim();
       const profile = document.getElementById('profile').value;
-      const context = document.getElementById('context').value.trim();
+
+      if (!textId) {
+        errEl.innerHTML = '<span>&#9888;</span> Identifiant Legifrance requis';
+        errEl.style.display = 'flex';
+        return;
+      }
+
+      // Build enriched context from questionnaire
+      const teamSize = document.getElementById('teamSize').value;
+      const tools = document.getElementById('tools').value.trim();
+      const clientTypes = document.getElementById('clientTypes').value;
+      const products = document.getElementById('products').value.trim();
+      const channel = document.getElementById('channel').value;
+
+      const contextParts = [];
+      const teamLabels = { solo: '1 personne (RCSI seul)', small: '2-5 personnes', medium: '6-15 personnes', large: '16+ personnes' };
+      contextParts.push(`\u00c9quipe compliance : ${teamLabels[teamSize]}`);
+      if (tools) contextParts.push(`Outils KYC/screening : ${tools}`);
+      const clientLabels = { b2c: 'B2C (particuliers)', b2b: 'B2B (entreprises)', mixte: 'Mixte B2B + B2C' };
+      contextParts.push(`Types de clients : ${clientLabels[clientTypes]}`);
+      if (products) contextParts.push(`Produits/services : ${products}`);
+      const channelLabels = { digital: '100% digital', face: 'Face \u00e0 face', mixte: 'Mixte' };
+      contextParts.push(`Canal d'entr\u00e9e en relation : ${channelLabels[channel]}`);
+
+      const clientContext = contextParts.join('\n');
+
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:1.5px"></div> G\u00e9n\u00e9ration en cours...';
+
+      showLoading('Extraction des obligations depuis Legifrance...');
+
+      try {
+        const body = { text_id: textId, tenant_profile: profile, client_context: clientContext };
+        const result = await api('/api/v1/procedures/generate', { method: 'POST', body });
+        renderResult(result);
+        toast('Proc\u00e9dure g\u00e9n\u00e9r\u00e9e avec succ\u00e8s');
+        loadProcedures();
+      } catch (e) {
+        showError(e.message, errEl);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'G\u00e9n\u00e9rer la proc\u00e9dure';
+      }
+    }
+
+    // ---- Generate gap analysis (mode gap) ----
+    async function generateGap() {
+      const btn = document.getElementById('gapBtn');
+      const errEl = document.getElementById('generate-error');
+      errEl.style.display = 'none';
+
+      if (!selectedFile) {
+        errEl.innerHTML = '<span>&#9888;</span> Aucun fichier s\u00e9lectionn\u00e9';
+        errEl.style.display = 'flex';
+        return;
+      }
+
+      const textId = document.getElementById('gapTextId').value.trim();
+      const profile = document.getElementById('gapProfile').value;
 
       if (!textId) {
         errEl.innerHTML = '<span>&#9888;</span> Identifiant Legifrance requis';
@@ -120,41 +327,58 @@
       }
 
       btn.disabled = true;
-      btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:1.5px"></div> Génération en cours...';
+      btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:1.5px"></div> Analyse en cours...';
 
-      // Show loading in result area
-      document.getElementById('result-area').innerHTML = `
-        <div class="loading-overlay" style="height:100%; flex-direction:column">
-          <div class="spinner"></div>
-          <p>Extraction des obligations depuis Legifrance...</p>
-          <p class="text-xs text-tertiary">Génération de la procédure via Claude AI</p>
-          <p class="text-xs text-tertiary">Cela peut prendre 30 à 60 secondes</p>
-        </div>`;
+      showLoading('Upload du document et analyse des \u00e9carts...');
 
       try {
-        const body = { text_id: textId, tenant_profile: profile };
-        if (context) body.client_context = context;
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('text_id', textId);
+        formData.append('profile', profile);
 
-        const result = await api('/api/v1/procedures/generate', { method: 'POST', body });
-        renderResult(result);
-        toast('Procédure générée avec succès');
-
-        // Refresh list
-        loadProcedures();
+        const token = sessionStorage.getItem('ew_token');
+        const r = await fetch(`${API}/api/v1/gap-analysis/procedure`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData,
+        });
+        if (!r.ok) {
+          const errData = await r.json().catch(() => ({}));
+          throw new Error(errData.detail || `Erreur ${r.status}`);
+        }
+        const result = await r.json();
+        renderGapResult(result);
+        toast('Gap analysis termin\u00e9');
       } catch (e) {
-        errEl.innerHTML = `<span>&#9888;</span> ${escHtml(e.message)}`;
-        errEl.style.display = 'flex';
-        document.getElementById('result-area').innerHTML = `
-          <div class="empty-state" style="height:100%">
-            <div class="icon" style="color:var(--color-danger)">&#10007;</div>
-            <p>${escHtml(e.message)}</p>
-          </div>`;
+        showError(e.message, errEl);
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Générer la procédure';
+        btn.textContent = 'Lancer le gap analysis';
       }
     }
 
+    // ---- Shared UI helpers ----
+    function showLoading(msg) {
+      document.getElementById('result-area').innerHTML = `
+        <div class="loading-overlay" style="height:100%; flex-direction:column">
+          <div class="spinner"></div>
+          <p>${msg}</p>
+          <p class="text-xs text-tertiary">Cela peut prendre 30 \u00e0 60 secondes</p>
+        </div>`;
+    }
+
+    function showError(msg, errEl) {
+      errEl.innerHTML = `<span>&#9888;</span> ${escHtml(msg)}`;
+      errEl.style.display = 'flex';
+      document.getElementById('result-area').innerHTML = `
+        <div class="empty-state" style="height:100%">
+          <div class="icon" style="color:var(--color-danger)">&#10007;</div>
+          <p>${escHtml(msg)}</p>
+        </div>`;
+    }
+
+    // ---- Render results ----
     async function loadProcedure(id) {
       document.getElementById('result-area').innerHTML = `
         <div class="loading-overlay" style="height:50%"><div class="spinner"></div></div>`;
@@ -167,34 +391,31 @@
     }
 
     function renderResult(proc) {
-      // Parse sections from markdown
       const content = proc.content || '';
       const sections = parseSections(content);
       const sources = proc.sources_cited || [];
 
       document.getElementById('result-area').innerHTML = `
         <div style="padding:24px; max-width:800px; margin:0 auto">
-          <!-- Header -->
           <div class="flex items-center justify-between" style="margin-bottom:20px">
             <div>
               <div class="flex items-center gap-8">
-                <h1>Procédure générée</h1>
+                <h1>Proc\u00e9dure g\u00e9n\u00e9r\u00e9e</h1>
                 ${statusBadge(proc.status)}
               </div>
               <p class="text-sm text-secondary" style="margin-top:4px">
-                ${proc.profile} &middot; ${proc.obligation_count} obligations &middot; ${proc.model_name}
+                ${proc.profile} &middot; ${proc.obligation_count} obligations &middot; ${proc.model_name || ''}
               </p>
             </div>
             ${proc.status === 'pending_validation' ? `
               <div class="flex gap-8">
-                <button class="btn btn-success btn-sm" onclick="validateProc('${proc.id}','validated')">Valider</button>
-                <button class="btn btn-danger btn-sm" onclick="validateProc('${proc.id}','rejected')">Rejeter</button>
+                <button class="btn btn-success btn-sm" style="border-radius:20px" onclick="validateProc('${proc.id}','validated')">Valider</button>
+                <button class="btn btn-danger btn-sm" style="border-radius:20px" onclick="validateProc('${proc.id}','rejected')">Rejeter</button>
               </div>` : ''}
           </div>
 
-          <!-- Sources cited badges -->
           <div style="margin-bottom:16px">
-            <h3 class="text-xs text-tertiary" style="margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Articles cités</h3>
+            <h3 class="text-xs text-tertiary" style="margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Articles cit\u00e9s</h3>
             <div class="flex gap-4" style="flex-wrap:wrap">
               ${sources.map(s => `
                 <a href="${s.lien_legifrance || '#'}" target="_blank" rel="noopener"
@@ -206,7 +427,6 @@
             </div>
           </div>
 
-          <!-- Sections -->
           ${sections.map((sec, i) => `
             <div class="expandable ${i < 4 ? 'open' : ''}">
               <button class="expandable-header">
@@ -219,20 +439,78 @@
             </div>
           `).join('')}
 
-          <!-- Warning -->
           <div class="warning-box" style="margin-top:20px">
             <span>&#9888;</span>
             <div>
               <strong>Avertissement Compliance Officer</strong><br>
-              Ce document est un PROJET généré automatiquement par IA à partir de sources Legifrance.
-              Il DOIT être validé par le Compliance Officer avant toute mise en application.
+              Ce document est un PROJET g\u00e9n\u00e9r\u00e9 automatiquement par IA \u00e0 partir de sources Legifrance.
+              Il DOIT \u00eatre valid\u00e9 par le Compliance Officer avant toute mise en application.
+            </div>
+          </div>
+          <p class="text-xs text-tertiary" style="margin-top:12px">${escHtml(proc.provenance || '')}</p>
+        </div>`;
+      initExpandables();
+    }
+
+    function renderGapResult(report) {
+      const gaps = report.gaps || [];
+      const covered = gaps.filter(g => g.status === 'covered').length;
+      const partial = gaps.filter(g => g.status === 'partial').length;
+      const absent = gaps.filter(g => g.status === 'absent').length;
+
+      document.getElementById('result-area').innerHTML = `
+        <div style="padding:24px; max-width:800px; margin:0 auto">
+          <div class="flex items-center justify-between" style="margin-bottom:20px">
+            <div>
+              <div class="flex items-center gap-8">
+                <h1>Gap Analysis</h1>
+                ${statusBadge(report.status || 'pending_validation')}
+              </div>
+              <p class="text-sm text-secondary" style="margin-top:4px">
+                ${escHtml(report.text_id)} &middot; ${escHtml(report.profile)} &middot; ${gaps.length} obligations analys\u00e9es
+              </p>
             </div>
           </div>
 
-          <!-- Provenance -->
-          <p class="text-xs text-tertiary" style="margin-top:12px">${escHtml(proc.provenance || '')}</p>
-        </div>`;
+          <!-- Summary cards -->
+          <div class="flex gap-12" style="margin-bottom:24px">
+            <div class="stat-card" style="flex:1; text-align:center">
+              <div class="stat-value" style="color:var(--kaki, var(--color-success))">${covered}</div>
+              <div class="stat-label">Couvertes</div>
+            </div>
+            <div class="stat-card" style="flex:1; text-align:center">
+              <div class="stat-value" style="color:var(--terra, var(--color-warning))">${partial}</div>
+              <div class="stat-label">Partielles</div>
+            </div>
+            <div class="stat-card" style="flex:1; text-align:center">
+              <div class="stat-value" style="color:var(--color-danger)">${absent}</div>
+              <div class="stat-label">Absentes</div>
+            </div>
+          </div>
 
+          ${gaps.map((g, i) => {
+            const icon = g.status === 'covered' ? '\u2705' : g.status === 'partial' ? '\u26a0\ufe0f' : '\u274c';
+            return `
+              <div class="expandable ${g.status !== 'covered' ? 'open' : ''}">
+                <button class="expandable-header">
+                  <span>${icon} ${escHtml(g.obligation || g.article || 'Obligation ' + (i+1))}</span>
+                  <span class="arrow">&#9654;</span>
+                </button>
+                <div class="expandable-body">
+                  <div class="md-content">${renderMarkdown(g.analysis || g.comment || '')}</div>
+                  ${g.recommendation ? `<div style="margin-top:8px; padding:8px 12px; background:var(--beige2, var(--color-background-tertiary)); border-radius:8px"><strong>Recommandation :</strong> ${escHtml(g.recommendation)}</div>` : ''}
+                </div>
+              </div>`;
+          }).join('')}
+
+          <div class="warning-box" style="margin-top:20px">
+            <span>&#9888;</span>
+            <div>
+              <strong>Avertissement</strong><br>
+              Cette analyse est g\u00e9n\u00e9r\u00e9e automatiquement. Elle doit \u00eatre revue par le Compliance Officer.
+            </div>
+          </div>
+        </div>`;
       initExpandables();
     }
 
@@ -240,17 +518,13 @@
       const lines = md.split('\n');
       const sections = [];
       let current = null;
-
       for (const line of lines) {
-        // Match ## headers (section headers)
         const m2 = line.match(/^## \d*\.?\s*(.+)/);
         const m1 = line.match(/^# (.+)/);
-
         if (m2) {
           if (current) sections.push(current);
           current = { title: m2[1], content: '' };
         } else if (m1 && !current) {
-          // Main title — skip or use as first section
           if (current) sections.push(current);
           current = { title: m1[1], content: '' };
         } else if (current) {
@@ -258,26 +532,18 @@
         }
       }
       if (current) sections.push(current);
-
-      // If no sections parsed, return full content as one block
-      if (sections.length === 0) {
-        sections.push({ title: 'Procédure', content: md });
-      }
-
+      if (sections.length === 0) sections.push({ title: 'Proc\u00e9dure', content: md });
       return sections;
     }
 
     async function validateProc(id, decision) {
-      const comment = decision === 'rejected'
-        ? prompt('Raison du rejet (optionnel):')
-        : null;
-
+      const comment = decision === 'rejected' ? prompt('Raison du rejet (optionnel):') : null;
       try {
         const body = { decision };
         if (comment) body.comment = comment;
         const result = await api(`/api/v1/procedures/${id}/validate`, { method: 'POST', body });
         renderResult(result);
-        toast(decision === 'validated' ? 'Procédure validée' : 'Procédure rejetée');
+        toast(decision === 'validated' ? 'Proc\u00e9dure valid\u00e9e' : 'Proc\u00e9dure rejet\u00e9e');
         loadProcedures();
       } catch (e) {
         toast(e.message, 'error');
