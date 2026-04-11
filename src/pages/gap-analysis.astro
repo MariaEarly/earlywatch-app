@@ -11,7 +11,7 @@ const base = import.meta.env.BASE_URL;
       <div class="ga-header">
         <div>
           <div class="ga-title">Gap Analysis</div>
-          <div class="ga-subtitle">Comparaison N vs N-1 des textes reglementaires et analyse des ecarts</div>
+          <div class="ga-subtitle">Evolutions reglementaires N vs N-1 — generees automatiquement par le pipeline</div>
         </div>
       </div>
 
@@ -543,8 +543,9 @@ const base = import.meta.env.BASE_URL;
 
   /* Detail view */
   .ga-detail {
-    border-top: 1px solid var(--border-light);
-    padding-top: 24px; margin-top: 8px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 24px; margin-top: 16px;
   }
   .ga-detail-top { margin-bottom: 24px; }
   .ga-detail-title-row {
@@ -577,10 +578,10 @@ const base = import.meta.env.BASE_URL;
 
   .ga-change {
     display: flex; align-items: flex-start; gap: 10px;
-    padding: 10px 0; border-bottom: 1px solid var(--border-light);
+    padding: 12px 14px; border: 1px solid var(--border-light);
+    border-radius: 8px; margin-bottom: 8px;
     font-size: 13px; color: var(--text-primary); line-height: 1.5;
   }
-  .ga-change:last-child { border-bottom: none; }
   .ga-change .ga-badge { flex-shrink: 0; margin-top: 2px; }
 
   .ga-procedures-list { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -599,9 +600,9 @@ const base = import.meta.env.BASE_URL;
 
   /* Obligations */
   .ga-obligation {
-    padding: 14px 0; border-bottom: 1px solid var(--border-light);
+    padding: 14px; border: 1px solid var(--border-light);
+    border-radius: 8px; margin-bottom: 8px;
   }
-  .ga-obligation:last-child { border-bottom: none; }
   .ga-obl-header {
     display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
   }
