@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parametres — Early Watch</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .st-layout { min-height: 100vh; display: flex; flex-direction: column; }
+  .st-main { flex: 1; max-width: 900px; margin: 0 auto; padding: 32px 24px; width: 100%; }
+
+  .page-title { font-size: 22px; font-weight: 600; color: var(--noir); margin-bottom: 4px; }
+  .page-subtitle { font-size: 14px; color: var(--color-text-tertiary); margin-bottom: 28px; }
+
+  /* ── SECTIONS ── */
+  .section {
+    background: var(--beige); border: 1.5px solid var(--noir); border-radius: 12px;
+    box-shadow: 3px 3px 0 rgba(26,26,23,0.35); margin-bottom: 20px; overflow: hidden;
+  }
+  .section-header {
+    padding: 14px 20px; font-size: 14px; font-weight: 600; color: var(--noir);
+    border-bottom: 1px solid var(--color-border); display: flex;
+    justify-content: space-between; align-items: center;
+  }
+  .section-body { padding: 20px; }
+
+  /* ── FORM ── */
+  .form-row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .form-group { flex: 1; min-width: 200px; }
+  .form-group label {
+    display: block; font-size: 12px; font-weight: 600; color: var(--noir);
+    margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .form-group input, .form-group select {
+    width: 100%; padding: 8px 12px; border: 1.5px solid var(--noir);
+    border-radius: 8px; font-size: 13px; font-family: inherit;
+    background: #fff; color: var(--noir);
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none; border-color: var(--kaki); box-shadow: 0 0 0 2px rgba(74,82,64,0.15);
+  }
+
+  /* ── TOGGLES ── */
+  .toggle-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--color-border);
+  }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-label { font-size: 13px; color: var(--noir); }
+  .toggle-desc { font-size: 11px; color: var(--color-text-tertiary); margin-top: 1px; }
+  .toggle {
+    position: relative; width: 44px; height: 24px; cursor: pointer;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--color-border); border-radius: 12px; transition: 0.2s;
+    border: 1px solid var(--noir);
+  }
+  .toggle-slider::before {
+    content: ''; position: absolute; height: 18px; width: 18px;
+    left: 2px; bottom: 2px; background: #fff; border-radius: 50%;
+    transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+  .toggle input:checked + .toggle-slider { background: var(--kaki); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+  /* ── CHIPS ── */
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .chip {
+    padding: 4px 12px; border-radius: 16px; border: 1.5px solid var(--noir);
+    font-size: 12px; cursor: pointer; font-family: inherit;
+    background: var(--beige); color: var(--noir); transition: all 0.15s;
+  }
+  .chip.active { background: var(--kaki); color: var(--beige); }
+  .chip:hover { background: var(--beige2); }
+  .chip.active:hover { background: var(--kaki); opacity: 0.9; }
+
+  /* ── USERS TABLE ── */
+  .users-table { width: 100%; font-size: 13px; }
+  .users-table th {
+    text-align: left; font-size: 11px; font-weight: 600; color: var(--color-text-tertiary);
+    text-transform: uppercase; letter-spacing: 0.3px; padding: 6px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .users-table td { padding: 8px 0; border-bottom: 1px solid var(--color-border); color: var(--noir); }
+  .role-badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600;
+  }
+  .role-admin { background: #E3ECFA; color: #2E5090; }
+  .role-user { background: var(--beige2); color: var(--noir); }
+  .role-compliance_officer { background: #FDECEA; color: #8B2F1F; }
+
+  /* ── PLAN BADGE ── */
+  .plan-badge {
+    padding: 4px 12px; border-radius: 10px; font-size: 12px; font-weight: 600;
+  }
+  .plan-demo { background: #FFF3E0; color: #B36B00; border: 1px solid #FFCC80; }
+  .plan-starter { background: #E3ECFA; color: #2E5090; border: 1px solid #7DA0D0; }
+  .plan-pro { background: var(--kaki); color: var(--beige); border: 1px solid var(--noir); }
+
+  /* ── SAVE BTN ── */
+  .save-bar {
+    position: sticky; bottom: 0; padding: 16px 0; background: rgba(246,241,233,0.95);
+    border-top: 1px solid var(--color-border); text-align: right;
+    display: none;
+  }
+  .save-bar.visible { display: block; }
+  .btn-save {
+    padding: 10px 28px; background: var(--kaki); color: var(--beige);
+    border: 1.5px solid var(--noir); border-radius: 8px; font-size: 14px;
+    font-weight: 600; cursor: pointer; font-family: inherit;
+    box-shadow: 3px 3px 0 rgba(26,26,23,0.35); transition: all 0.15s;
+  }
+  .btn-save:hover { box-shadow: 4px 4px 0 rgba(26,26,23,0.45); }
+
+  .loading { padding: 40px; text-align: center; color: var(--color-text-tertiary); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="st-layout">
+  <div id="header-root"></div>
+  <div class="st-main">
+    <div class="page-title">Parametres</div>
+    <div class="page-subtitle">Profil d'assujetti, preferences d'alertes et utilisateurs</div>
+
+    <div id="content">
+      <div class="loading">Chargement des parametres...</div>
+    </div>
+
+    <div class="save-bar" id="save-bar">
+      <button class="btn-save" onclick="saveAll()">Enregistrer les modifications</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  if (!requireAuth()) throw new Error('redirect');
+
+  document.getElementById('header-root').innerHTML = renderHeader();
+  loadReminderBadge();
+
+  let settingsData = {};
+  let hasChanges = false;
+
+  const ENTITY_TYPES = [
+    { value: 'EC', label: 'Etablissement de credit' },
+    { value: 'PSP', label: 'Prestataire de services de paiement' },
+    { value: 'EME', label: 'Etablissement de monnaie electronique' },
+    { value: 'SGP', label: 'Societe de gestion de portefeuille' },
+    { value: 'CASP', label: 'Prestataire de services sur actifs numeriques' },
+    { value: 'CIF', label: 'Conseiller en investissement financier' },
+    { value: 'IFP', label: 'Intermediaire en financement participatif' },
+    { value: 'OTHER', label: 'Autre' },
+  ];
+
+  const ALL_REGULATIONS = ['LCB-FT', 'DORA', 'DSP2', 'MiCA', 'AI Act', 'AMLR', 'PSD3', 'RGPD'];
+  const SEVERITIES = ['critical', 'high', 'medium', 'low'];
+  const SEV_LABELS = { critical: 'Critique', high: 'Eleve', medium: 'Moyen', low: 'Faible' };
+
+  async function loadSettings() {
+    try {
+      const data = await api('/api/v1/settings');
+      settingsData = data;
+      render(data);
+    } catch (e) {
+      document.getElementById('content').innerHTML = `<div class="loading">Erreur : ${e.message}</div>`;
+    }
+  }
+
+  function render(data) {
+    const t = data.tenant || {};
+    const s = data.settings || {};
+    const p = data.profile || {};
+    const users = data.users || [];
+    const counts = data.counts || {};
+
+    const entityOpts = ENTITY_TYPES.map(et =>
+      `<option value="${et.value}" ${et.value === (s.entity_type || '') ? 'selected' : ''}>${et.label}</option>`
+    ).join('');
+
+    const regChips = ALL_REGULATIONS.map(r => {
+      const active = (s.regulations || []).includes(r) ? 'active' : '';
+      return `<button class="chip ${active}" data-reg="${r}" onclick="toggleChip(this,'reg')">${r}</button>`;
+    }).join('');
+
+    const sevChips = SEVERITIES.map(sv => {
+      const active = (s.alert_severities || ['critical','high']).includes(sv) ? 'active' : '';
+      return `<button class="chip ${active}" data-sev="${sv}" onclick="toggleChip(this,'sev')">${SEV_LABELS[sv]}</button>`;
+    }).join('');
+
+    const planCls = t.plan === 'pro' ? 'plan-pro' : t.plan === 'starter' ? 'plan-starter' : 'plan-demo';
+
+    const usersRows = users.map(u => {
+      const roleCls = u.role === 'admin' ? 'role-admin' : u.role === 'compliance_officer' ? 'role-compliance_officer' : 'role-user';
+      const lastLogin = u.last_login_at ? new Date(u.last_login_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' }) : 'Jamais';
+      return `<tr>
+        <td>${u.first_name || ''} ${u.last_name || ''}</td>
+        <td>${u.email}</td>
+        <td><span class="role-badge ${roleCls}">${u.role}</span></td>
+        <td>${lastLogin}</td>
+        <td>${u.is_active ? 'Actif' : 'Inactif'}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('content').innerHTML = `
+      <!-- PROFIL ÉTABLISSEMENT -->
+      <div class="section">
+        <div class="section-header">
+          Profil d'assujetti
+          <span class="plan-badge ${planCls}">${t.plan || 'demo'}</span>
+        </div>
+        <div class="section-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nom de l'etablissement</label>
+              <input type="text" id="f-name" value="${t.name || ''}" onchange="markChanged()">
+            </div>
+            <div class="form-group">
+              <label>Type d'entite</label>
+              <select id="f-entity-type" onchange="markChanged()">${entityOpts}</select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Sous-type</label>
+              <input type="text" id="f-entity-subtype" value="${s.entity_subtype || ''}" onchange="markChanged()">
+            </div>
+            <div class="form-group">
+              <label>N ACPR / AMF</label>
+              <input type="text" id="f-acpr" value="${s.acpr_number || ''}" placeholder="Ex: 12345" onchange="markChanged()">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Reglementations applicables</label>
+            <div class="chips" id="chips-reg">${regChips}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRÉFÉRENCES ALERTES -->
+      <div class="section">
+        <div class="section-header">Preferences d'alertes</div>
+        <div class="section-body">
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Alertes email</div>
+              <div class="toggle-desc">Recevoir un email pour chaque reminder selon la severite selectionnee</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="f-alert-email" ${s.alert_email_enabled ? 'checked' : ''} onchange="markChanged()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div style="margin-top:12px">
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--noir);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px">Severites declenchant un email</label>
+            <div class="chips" id="chips-sev">${sevChips}</div>
+          </div>
+          <div class="form-row" style="margin-top:16px">
+            <div class="form-group">
+              <label>Mode d'envoi</label>
+              <select id="f-digest" onchange="markChanged()">
+                <option value="immediate" ${s.alert_digest === 'immediate' ? 'selected' : ''}>Immediat</option>
+                <option value="daily" ${s.alert_digest === 'daily' ? 'selected' : ''}>Digest quotidien</option>
+                <option value="weekly" ${s.alert_digest === 'weekly' ? 'selected' : ''}>Digest hebdomadaire</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULES -->
+      <div class="section">
+        <div class="section-header">Modules actifs</div>
+        <div class="section-body">
+          <div class="toggle-row">
+            <div><div class="toggle-label">Procedures LCB-FT</div><div class="toggle-desc">${counts.procedures_count || 0} procedures attribuees</div></div>
+            <label class="toggle"><input type="checkbox" id="f-mod-procs" ${s.procedures_enabled ? 'checked' : ''} onchange="markChanged()"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Pays a risque</div><div class="toggle-desc">Liste FATF / EU / ACPR avec croisement veille</div></div>
+            <label class="toggle"><input type="checkbox" id="f-mod-country" ${s.country_risk_enabled !== false ? 'checked' : ''} onchange="markChanged()"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Roadmap reglementaire</div><div class="toggle-desc">Echeances DORA, AMLR, AI Act</div></div>
+            <label class="toggle"><input type="checkbox" id="f-mod-roadmap" ${s.roadmap_enabled !== false ? 'checked' : ''} onchange="markChanged()"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Fiches reflexes</div><div class="toggle-desc">Guides operationnels par situation</div></div>
+            <label class="toggle"><input type="checkbox" id="f-mod-situations" ${s.situations_enabled !== false ? 'checked' : ''} onchange="markChanged()"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- MON PROFIL -->
+      <div class="section">
+        <div class="section-header">Mon profil</div>
+        <div class="section-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Prenom</label>
+              <input type="text" id="f-firstname" value="${p.first_name || ''}" onchange="markChanged()">
+            </div>
+            <div class="form-group">
+              <label>Nom</label>
+              <input type="text" id="f-lastname" value="${p.last_name || ''}" onchange="markChanged()">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="f-email" value="${p.email || ''}" onchange="markChanged()">
+            </div>
+            <div class="form-group">
+              <label>Role</label>
+              <input type="text" value="${p.role || ''}" disabled style="background:#f5f5f5">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UTILISATEURS -->
+      <div class="section">
+        <div class="section-header">Utilisateurs (${users.length})</div>
+        <div class="section-body">
+          <table class="users-table">
+            <thead><tr><th>Nom</th><th>Email</th><th>Role</th><th>Derniere connexion</th><th>Statut</th></tr></thead>
+            <tbody>${usersRows || '<tr><td colspan="5" style="color:var(--color-text-tertiary)">Aucun utilisateur</td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div style="font-size:12px;color:var(--color-text-tertiary);text-align:center;padding:16px 0">
+        ${counts.sources_count || 0} sources surveillees · ${counts.procedures_count || 0} procedures · ${counts.reminders_active || 0} reminders actifs
+      </div>
+    `;
+  }
+
+  function toggleChip(el, type) {
+    el.classList.toggle('active');
+    markChanged();
+  }
+
+  function markChanged() {
+    hasChanges = true;
+    document.getElementById('save-bar').classList.add('visible');
+  }
+
+  async function saveAll() {
+    try {
+      // Collect regulations
+      const regs = Array.from(document.querySelectorAll('#chips-reg .chip.active')).map(c => c.dataset.reg);
+      const sevs = Array.from(document.querySelectorAll('#chips-sev .chip.active')).map(c => c.dataset.sev);
+
+      // Update tenant settings
+      await api('/api/v1/settings', {
+        method: 'PUT',
+        body: {
+          name: document.getElementById('f-name').value,
+          entity_type: document.getElementById('f-entity-type').value,
+          entity_subtype: document.getElementById('f-entity-subtype').value,
+          acpr_number: document.getElementById('f-acpr').value,
+          regulations: regs,
+          alert_email_enabled: document.getElementById('f-alert-email').checked,
+          alert_severities: sevs,
+          alert_digest: document.getElementById('f-digest').value,
+          procedures_enabled: document.getElementById('f-mod-procs').checked,
+          country_risk_enabled: document.getElementById('f-mod-country').checked,
+          roadmap_enabled: document.getElementById('f-mod-roadmap').checked,
+          situations_enabled: document.getElementById('f-mod-situations').checked,
+        },
+      });
+
+      // Update profile
+      await api('/api/v1/settings/profile', {
+        method: 'PUT',
+        body: {
+          first_name: document.getElementById('f-firstname').value,
+          last_name: document.getElementById('f-lastname').value,
+          email: document.getElementById('f-email').value,
+        },
+      });
+
+      hasChanges = false;
+      document.getElementById('save-bar').classList.remove('visible');
+      toast('Parametres enregistres', 'success');
+    } catch (e) {
+      toast(e.message || 'Erreur', 'error');
+    }
+  }
+
+  // ── INIT ──
+  loadSettings();
+</script>
+</body>
+</html>
