@@ -11,7 +11,7 @@ const base = import.meta.env.BASE_URL;
           <div class="page-title">Mes procedures LCB-FT</div>
           <div class="page-subtitle">Vos procedures reglementaires — statut, articles lies et telechargement</div>
         </div>
-        <button id="btn-export-pdf" class="filter-btn" style="background:var(--kaki);color:var(--beige);font-weight:600;padding:8px 18px;margin-top:4px">
+        <button id="btn-export-pdf" class="filter-btn" style="background:var(--kaki);color:var(--beige);font-weight:500;padding:8px 18px;margin-top:4px">
           Exporter piste d'audit PDF
         </button>
       </div>
@@ -61,16 +61,17 @@ const base = import.meta.env.BASE_URL;
 <style>
   .mp-layout { min-height: 100vh; display: flex; flex-direction: column; }
   .mp-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
-  .page-title { font-size: 22px; font-weight: 600; color: var(--noir); margin-bottom: 4px; }
+  .page-title { font-size: 15px; font-weight: 500; color: var(--noir); margin-bottom: 4px; }
   .page-subtitle { font-size: 14px; color: var(--color-text-tertiary); margin-bottom: 28px; }
 
   .stats-bar {
-    display: flex; gap: 24px; margin-bottom: 24px; padding: 16px 20px;
-    background: var(--beige); border: 1.5px solid var(--noir);
-    border-radius: 12px; box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+    display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--border-light); gap: 0; margin-bottom: 24px; padding: 0;
+    background: var(--beige);
+    border-radius: 0; box-shadow: none;
   }
-  .stat-item { display: flex; flex-direction: column; gap: 2px; }
-  .stat-value { font-size: 20px; font-weight: 600; color: var(--noir); }
+  .stat-item { display: flex; flex-direction: column; gap: 2px; padding: 1.25rem 1.5rem; border-right: 1px solid var(--border-light); }
+  .stat-item:last-child { border-right: none; }
+  .stat-value { font-family: 'IBM Plex Mono', monospace; font-size: 32px; font-weight: 300; line-height: 1; color: var(--noir); }
   .stat-label { font-size: 12px; color: var(--color-text-tertiary); }
   .stat-hot .stat-value { color: var(--noir); }
   .stat-warn .stat-value { color: var(--noir); }
@@ -79,7 +80,7 @@ const base = import.meta.env.BASE_URL;
   .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
   .filter-label { font-size: 13px; color: var(--color-text-tertiary); font-weight: 500; }
   .filter-btn {
-    padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--noir);
+    padding: 6px 14px; border-radius: 0; border: 1px solid var(--border-medium);
     background: var(--beige); font-size: 13px; color: var(--noir);
     cursor: pointer; font-family: inherit; transition: all 0.15s;
   }
@@ -95,50 +96,50 @@ const base = import.meta.env.BASE_URL;
 
 <style is:global>
   .mp-card {
-    background: var(--beige); border: 1.5px solid var(--noir); border-radius: 12px;
+    background: var(--beige); border: 1px solid var(--border-light); border-radius: 0;
     padding: 20px; display: flex; flex-direction: column; gap: 12px;
-    box-shadow: 3px 3px 0 rgba(26,26,23,0.35); transition: box-shadow 0.15s;
+    box-shadow: none; transition: border-color 0.15s;
   }
-  .mp-card:hover { box-shadow: 4px 4px 0 rgba(26,26,23,0.45); }
-  .mp-card.alert-border { border-color: #6B7A5E; }
+  .mp-card:hover { border-color: var(--kaki); }
+  .mp-card.alert-border { border-color: #5C6347; }
 
   .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
   .card-ref {
     font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--kaki);
-    background: var(--beige2); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--beige3);
+    background: var(--beige2); padding: 3px 8px; border-radius: 0; border: 1px solid var(--beige3);
     white-space: nowrap;
   }
 
   .status-badge {
-    display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500;
-    padding: 4px 10px; border-radius: 20px; border: 1px solid; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 5px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.06em;
+    padding: 4px 10px; border-radius: 0; border: 1px solid; white-space: nowrap;
   }
-  .status-badge.a_valider { background: rgba(107,122,94,0.1); color: #6B7A5E; border-color: #6B7A5E; }
-  .status-badge.en_cours { background: rgba(107,122,94,0.1); color: #6B7A5E; border-color: #6B7A5E; }
-  .status-badge.valide { background: rgba(107,122,94,0.1); color: #6B7A5E; border-color: #6B7A5E; }
-  .status-badge.obsolete { background: rgba(107,122,94,0.1); color: #6B7A5E; border-color: #6B7A5E; }
+  .status-badge.a_valider { background: rgba(92,99,71,0.1); color: #5C6347; border-color: #5C6347; }
+  .status-badge.en_cours { background: rgba(92,99,71,0.1); color: #5C6347; border-color: #5C6347; }
+  .status-badge.valide { background: rgba(92,99,71,0.1); color: #5C6347; border-color: #5C6347; }
+  .status-badge.obsolete { background: rgba(92,99,71,0.1); color: #5C6347; border-color: #5C6347; }
   .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
   .alert-ribbon {
-    font-size: 11px; font-weight: 500; color: #6B7A5E; background: rgba(107,122,94,0.1);
-    padding: 6px 10px; border-radius: 6px; border: 1px solid #6B7A5E;
+    font-size: 11px; font-weight: 500; color: #5C6347; background: rgba(92,99,71,0.1);
+    padding: 6px 10px; border-radius: 0; border: 1px solid #5C6347;
     display: flex; align-items: center; gap: 6px;
   }
 
   .freshness-badge {
     display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500;
-    padding: 4px 10px; border-radius: 20px; white-space: nowrap; cursor: pointer;
+    padding: 4px 10px; border-radius: 0; white-space: nowrap; cursor: pointer;
     border: 1px solid transparent;
   }
-  .freshness-badge.hot { background: rgba(107,122,94,0.15); color: #6B7A5E; border-color: #6B7A5E; }
-  .freshness-badge.warm { background: rgba(107,122,94,0.1); color: #6B7A5E; border-color: #6B7A5E; }
-  .freshness-badge.ok { background: rgba(107,122,94,0.1); color: #6B7A5E; border-color: #6B7A5E; }
+  .freshness-badge.hot { background: rgba(92,99,71,0.15); color: #5C6347; border-color: #5C6347; }
+  .freshness-badge.warm { background: rgba(92,99,71,0.1); color: #5C6347; border-color: #5C6347; }
+  .freshness-badge.ok { background: rgba(92,99,71,0.1); color: #5C6347; border-color: #5C6347; }
   .freshness-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-  .card-title { font-size: 15px; font-weight: 600; color: var(--noir); line-height: 1.4; }
+  .card-title { font-size: 15px; font-weight: 500; color: var(--noir); line-height: 1.4; }
   .card-subtitle { font-size: 13px; color: var(--color-text-tertiary); margin-top: 2px; }
   .card-meta { display: flex; gap: 12px; align-items: center; }
-  .card-domain { font-size: 12px; color: var(--color-text-tertiary); background: var(--beige2); padding: 3px 8px; border-radius: 4px; }
+  .card-domain { font-size: 12px; color: var(--color-text-tertiary); background: var(--beige2); padding: 3px 8px; border-radius: 0; }
   .card-version { font-size: 12px; color: var(--color-text-tertiary); }
 
   .status-selector {
@@ -146,7 +147,7 @@ const base = import.meta.env.BASE_URL;
     border-top: 1px solid var(--beige3);
   }
   .status-opt {
-    padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--noir);
+    padding: 5px 12px; border-radius: 0; border: 1px solid var(--border-medium);
     background: var(--beige); font-size: 12px; cursor: pointer;
     font-family: inherit; transition: all 0.15s; color: var(--noir);
   }
@@ -158,28 +159,28 @@ const base = import.meta.env.BASE_URL;
   .linked-articles { border-top: 1px solid var(--beige3); padding-top: 12px; display: none; }
   .linked-articles.open { display: block; }
   .linked-articles-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 10px; }
-  .article-item { padding: 8px 10px; border-radius: 6px; background: var(--beige2); margin-bottom: 6px; display: flex; flex-direction: column; gap: 3px; }
+  .article-item { padding: 8px 10px; border-radius: 0; background: var(--beige2); margin-bottom: 6px; display: flex; flex-direction: column; gap: 3px; }
   .article-item-title { font-size: 13px; color: var(--noir); font-weight: 500; text-decoration: none; line-height: 1.3; }
   .article-item-title:hover { color: var(--kaki); }
   .article-item-meta { font-size: 11px; color: var(--color-text-tertiary); display: flex; gap: 8px; flex-wrap: wrap; }
-  .article-theme-tag { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: var(--beige2); color: var(--kaki); border: 1px solid var(--beige3); }
+  .article-theme-tag { font-size: 10px; padding: 1px 5px; border-radius: 0; background: var(--beige2); color: var(--kaki); border: 1px solid var(--beige3); }
   .no-articles { font-size: 13px; color: var(--color-text-tertiary); font-style: italic; }
 
   .card-actions { display: flex; gap: 10px; align-items: center; margin-top: auto; }
   .btn-download {
     flex: 1; padding: 9px 16px; background: var(--kaki); color: var(--beige);
-    border: 1.5px solid var(--noir); border-radius: 20px; font-size: 13px; font-weight: 500;
+    border: 1px solid var(--text-primary); border-radius: 0; font-size: 13px; font-weight: 500;
     cursor: pointer; text-decoration: none; text-align: center; font-family: inherit;
     display: flex; align-items: center; justify-content: center; gap: 6px;
-    transition: background 0.15s; box-shadow: 2px 2px 0 rgba(26,26,23,0.4);
+    transition: background 0.15s; box-shadow: none;
   }
   .btn-download:hover { background: var(--kaki-hover); }
   .btn-toggle {
     padding: 9px 14px; background: var(--beige); color: var(--noir);
-    border: 1.5px solid var(--noir); border-radius: 20px; font-size: 13px;
+    border: 1px solid var(--border-medium); border-radius: 0; font-size: 13px;
     cursor: pointer; font-family: inherit; transition: all 0.15s;
     display: flex; align-items: center; gap: 5px; white-space: nowrap;
-    box-shadow: 2px 2px 0 rgba(26,26,23,0.3);
+    box-shadow: none;
   }
   .btn-toggle:hover { background: var(--beige2); }
   .btn-toggle.active { background: var(--kaki); color: var(--beige); }

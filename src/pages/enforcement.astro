@@ -53,16 +53,17 @@ const base = import.meta.env.BASE_URL;
 <style>
   .enf-layout { min-height: 100vh; display: flex; flex-direction: column; }
   .enf-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
-  .page-title { font-size: 22px; font-weight: 600; color: var(--noir); margin-bottom: 4px; }
+  .page-title { font-size: 15px; font-weight: 500; color: var(--noir); margin-bottom: 4px; }
   .page-subtitle { font-size: 14px; color: var(--color-text-tertiary); margin-bottom: 28px; }
 
   .stats-bar {
-    display: flex; gap: 24px; margin-bottom: 24px; padding: 16px 20px;
-    background: var(--beige); border: 1.5px solid var(--noir);
-    border-radius: 12px; box-shadow: 3px 3px 0 rgba(26,26,23,0.35); flex-wrap: wrap;
+    display: grid; grid-template-columns: repeat(5, 1fr); margin-bottom: 24px; padding: 0;
+    background: var(--beige); border: 1px solid var(--border-light);
+    border-radius: 0; box-shadow: none; gap: 0;
   }
-  .stat-item { display: flex; flex-direction: column; gap: 2px; }
-  .stat-value { font-size: 20px; font-weight: 600; color: var(--noir); }
+  .stat-item { display: flex; flex-direction: column; gap: 2px; padding: 1.25rem 1.5rem; border-right: 1px solid var(--border-light); }
+  .stat-item:last-child { border-right: none; }
+  .stat-value { font-family: 'IBM Plex Mono', monospace; font-size: 32px; font-weight: 300; line-height: 1; color: var(--noir); }
   .stat-label { font-size: 12px; color: var(--color-text-tertiary); }
   .stat-critical .stat-value { color: var(--noir); }
   .stat-high .stat-value { color: var(--noir); }
@@ -72,21 +73,21 @@ const base = import.meta.env.BASE_URL;
     display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;
   }
   .filters-bar select, .filters-bar input {
-    padding: 8px 12px; border: 1.5px solid var(--noir);
-    border-radius: 8px; background: #fff; font-size: 13px;
+    padding: 8px 12px; border: 1px solid var(--border-medium);
+    border-radius: 0; background: #fff; font-size: 13px;
     font-family: inherit; color: var(--noir);
   }
 
   .enf-table {
-    width: 100%; border-collapse: separate; border-spacing: 0;
-    border: 1.5px solid var(--noir); border-radius: 12px;
-    overflow: hidden; box-shadow: 3px 3px 0 rgba(26,26,23,0.35); background: #fff;
+    width: 100%; border-collapse: collapse; border-spacing: 0;
+    border: 1px solid var(--border-light); border-radius: 0;
+    overflow: hidden; box-shadow: none; background: #fff;
   }
   .enf-table th {
-    background: var(--beige); font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.5px;
-    padding: 12px 14px; text-align: left; color: var(--noir);
-    border-bottom: 2px solid #1A1A17;
+    background: var(--beige); font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 12px 14px; text-align: left; color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-light);
   }
   .enf-table td {
     padding: 14px; font-size: 13px; border-bottom: 1px solid var(--color-border); vertical-align: top;
@@ -99,8 +100,8 @@ const base = import.meta.env.BASE_URL;
   .detail-panel {
     display: none; position: fixed; top: 0; right: 0;
     width: 480px; height: 100vh; background: #fff;
-    border-left: 1.5px solid var(--noir);
-    box-shadow: -4px 0 12px rgba(0,0,0,0.1);
+    border-left: 1px solid var(--border-light);
+    box-shadow: none;
     z-index: 200; overflow-y: auto; padding: 24px;
   }
   :global(.detail-panel.open) { display: block; }
@@ -116,34 +117,34 @@ const base = import.meta.env.BASE_URL;
   .enf-title a:hover { text-decoration: underline; }
   .enf-summary { font-size: 12px; color: var(--color-text-tertiary); margin-top: 4px; line-height: 1.5; }
 
-  .sev-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-  .sev-critical { background: rgba(107,122,94,0.15); color: #6B7A5E; }
-  .sev-high { background: rgba(107,122,94,0.1); color: #6B7A5E; }
-  .sev-medium { background: rgba(107,122,94,0.1); color: #6B7A5E; }
-  .sev-low { background: rgba(107,122,94,0.05); color: #6B7A5E; }
+  .sev-badge { display: inline-block; padding: 2px 8px; border-radius: 0; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.06em; }
+  .sev-critical { background: rgba(92,99,71,0.15); color: #5C6347; }
+  .sev-high { background: rgba(92,99,71,0.1); color: #5C6347; }
+  .sev-medium { background: rgba(92,99,71,0.1); color: #5C6347; }
+  .sev-low { background: rgba(92,99,71,0.05); color: #5C6347; }
 
   .source-badge {
-    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    display: inline-block; padding: 2px 8px; border-radius: 0;
     font-size: 11px; font-weight: 500; background: var(--beige); border: 1px solid var(--color-border);
   }
 
   .proc-tag {
-    display: inline-block; padding: 1px 6px; border-radius: 3px;
-    font-size: 10px; font-weight: 500; background: rgba(107,122,94,0.1); color: #6B7A5E; margin: 1px 2px;
+    display: inline-block; padding: 1px 6px; border-radius: 0;
+    font-size: 10px; font-weight: 500; background: rgba(92,99,71,0.1); color: #5C6347; margin: 1px 2px;
   }
 
   .enf-date { font-size: 12px; color: var(--color-text-tertiary); white-space: nowrap; }
 
-  .detail-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; line-height: 1.3; padding-right: 32px; }
+  .detail-title { font-size: 18px; font-weight: 500; margin-bottom: 12px; line-height: 1.3; padding-right: 32px; }
   .detail-meta { font-size: 12px; color: var(--color-text-tertiary); margin-bottom: 16px; }
   .detail-summary { font-size: 14px; line-height: 1.7; margin-bottom: 20px; color: var(--noir); }
   .detail-section { margin-bottom: 16px; }
-  .detail-section h4 { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--color-text-tertiary); margin-bottom: 8px; }
+  .detail-section h4 { font-size: 12px; font-weight: 500; text-transform: uppercase; color: var(--color-text-tertiary); margin-bottom: 8px; }
   .detail-link {
     display: inline-block; padding: 10px 20px; background: var(--kaki);
-    color: #F6F1E9; border-radius: 8px; font-size: 13px; font-weight: 600;
-    text-decoration: none; border: 1.5px solid var(--noir);
-    box-shadow: 3px 3px 0 rgba(26,26,23,0.35); margin-top: 8px;
+    color: #EDEAE3; border-radius: 0; font-size: 13px; font-weight: 500;
+    text-decoration: none; border: 1px solid var(--text-primary);
+    box-shadow: none; margin-top: 8px;
   }
 </style>
 

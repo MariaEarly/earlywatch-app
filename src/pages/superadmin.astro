@@ -77,27 +77,27 @@ const base = import.meta.env.BASE_URL;
 <style>
   .sa-layout { min-height: 100vh; display: flex; flex-direction: column; background: #EDEAE3; }
   .sa-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
-  .sa-title { font-size: 22px; font-weight: 700; color: var(--noir); }
+  .sa-title { font-size: 15px; font-weight: 500; color: var(--noir); }
   .sa-subtitle { font-size: 13px; color: var(--color-text-tertiary); margin-bottom: 24px; }
-  .sa-badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; background: transparent; color: #6B7A5E; border: 1px solid #6B7A5E; margin-left: 8px; vertical-align: middle; }
+  .sa-badge { display: inline-block; padding: 1px 6px; border-radius: 0; font-size: 10px; font-weight: 400; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.06em; background: transparent; color: #5C6347; border: 1px solid #5C6347; margin-left: 8px; vertical-align: middle; }
 
   .stats-bar {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;
     margin-bottom: 24px;
   }
   .stat-card {
-    padding: 14px 18px; background: var(--beige); border: 1.5px solid var(--noir);
-    border-radius: 12px; box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+    padding: 1.25rem 1.5rem; background: var(--beige); border: 1px solid var(--border-light);
+    border-radius: 0; box-shadow: none;
   }
-  .stat-card-value { font-size: 24px; font-weight: 700; color: var(--noir); }
+  .stat-card-value { font-family: 'IBM Plex Mono', monospace; font-size: 32px; font-weight: 300; line-height: 1; color: var(--noir); }
   .stat-card-label { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
 
   .create-section {
-    margin-top: 24px; background: var(--beige); border: 1.5px solid var(--noir);
-    border-radius: 12px; box-shadow: 3px 3px 0 rgba(26,26,23,0.35); overflow: hidden;
+    margin-top: 24px; background: var(--beige); border: 1px solid var(--border-light);
+    border-radius: 0; box-shadow: none; overflow: hidden;
   }
   .create-header {
-    padding: 14px 18px; font-size: 14px; font-weight: 600; color: var(--noir);
+    padding: 14px 18px; font-size: 14px; font-weight: 500; color: var(--noir);
     border-bottom: 1px solid var(--color-border); cursor: pointer;
     display: flex; justify-content: space-between; align-items: center;
   }
@@ -105,20 +105,20 @@ const base = import.meta.env.BASE_URL;
   :global(.create-body.open) { display: block; }
   .form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
   .form-group { flex: 1; min-width: 180px; }
-  .form-group label { display: block; font-size: 11px; font-weight: 600; color: var(--noir); margin-bottom: 3px; text-transform: uppercase; }
+  .form-group label { display: block; font-size: 11px; font-weight: 500; color: var(--noir); margin-bottom: 3px; text-transform: uppercase; }
   .form-group input, .form-group select {
-    width: 100%; padding: 7px 10px; border: 1.5px solid var(--noir);
-    border-radius: 8px; font-size: 13px; font-family: inherit; background: #fff;
+    width: 100%; padding: 7px 10px; border: 1px solid var(--border-medium);
+    border-radius: 0; font-size: 13px; font-family: inherit; background: #fff;
   }
   .btn-create {
     padding: 10px 24px; background: var(--kaki); color: var(--beige);
-    border: 1.5px solid var(--noir); border-radius: 8px; font-size: 13px;
-    font-weight: 600; cursor: pointer; font-family: inherit;
-    box-shadow: 3px 3px 0 rgba(26,26,23,0.35);
+    border: 1px solid var(--text-primary); border-radius: 0; font-size: 13px;
+    font-weight: 500; cursor: pointer; font-family: inherit;
+    box-shadow: none;
   }
   .result-box {
-    margin-top: 12px; padding: 12px 16px; background: rgba(107,122,94,0.1);
-    border: 1px solid #6B7A5E; border-radius: 8px; font-size: 13px; display: none;
+    margin-top: 12px; padding: 12px 16px; background: rgba(92,99,71,0.1);
+    border: 1px solid #5C6347; border-radius: 0; font-size: 13px; display: none;
   }
   :global(.result-box.visible) { display: block; }
   .loading { padding: 40px; text-align: center; color: var(--color-text-tertiary); font-size: 14px; }
@@ -126,37 +126,37 @@ const base = import.meta.env.BASE_URL;
 
 <style is:global>
   .tenant-table {
-    width: 100%; border-collapse: separate; border-spacing: 0;
-    border: 1.5px solid var(--noir); border-radius: 12px; overflow: hidden;
-    box-shadow: 3px 3px 0 rgba(26,26,23,0.35); background: var(--beige);
+    width: 100%; border-collapse: collapse;
+    border: 1px solid var(--border-light); border-radius: 0; overflow: hidden;
+    box-shadow: none; background: var(--beige);
   }
   .tenant-table thead th {
-    background: var(--beige); color: var(--noir); font-size: 11px;
-    font-weight: 600; text-align: left; padding: 10px 12px;
-    text-transform: uppercase; letter-spacing: 0.4px;
-    border-bottom: 2px solid #1A1A17;
+    background: var(--beige); color: var(--text-secondary); font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    font-weight: 400; text-align: left; padding: 8px 14px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--border-light);
   }
   .tenant-table tbody tr { transition: background 0.1s; }
   .tenant-table tbody tr:nth-child(even) { background: rgba(246,241,233,0.5); }
   .tenant-table tbody tr:hover { background: #F6F1E9; }
   .tenant-table td { padding: 10px 12px; font-size: 13px; color: var(--noir); border-top: 1px solid var(--color-border); }
 
-  .plan-badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-  .plan-demo { background: rgba(107,122,94,0.1); color: #6B7A5E; }
-  .plan-starter { background: rgba(107,122,94,0.15); color: #6B7A5E; }
-  .plan-pro { background: rgba(107,122,94,0.25); color: #6B7A5E; font-weight: 700; }
+  .plan-badge { padding: 1px 6px; border-radius: 0; font-weight: 400; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; }
+  .plan-demo { background: transparent; color: #5C6347; border: 1px solid #5C6347; }
+  .plan-starter { background: transparent; color: #5C6347; border: 1px solid #5C6347; }
+  .plan-pro { background: transparent; color: #5C6347; border: 1px solid #5C6347; }
 
   .module-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 3px; }
   .dot-on { background: var(--kaki); }
   .dot-off { background: var(--color-border); }
 
   .sa-btn-sm {
-    padding: 4px 10px; border-radius: 6px; border: 1px solid var(--noir);
+    padding: 4px 10px; border-radius: 0; border: 1px solid var(--noir);
     font-size: 11px; cursor: pointer; font-family: inherit;
     background: var(--beige); color: var(--noir); transition: all 0.15s;
   }
   .sa-btn-sm:hover { background: var(--beige2); }
-  .sa-btn-sm-kaki { background: var(--kaki); color: var(--beige); }
+  .sa-btn-sm-kaki { background: var(--kaki); color: var(--beige); border-color: var(--kaki); }
 </style>
 
 <script>
@@ -218,14 +218,14 @@ const base = import.meta.env.BASE_URL;
 
       html += `<tr>
         <td>
-          <div style="font-weight:600">${t.name}</div>
+          <div style="font-weight:500">${t.name}</div>
           <div style="font-size:11px;color:var(--color-text-tertiary)">${created}</div>
         </td>
         <td>${t.entity_type || '\u2014'}</td>
         <td><span class="plan-badge ${planCls}">${t.plan}</span></td>
         <td>${t.users_count}</td>
         <td>${t.procedures_validated}/${t.procedures_count} <span style="font-size:11px;color:var(--color-text-tertiary)">(${procPct}%)</span></td>
-        <td>${t.reminders_pending > 0 ? '<b style="color:#6B7A5E">' + t.reminders_pending + '</b>' : '0'}</td>
+        <td>${t.reminders_pending > 0 ? '<b style="color:#5C6347">' + t.reminders_pending + '</b>' : '0'}</td>
         <td>${moduleDots}</td>
         <td>
           <button class="sa-btn-sm" data-toggle-module="${t.id}" data-module="procedures_enabled" data-enabled="${!t.procedures_enabled}">
@@ -300,8 +300,8 @@ const base = import.meta.env.BASE_URL;
       box.innerHTML = `<b>Tenant cree !</b><br>
         ID : ${result.tenant_id}<br>
         Email : ${result.admin_email}<br>
-        Mot de passe temporaire : <code style="background:#fff;padding:2px 6px;border-radius:4px;font-weight:700">${result.temp_password}</code><br>
-        <span style="font-size:11px;color:#6B6860">Communiquer ce mot de passe au client — il devra le changer a la premiere connexion.</span>`;
+        Mot de passe temporaire : <code style="background:#fff;padding:2px 6px;border-radius:0;font-weight:500">${result.temp_password}</code><br>
+        <span style="font-size:11px;color:#8C8880">Communiquer ce mot de passe au client — il devra le changer a la premiere connexion.</span>`;
       box.classList.add('visible');
 
       (document.getElementById('c-name') as HTMLInputElement).value = '';

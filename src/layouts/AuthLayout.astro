@@ -18,38 +18,38 @@ const { title } = Astro.props;
     html, body { height: 100%; }
     body {
       font-family: 'IBM Plex Sans', sans-serif;
-      background: #F5F0E8; color: #1A1A17;
+      background: #EDEAE3; color: #1A1918;
       display: flex; align-items: center; justify-content: center;
       min-height: 100vh; padding: 24px;
     }
     .auth-card { width: 100%; max-width: 340px; }
     .auth-brand {
-      font-size: 16px; font-weight: 500; color: #1A1A17;
+      font-size: 13px; font-weight: 500; color: #1A1918;
       margin-bottom: 36px; text-align: center;
     }
-    .auth-brand span { color: #6B7A5E; }
+    .auth-brand span { color: #5C6347; }
     .auth-subtitle {
-      font-size: 13px; color: #6B6860; text-align: center;
+      font-size: 13px; color: #8C8880; text-align: center;
       margin-bottom: 32px; line-height: 1.6;
     }
     .auth-card label {
       display: block; font-size: 13px; font-weight: 400;
-      color: #6B6860; margin-bottom: 6px;
+      color: #8C8880; margin-bottom: 6px;
     }
     .auth-card input {
       width: 100%; padding: 11px 0;
-      border: none; border-bottom: 1px solid rgba(28,28,26,0.11);
+      border: none; border-bottom: 1px solid #D5D2CB;
       background: transparent;
-      font-size: 15px; font-family: inherit; color: #1A1A17;
+      font-size: 15px; font-family: inherit; color: #1A1918;
       outline: none; margin-bottom: 24px; transition: border-color .15s;
       border-radius: 0;
     }
-    .auth-card input:focus { border-color: #6B7A5E; }
+    .auth-card input:focus { border-color: #5C6347; }
     .auth-card input.error { border-color: #DC2626; margin-bottom: 6px; }
     .auth-btn {
       width: 100%; padding: 13px;
-      background: #6B7A5E; color: #fff;
-      border: none; border-radius: 6px;
+      background: #5C6347; color: #fff;
+      border: none; border-radius: 0;
       font-size: 14px; font-weight: 500;
       font-family: inherit; cursor: pointer;
       transition: opacity .15s; margin-top: 8px;
@@ -65,13 +65,13 @@ const { title } = Astro.props;
       font-size: 13px; text-align: center; margin-top: 16px;
       line-height: 1.6; display: none;
     }
-    .auth-msg.success { display: block; color: #6B7A5E; }
+    .auth-msg.success { display: block; color: #5C6347; }
     .auth-msg.error { display: block; color: #DC2626; }
     .auth-footer {
       margin-top: 24px; text-align: center;
-      font-size: 12px; color: #6B6860;
+      font-size: 12px; color: #8C8880;
     }
-    .auth-footer a { color: #6B7A5E; text-decoration: none; }
+    .auth-footer a { color: #5C6347; text-decoration: none; }
     .auth-spinner {
       display: inline-block; width: 14px; height: 14px;
       border: 2px solid rgba(255,255,255,0.3);
