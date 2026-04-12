@@ -17,7 +17,7 @@ const base = import.meta.env.BASE_URL;
     <div id="apercu-panel" style="background:#EDEAE3;border:1px solid #C2BFB8;border-radius:8px;width:680px;max-width:92vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,0.12)">
       <div style="padding:18px 22px 14px;border-bottom:1px solid #D5D2CB;display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div style="font-size:14px;font-weight:500;color:#1A1918">Aper\u00e7u Hebdo</div>
+          <div id="apercu-title" style="font-size:14px;font-weight:500;color:#1A1918">Aper\u00e7u Hebdo</div>
           <div style="font-size:12px;color:#6B6860;margin-top:2px">Glissez pour r\u00e9ordonner les articles</div>
         </div>
         <button id="apercu-close" style="background:none;border:none;font-size:18px;color:#6B6860;cursor:pointer;padding:4px">&times;</button>
@@ -322,7 +322,10 @@ const base = import.meta.env.BASE_URL;
 
   function renderRightPanel(): void {
     const nc: any = newsletterCounts;
+    const quotidienCount: number = nc ? nc.quotidien_total : 0;
     const hebdoCount: number = nc ? nc.hebdo_total : 0;
+    const qDisabled: string = quotidienCount === 0 ? ';opacity:0.4;cursor:not-allowed;pointer-events:none' : '';
+    const hDisabled: string = hebdoCount === 0 ? ';opacity:0.4;cursor:not-allowed;pointer-events:none' : '';
     const newsletterBlock: string = (newsletterEnabled() && nc) ? `
       <div class="sidebar-section">
         <h3>Newsletter</h3>
@@ -331,7 +334,10 @@ const base = import.meta.env.BASE_URL;
             <span style="font-size:12px;font-weight:500;color:var(--text-primary)">Quotidien</span>
             <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B6860;white-space:nowrap">${nc.quotidien_published}/${nc.quotidien_total} publi\u00e9</span>
           </div>
-          <button class="btn btn-sm btn-secondary" data-copy-md="quotidien" style="padding:2px 8px;font-size:10px;border-radius:4px;width:100%">Copier Quotidien</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-secondary" data-copy-md="quotidien" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1">Copier</button>
+            <button class="btn btn-sm btn-secondary" id="btn-apercu-quotidien" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1${qDisabled}" ${quotidienCount === 0 ? 'disabled' : ''}>Aper\u00e7u</button>
+          </div>
         </div>
         <div style="padding:6px 0">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
@@ -339,8 +345,8 @@ const base = import.meta.env.BASE_URL;
             <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B6860;white-space:nowrap">${nc.hebdo_published}/${nc.hebdo_total} publi\u00e9</span>
           </div>
           <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-secondary" data-copy-md="hebdo" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1">Copier Hebdo</button>
-            <button class="btn btn-sm btn-secondary" id="btn-apercu-hebdo" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1${hebdoCount === 0 ? ';opacity:0.4;pointer-events:none' : ''}" ${hebdoCount === 0 ? 'disabled' : ''}>Aper\u00e7u</button>
+            <button class="btn btn-sm btn-secondary" data-copy-md="hebdo" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1">Copier</button>
+            <button class="btn btn-sm btn-secondary" id="btn-apercu-hebdo" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1${hDisabled}" ${hebdoCount === 0 ? 'disabled' : ''}>Aper\u00e7u</button>
           </div>
         </div>
       </div>` : '';
@@ -350,7 +356,6 @@ const base = import.meta.env.BASE_URL;
       <div class="sidebar-section">
         <h3>Export</h3>
         <div class="flex flex-col gap-4">
-          <button class="btn btn-secondary btn-sm" data-export="json">Export JSON</button>
           <button class="btn btn-secondary btn-sm" data-export="markdown">Export Markdown</button>
         </div>
       </div>`;
@@ -368,22 +373,32 @@ const base = import.meta.env.BASE_URL;
       });
     });
 
-    // Bind aper\u00e7u hebdo button
-    const apercuBtn = document.getElementById('btn-apercu-hebdo');
-    if (apercuBtn) {
-      apercuBtn.addEventListener('click', () => openApercuHebdo());
+    // Bind aper\u00e7u buttons
+    const apercuHebdo = document.getElementById('btn-apercu-hebdo');
+    if (apercuHebdo) {
+      apercuHebdo.addEventListener('click', () => openApercu('hebdo'));
+    }
+    const apercuQuotidien = document.getElementById('btn-apercu-quotidien');
+    if (apercuQuotidien) {
+      apercuQuotidien.addEventListener('click', () => openApercu('quotidien'));
     }
   }
 
-  // ---- Aper\u00e7u Hebdo (drag & drop) ----
+  // ---- Aper\u00e7u Newsletter (drag & drop) ----
   let apercuOrder: any[] = [];
+  let apercuType: string = 'hebdo';
 
-  function openApercuHebdo(): void {
-    apercuOrder = articles.filter((a: any) => a.status === 'hebdo' || a.status === 'quotidien')
+  function openApercu(type: string): void {
+    apercuType = type;
+    const statusFilter = type === 'quotidien'
+      ? (a: any) => a.status === 'quotidien'
+      : (a: any) => a.status === 'hebdo' || a.status === 'quotidien';
+    apercuOrder = articles.filter(statusFilter)
       .sort((a: any, b: any) => new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime());
 
     const overlay = document.getElementById('apercu-overlay')!;
     overlay.style.display = 'flex';
+    document.getElementById('apercu-title')!.textContent = `Aper\u00e7u ${type === 'quotidien' ? 'Quotidien' : 'Hebdo'}`;
     renderApercuList();
 
     document.getElementById('apercu-close')!.onclick = closeApercu;
@@ -448,8 +463,9 @@ const base = import.meta.env.BASE_URL;
   }
 
   async function exportApercuOrder(): Promise<void> {
+    const label = apercuType === 'quotidien' ? 'Quotidien' : 'Hebdo';
     const today = new Date().toLocaleDateString('fr-FR');
-    const lines = [`# Early Watch Hebdo \u2014 ${today}`, ''];
+    const lines = [`# Early Watch ${label} \u2014 ${today}`, ''];
     apercuOrder.forEach((a: any, i: number) => {
       const pub = a.published_at ? new Date(a.published_at).toLocaleDateString('fr-FR') : new Date(a.created_at).toLocaleDateString('fr-FR');
       lines.push(`## ${i + 1}. ${a.title}`);
@@ -465,7 +481,7 @@ const base = import.meta.env.BASE_URL;
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `earlywatch-hebdo-${new Date().toISOString().slice(0,10)}.md`;
+    link.download = `earlywatch-${apercuType}-${new Date().toISOString().slice(0,10)}.md`;
     link.click();
     URL.revokeObjectURL(url);
     closeApercu();
