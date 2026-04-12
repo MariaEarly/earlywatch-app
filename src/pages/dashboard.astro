@@ -11,12 +11,59 @@ const base = import.meta.env.BASE_URL;
     </main>
     <aside class="sidebar sidebar-right" id="sidebar-right"></aside>
   </div>
+
+  <!-- Aper\u00e7u Hebdo overlay -->
+  <div id="apercu-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,25,24,0.4);z-index:200;display:none;align-items:center;justify-content:center">
+    <div id="apercu-panel" style="background:#EDEAE3;border:1px solid #C2BFB8;border-radius:8px;width:680px;max-width:92vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,0.12)">
+      <div style="padding:18px 22px 14px;border-bottom:1px solid #D5D2CB;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:14px;font-weight:500;color:#1A1918">Aper\u00e7u Hebdo</div>
+          <div style="font-size:12px;color:#6B6860;margin-top:2px">Glissez pour r\u00e9ordonner les articles</div>
+        </div>
+        <button id="apercu-close" style="background:none;border:none;font-size:18px;color:#6B6860;cursor:pointer;padding:4px">&times;</button>
+      </div>
+      <div id="apercu-list" style="flex:1;overflow-y:auto;padding:14px 22px"></div>
+      <div style="padding:14px 22px;border-top:1px solid #D5D2CB;display:flex;gap:10px;justify-content:flex-end">
+        <button id="apercu-cancel" class="btn btn-sm btn-secondary" style="border-radius:4px">Annuler</button>
+        <button id="apercu-export" class="btn btn-sm btn-primary" style="border-radius:4px">Exporter dans cet ordre</button>
+      </div>
+    </div>
+  </div>
 </AppLayout>
 
 <script>
   import { api, formatDate, statusBadge, actionBadge, toast, getUser } from '../scripts/api';
 
   const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
+
+  // Mapping proc\u00e9dures : code → nom complet
+  const PROC_LABELS: Record<string, string> = {
+    'EB-POL-001': 'Politique g\u00e9n\u00e9rale LCB-FT',
+    'EB-RISK-001': 'Classification des risques',
+    'EB-KYC-001': 'Entr\u00e9e en relation \u2014 Personne physique',
+    'EB-KYC-002': 'Entr\u00e9e en relation \u2014 Personne morale',
+    'EB-SCR-001': 'Criblage sanctions et PPE',
+    'EB-MON-001': 'Monitoring transactionnel',
+    'EB-TRC-001': 'D\u00e9claration de soup\u00e7on Tracfin',
+    'EB-CASP-001': 'LCB-FT sp\u00e9cifique CASP/PSAN',
+    'EB-CTRL-001': 'Contr\u00f4le permanent LCB-FT',
+    'EB-AGT-001': 'Agents et distributeurs',
+    'EB-UBO-001': 'B\u00e9n\u00e9ficiaires effectifs',
+    'EB-EDD-001': 'Vigilance renforc\u00e9e',
+    'EB-PEP-001': 'Personnes politiquement expos\u00e9es',
+    'EB-SCR-002': 'Criblage sanctions avanc\u00e9',
+    'EB-GEL-001': 'Gel des avoirs',
+    'EB-ARCH-001': 'Archivage',
+    'EB-TRV-001': 'Transfert de fonds',
+    'EB-CBK-001': 'Correspondance bancaire',
+    'EB-FORM-001': 'Formation LCB-FT',
+  };
+
+  function procLabel(code: string): string {
+    return PROC_LABELS[code] || code;
+  }
+
+  const LINK_ICON = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><path d="M10 6.5V10a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1h3.5M7.5 1H11v3.5M11 1L5 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   let articles: any[] = [];
   let sources: any[] = [];
@@ -33,11 +80,18 @@ const base = import.meta.env.BASE_URL;
     try {
       const [articlesData, sourcesData, countsData]: any[] = await Promise.all([
         api('/api/v1/articles'),
-        api('/api/v1/sources/health').catch(() => []),
+        api('/api/v1/sources/health').catch(() => ({ items: [] })),
         newsletterEnabled() ? api('/api/v1/articles/newsletter/counts').catch(() => null) : Promise.resolve(null),
       ]);
       articles = Array.isArray(articlesData) ? articlesData : (articlesData?.items || []);
-      sources = Array.isArray(sourcesData) ? sourcesData : (sourcesData?.items || []);
+      // sources/health may 500 — fallback to building from articles
+      if (Array.isArray(sourcesData)) {
+        sources = sourcesData;
+      } else if (sourcesData?.items && Array.isArray(sourcesData.items)) {
+        sources = sourcesData.items;
+      } else {
+        sources = [];
+      }
       newsletterCounts = countsData;
     } catch (e: any) {
       document.getElementById('article-list')!.innerHTML =
@@ -134,11 +188,11 @@ const base = import.meta.env.BASE_URL;
     else if (scoreFilter === 'med') filtered = filtered.filter((a: any) => (a.score || 0) >= 25 && (a.score || 0) < 50);
     else if (scoreFilter === 'low') filtered = filtered.filter((a: any) => (a.score || 0) < 25);
 
-    // Filtre temporel — toujours basé sur created_at (date d'ingestion dans Early Watch)
+    // Filtre temporel — toujours bas\u00e9 sur created_at (date d'ingestion dans Early Watch)
     const now = new Date();
     if (sortMode === 'week') {
       const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay() + 1); // lundi
+      startOfWeek.setDate(now.getDate() - now.getDay() + 1);
       startOfWeek.setHours(0, 0, 0, 0);
       filtered = filtered.filter((a: any) => new Date(a.created_at) >= startOfWeek);
     } else if (sortMode === '7days') {
@@ -153,7 +207,7 @@ const base = import.meta.env.BASE_URL;
       return sortMode === 'oldest' ? da - db : db - da;
     });
 
-    const emptySortSelect = `<div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+    const sortSelectHtml = `<div style="display:flex;justify-content:flex-end;margin-bottom:8px">
       <select id="sort-select" style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 10px;border:1px solid #C2BFB8;border-radius:4px;background:#EDEAE3;color:#1A1918;cursor:pointer;outline:none">
         <option value="recent"${sortMode === 'recent' ? ' selected' : ''}>Plus r\u00e9cent</option>
         <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien</option>
@@ -163,32 +217,18 @@ const base = import.meta.env.BASE_URL;
     </div>`;
 
     if (filtered.length === 0) {
-      document.getElementById('article-list')!.innerHTML = emptySortSelect + `
+      document.getElementById('article-list')!.innerHTML = sortSelectHtml + `
         <div class="empty-state">
           <div class="icon">&#128196;</div>
           <p>Aucun article dans cette vue</p>
         </div>`;
-      const sortElEmpty = document.getElementById('sort-select') as HTMLSelectElement;
-      if (sortElEmpty) {
-        sortElEmpty.addEventListener('change', () => {
-          sortMode = sortElEmpty.value;
-          renderArticles();
-        });
-      }
+      bindSortSelect();
       return;
     }
 
-    const sortSelect = `<div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-      <select id="sort-select" style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 10px;border:1px solid #C2BFB8;border-radius:4px;background:#EDEAE3;color:#1A1918;cursor:pointer;outline:none">
-        <option value="recent"${sortMode === 'recent' ? ' selected' : ''}>Plus r\u00e9cent</option>
-        <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien</option>
-        <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine</option>
-        <option value="7days"${sortMode === '7days' ? ' selected' : ''}>7 derniers jours</option>
-      </select>
-    </div>`;
-
-    document.getElementById('article-list')!.innerHTML = sortSelect + filtered.map((a: any) => `
-      <div class="article-card" data-article-nav="${a.id}">
+    document.getElementById('article-list')!.innerHTML = sortSelectHtml + filtered.map((a: any) => `
+      <div class="article-card" data-article-nav="${a.id}" style="position:relative">
+        ${a.original_url ? `<a href="${escHtml(a.original_url)}" target="_blank" rel="noopener" class="card-ext-link" onclick="event.stopPropagation()" title="Ouvrir la source">${LINK_ICON}</a>` : ''}
         <div class="article-meta">
           <span>${a.source_name || 'Source inconnue'}</span>
           <span>&middot;</span>
@@ -196,13 +236,10 @@ const base = import.meta.env.BASE_URL;
           ${a.detected_action_type ? actionBadge(a.detected_action_type) : ''}
           <span style="margin-left:auto">${statusBadge(a.status)}</span>
         </div>
-        ${a.original_url
-          ? `<a href="${escHtml(a.original_url)}" target="_blank" rel="noopener" class="article-title" onclick="event.stopPropagation()">${escHtml(a.title || 'Sans titre')} <span style="color:#8C8880;font-size:11px;font-weight:400">\u2197</span></a>`
-          : `<div class="article-title">${escHtml(a.title || 'Sans titre')}</div>`
-        }
+        <div class="article-title" style="padding-right:24px">${escHtml(a.title || 'Sans titre')}</div>
         ${a.has_impact && a.impacted_procedures && a.impacted_procedures.length > 0 ? `
           <div class="article-impact" onclick="event.stopPropagation()">
-            ${a.severity === 'critical' ? '<span class="impact-dot-critical"></span>' : ''}Impacte \u2192 ${a.impacted_procedures.map((p: string) => `<span class="impact-ref">${escHtml(p)}</span>`).join(' \u00b7 ')}
+            ${a.severity === 'critical' ? '<span class="impact-dot-critical"></span>' : ''}Impacte \u2192 ${a.impacted_procedures.map((p: string) => `<span class="impact-ref" title="${escHtml(p)}">${escHtml(procLabel(p))}</span>`).join(' \u00b7 ')}
             <a href="${BASE}controle" class="impact-link">Voir reminder</a>
           </div>` : ''}
         <div class="article-actions">
@@ -219,19 +256,12 @@ const base = import.meta.env.BASE_URL;
       </div>
     `).join('');
 
-    // Bind sort selector
-    const sortEl = document.getElementById('sort-select') as HTMLSelectElement;
-    if (sortEl) {
-      sortEl.addEventListener('change', () => {
-        sortMode = sortEl.value;
-        renderArticles();
-      });
-    }
+    bindSortSelect();
 
     // Bind events
     document.querySelectorAll('[data-article-nav]').forEach((el: any) => {
       el.addEventListener('click', (e: any) => {
-        if (e.target.closest('button')) return;
+        if (e.target.closest('button') || e.target.closest('a')) return;
         window.location.href = `${BASE}article?id=${el.dataset.articleNav}`;
       });
     });
@@ -247,6 +277,16 @@ const base = import.meta.env.BASE_URL;
         publishArticle(el.dataset.publish);
       });
     });
+  }
+
+  function bindSortSelect(): void {
+    const sortEl = document.getElementById('sort-select') as HTMLSelectElement;
+    if (sortEl) {
+      sortEl.addEventListener('change', () => {
+        sortMode = sortEl.value;
+        renderArticles();
+      });
+    }
   }
 
   async function publishArticle(id: string): Promise<void> {
@@ -289,21 +329,61 @@ const base = import.meta.env.BASE_URL;
     const daily: number = articles.filter((a: any) => new Date(a.created_at) >= today).length;
     const weekly: number = articles.filter((a: any) => new Date(a.created_at) >= weekAgo).length;
 
-    const srcList: any[] = Array.isArray(sources) ? sources : [];
+    // Build source list from articles if health endpoint failed
+    let srcList: any[] = Array.isArray(sources) && sources.length > 0 ? sources : [];
+    let sourcesHtml: string;
+    if (srcList.length) {
+      sourcesHtml = srcList.slice(0, 12).map((s: any) => `
+        <div class="source-row">
+          <span class="flex items-center">
+            <span class="source-dot ${s.status === 'OK' || s.status === 'ok' ? 'ok' : s.status === 'warning' ? 'warn' : 'err'}"></span>
+            <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name || s.slug}</span>
+          </span>
+          <span class="text-xs text-tertiary">${s.articles_48h ?? s.article_count ?? 0}</span>
+        </div>`).join('');
+    } else {
+      // Fallback: build from articles data
+      const srcMap: Record<string, number> = {};
+      articles.forEach((a: any) => {
+        const name = a.source_name || 'Autre';
+        srcMap[name] = (srcMap[name] || 0) + 1;
+      });
+      const srcEntries = Object.entries(srcMap).sort((a, b) => b[1] - a[1]).slice(0, 12);
+      if (srcEntries.length) {
+        sourcesHtml = srcEntries.map(([name, count]) => `
+          <div class="source-row">
+            <span class="flex items-center">
+              <span class="source-dot ok"></span>
+              <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
+            </span>
+            <span class="text-xs text-tertiary">${count}</span>
+          </div>`).join('');
+      } else {
+        sourcesHtml = '<p class="text-sm text-tertiary">Aucune source</p>';
+      }
+    }
 
     const nc: any = newsletterCounts;
+    const hebdoCount: number = nc ? nc.hebdo_total : 0;
     const newsletterBlock: string = (newsletterEnabled() && nc) ? `
       <div class="sidebar-section">
         <h3>Newsletter</h3>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #D5D2CB">
-          <span style="font-size:12px;font-weight:500;color:var(--text-primary)">Quotidien</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6B6860;white-space:nowrap">${nc.quotidien_total} tagu\u00e9 \u00b7 ${nc.quotidien_published} publi\u00e9</span>
-          <button class="btn btn-sm btn-secondary" data-export="markdown" data-export-type="quotidien" style="padding:2px 8px;font-size:10px">Export</button>
+        <div style="padding:6px 0;border-bottom:1px solid #D5D2CB">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:500;color:var(--text-primary)">Quotidien</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B6860;white-space:nowrap">${nc.quotidien_published}/${nc.quotidien_total} publi\u00e9</span>
+          </div>
+          <button class="btn btn-sm btn-secondary" data-export="markdown" data-export-type="quotidien" style="padding:2px 8px;font-size:10px;border-radius:4px;width:100%">Export Markdown</button>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-          <span style="font-size:12px;font-weight:500;color:var(--text-primary)">Hebdo</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6B6860;white-space:nowrap">${nc.hebdo_total} tagu\u00e9 \u00b7 ${nc.hebdo_published} publi\u00e9</span>
-          <button class="btn btn-sm btn-secondary" data-export="markdown" data-export-type="hebdo" style="padding:2px 8px;font-size:10px">Export</button>
+        <div style="padding:6px 0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:500;color:var(--text-primary)">Hebdo</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B6860;white-space:nowrap">${nc.hebdo_published}/${nc.hebdo_total} publi\u00e9</span>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-secondary" data-export="markdown" data-export-type="hebdo" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1">Export</button>
+            <button class="btn btn-sm btn-secondary" id="btn-apercu-hebdo" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1${hebdoCount === 0 ? ';opacity:0.4;pointer-events:none' : ''}" ${hebdoCount === 0 ? 'disabled' : ''}>Aper\u00e7u</button>
+          </div>
         </div>
       </div>` : '';
 
@@ -332,16 +412,7 @@ const base = import.meta.env.BASE_URL;
       </div>
       <div class="sidebar-section">
         <h3>Sources</h3>
-        <div id="sources-health">
-          ${srcList.length ? srcList.slice(0, 12).map((s: any) => `
-            <div class="source-row">
-              <span class="flex items-center">
-                <span class="source-dot ${s.status === 'OK' || s.status === 'ok' ? 'ok' : s.status === 'warning' ? 'warn' : 'err'}"></span>
-                <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name || s.slug}</span>
-              </span>
-              <span class="text-xs text-tertiary">${s.article_count || 0}</span>
-            </div>`).join('') : '<p class="text-sm text-tertiary">Aucune source</p>'}
-        </div>
+        <div id="sources-health">${sourcesHtml}</div>
       </div>`;
 
     document.querySelectorAll('[data-export]').forEach((el: any) => {
@@ -349,6 +420,109 @@ const base = import.meta.env.BASE_URL;
         exportArticles(el.dataset.export, el.dataset.exportType);
       });
     });
+
+    // Bind aper\u00e7u hebdo button
+    const apercuBtn = document.getElementById('btn-apercu-hebdo');
+    if (apercuBtn) {
+      apercuBtn.addEventListener('click', () => openApercuHebdo());
+    }
+  }
+
+  // ---- Aper\u00e7u Hebdo (drag & drop) ----
+  let apercuOrder: any[] = [];
+
+  function openApercuHebdo(): void {
+    apercuOrder = articles.filter((a: any) => a.status === 'hebdo' || a.status === 'quotidien')
+      .sort((a: any, b: any) => new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime());
+
+    const overlay = document.getElementById('apercu-overlay')!;
+    overlay.style.display = 'flex';
+    renderApercuList();
+
+    document.getElementById('apercu-close')!.onclick = closeApercu;
+    document.getElementById('apercu-cancel')!.onclick = closeApercu;
+    document.getElementById('apercu-export')!.onclick = exportApercuOrder;
+  }
+
+  function closeApercu(): void {
+    document.getElementById('apercu-overlay')!.style.display = 'none';
+  }
+
+  let dragIdx: number = -1;
+
+  function renderApercuList(): void {
+    const list = document.getElementById('apercu-list')!;
+    if (!apercuOrder.length) {
+      list.innerHTML = '<div style="padding:30px;text-align:center;color:#6B6860;font-size:13px">Aucun article hebdo</div>';
+      return;
+    }
+    list.innerHTML = apercuOrder.map((a: any, i: number) => `
+      <div class="apercu-item" draggable="true" data-apercu-idx="${i}" style="display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:6px;background:#EDEAE3;border:1px solid #D5D2CB;border-radius:8px;cursor:grab;transition:opacity .15s,border .15s">
+        <span style="color:#B0ADA7;font-size:16px;cursor:grab;user-select:none;flex-shrink:0">\u2807</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B6860;flex-shrink:0;width:20px;text-align:center">${i + 1}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500;color:#1A1918;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.title || 'Sans titre')}</div>
+          <div style="font-size:11px;color:#6B6860;margin-top:2px">${a.source_name || ''} \u00b7 ${formatDate(a.published_at || a.created_at)}</div>
+        </div>
+      </div>
+    `).join('');
+
+    // Bind drag events
+    list.querySelectorAll('.apercu-item').forEach((el: any) => {
+      el.addEventListener('dragstart', (e: DragEvent) => {
+        dragIdx = parseInt(el.dataset.apercuIdx);
+        el.style.opacity = '0.5';
+        e.dataTransfer!.effectAllowed = 'move';
+      });
+      el.addEventListener('dragend', () => {
+        el.style.opacity = '1';
+        list.querySelectorAll('.apercu-item').forEach((x: any) => {
+          x.style.border = '1px solid #D5D2CB';
+        });
+      });
+      el.addEventListener('dragover', (e: DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer!.dropEffect = 'move';
+        el.style.border = '1px dashed #5C6347';
+      });
+      el.addEventListener('dragleave', () => {
+        el.style.border = '1px solid #D5D2CB';
+      });
+      el.addEventListener('drop', (e: DragEvent) => {
+        e.preventDefault();
+        const dropIdx = parseInt(el.dataset.apercuIdx);
+        if (dragIdx !== dropIdx && dragIdx >= 0) {
+          const item = apercuOrder.splice(dragIdx, 1)[0];
+          apercuOrder.splice(dropIdx, 0, item);
+          renderApercuList();
+        }
+      });
+    });
+  }
+
+  async function exportApercuOrder(): Promise<void> {
+    const today = new Date().toLocaleDateString('fr-FR');
+    const lines = [`# Early Watch Hebdo \u2014 ${today}`, ''];
+    apercuOrder.forEach((a: any, i: number) => {
+      const pub = a.published_at ? new Date(a.published_at).toLocaleDateString('fr-FR') : new Date(a.created_at).toLocaleDateString('fr-FR');
+      lines.push(`## ${i + 1}. ${a.title}`);
+      lines.push('');
+      if (a.summary) { lines.push(a.summary); lines.push(''); }
+      lines.push(`**Source :** ${a.source_name || 'Source inconnue'} \u2014 ${pub}`);
+      lines.push(`**Lien :** ${a.original_url || 'N/A'}`);
+      lines.push('');
+      lines.push('---');
+      lines.push('');
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `earlywatch-hebdo-${new Date().toISOString().slice(0,10)}.md`;
+    link.click();
+    URL.revokeObjectURL(url);
+    closeApercu();
+    toast('Export hebdo t\u00e9l\u00e9charg\u00e9');
   }
 
   async function exportArticles(format: string, type?: string): Promise<void> {
@@ -376,3 +550,27 @@ const base = import.meta.env.BASE_URL;
 
   init();
 </script>
+
+<style>
+  .card-ext-link {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #B0ADA7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+    text-decoration: none;
+  }
+  .article-card:hover .card-ext-link {
+    color: #5C6347;
+  }
+  .card-ext-link:hover {
+    color: #5C6347;
+    background: rgba(92, 99, 71, 0.08);
+  }
+</style>
