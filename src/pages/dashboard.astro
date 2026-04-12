@@ -144,6 +144,9 @@ const base = import.meta.env.BASE_URL;
     } else if (sortMode === '7days') {
       const cutoff = new Date(now.getTime() - 7 * 86400000);
       filtered = filtered.filter((a: any) => new Date(a.published_at || a.created_at) >= cutoff);
+    } else if (sortMode === 'new-ew') {
+      const cutoff = new Date(now.getTime() - 7 * 86400000);
+      filtered = filtered.filter((a: any) => new Date(a.created_at) >= cutoff);
     }
 
     // Tri par date
@@ -159,6 +162,7 @@ const base = import.meta.env.BASE_URL;
         <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien</option>
         <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine</option>
         <option value="7days"${sortMode === '7days' ? ' selected' : ''}>7 derniers jours</option>
+        <option value="new-ew"${sortMode === 'new-ew' ? ' selected' : ''}>Nouveaux dans Early Watch</option>
       </select>
     </div>`;
 
@@ -184,6 +188,7 @@ const base = import.meta.env.BASE_URL;
         <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien</option>
         <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine</option>
         <option value="7days"${sortMode === '7days' ? ' selected' : ''}>7 derniers jours</option>
+        <option value="new-ew"${sortMode === 'new-ew' ? ' selected' : ''}>Nouveaux dans Early Watch</option>
       </select>
     </div>`;
 
@@ -197,7 +202,7 @@ const base = import.meta.env.BASE_URL;
           <span style="margin-left:auto">${statusBadge(a.status)}</span>
         </div>
         ${a.original_url
-          ? `<a href="${escHtml(a.original_url)}" target="_blank" rel="noopener" class="article-title" onclick="event.stopPropagation()">${escHtml(a.title || 'Sans titre')}</a>`
+          ? `<a href="${escHtml(a.original_url)}" target="_blank" rel="noopener" class="article-title" onclick="event.stopPropagation()">${escHtml(a.title || 'Sans titre')} <span style="color:#8C8880;font-size:11px;font-weight:400">\u2197</span></a>`
           : `<div class="article-title">${escHtml(a.title || 'Sans titre')}</div>`
         }
         ${a.has_impact && a.impacted_procedures && a.impacted_procedures.length > 0 ? `
