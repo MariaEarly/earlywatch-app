@@ -78,7 +78,7 @@ const base = import.meta.env.BASE_URL;
   async function init(): Promise<void> {
     try {
       const [articlesData, countsData]: any[] = await Promise.all([
-        api('/api/v1/articles'),
+        api('/api/v1/articles?page_size=200'),
         newsletterEnabled() ? api('/api/v1/articles/newsletter/counts').catch(() => null) : Promise.resolve(null),
       ]);
       articles = Array.isArray(articlesData) ? articlesData : (articlesData?.items || []);
