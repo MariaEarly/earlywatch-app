@@ -228,7 +228,7 @@ const base = import.meta.env.BASE_URL;
         <div class="article-meta">
           <span>${a.source_name || 'Source inconnue'}</span>
           <span>&middot;</span>
-          <span>${a.published_at ? formatDate(a.published_at) : '<span style="color:#9B9790;font-style:italic">Date inconnue</span>'}</span>
+          <span>${a.published_at ? formatDate(a.published_at) : `<span class="date-unknown-badge" style="background:#E8A23E;color:#fff;font-size:10px;padding:1px 6px;border-radius:3px;font-style:normal">Date inconnue</span><a href="#" class="fix-date-link" data-fix-date="${a.id}" onclick="event.stopPropagation();event.preventDefault()" style="font-size:10px;color:#9B9790;margin-left:4px;text-decoration:underline">Corriger</a>`}</span>
           ${a.detected_action_type ? actionBadge(a.detected_action_type) : ''}
           <span style="margin-left:auto">${statusBadge(a.status)}</span>
         </div>
@@ -281,6 +281,28 @@ const base = import.meta.env.BASE_URL;
       el.addEventListener('click', (e: any) => {
         e.stopPropagation();
         publishArticle(el.dataset.publish);
+      });
+    });
+    // Bind "Corriger la date" links
+    document.querySelectorAll('.fix-date-link').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const articleId = el.dataset.fixDate;
+        const parent = el.parentElement;
+        if (!parent) return;
+        parent.innerHTML = `<input type="date" class="date-fix-input" data-date-article="${articleId}" style="font-size:11px;padding:1px 4px;border:1px solid #C2BFB8;border-radius:3px;font-family:'IBM Plex Sans',sans-serif;background:#EDEAE3"><button class="date-fix-ok" data-date-ok="${articleId}" style="font-size:10px;margin-left:3px;padding:1px 6px;border:1px solid #5C6347;border-radius:3px;background:#5C6347;color:#fff;cursor:pointer">OK</button>`;
+        parent.querySelector('.date-fix-ok')!.addEventListener('click', async (ev: any) => {
+          ev.stopPropagation();
+          const input = parent.querySelector('.date-fix-input') as HTMLInputElement;
+          if (!input.value) return;
+          try {
+            await api(`/api/v1/articles/${articleId}/date`, { method: 'PATCH', body: { published_at: input.value } });
+            const idx = articles.findIndex((a: any) => a.id === articleId);
+            if (idx !== -1) articles[idx].published_at = input.value + 'T00:00:00Z';
+            renderArticles();
+          } catch (err) { console.error('Date fix failed:', err); }
+        });
       });
     });
   }
@@ -481,7 +503,7 @@ const base = import.meta.env.BASE_URL;
       lines.push(`## ${i + 1}. ${a.title}`);
       lines.push('');
       if (a.summary) { lines.push(a.summary); lines.push(''); }
-      lines.push(`**Source :** ${a.source_name || 'Source inconnue'} \u2014 ${pub}`);
+      lines.push(`**Source :** ${a.source_name || 'Source inconnue'} \u2014 ${pub}${!a.published_at ? ' (date non confirm\u00e9e)' : ''}`);
       lines.push(`**Lien :** ${a.original_url || 'N/A'}`);
       lines.push('');
       lines.push('---');
