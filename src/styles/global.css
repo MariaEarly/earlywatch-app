@@ -477,6 +477,33 @@ a.article-title {
   text-decoration: none;
 }
 a.article-title:hover { text-decoration: underline; }
+.article-impact {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--kaki);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.impact-ref { font-weight: 500; }
+.impact-dot-critical {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3D3B38;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.impact-link {
+  margin-left: auto;
+  color: var(--kaki);
+  text-decoration: none;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 11px;
+}
+.impact-link:hover { text-decoration: underline; }
 .article-actions {
   display: flex;
   gap: 6px;
