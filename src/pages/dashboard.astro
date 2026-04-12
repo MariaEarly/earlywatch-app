@@ -134,17 +134,14 @@ const base = import.meta.env.BASE_URL;
     else if (scoreFilter === 'med') filtered = filtered.filter((a: any) => (a.score || 0) >= 25 && (a.score || 0) < 50);
     else if (scoreFilter === 'low') filtered = filtered.filter((a: any) => (a.score || 0) < 25);
 
-    // Filtre temporel
+    // Filtre temporel — toujours basé sur created_at (date d'ingestion dans Early Watch)
     const now = new Date();
     if (sortMode === 'week') {
       const startOfWeek = new Date(now);
       startOfWeek.setDate(now.getDate() - now.getDay() + 1); // lundi
       startOfWeek.setHours(0, 0, 0, 0);
-      filtered = filtered.filter((a: any) => new Date(a.published_at || a.created_at) >= startOfWeek);
+      filtered = filtered.filter((a: any) => new Date(a.created_at) >= startOfWeek);
     } else if (sortMode === '7days') {
-      const cutoff = new Date(now.getTime() - 7 * 86400000);
-      filtered = filtered.filter((a: any) => new Date(a.published_at || a.created_at) >= cutoff);
-    } else if (sortMode === 'new-ew') {
       const cutoff = new Date(now.getTime() - 7 * 86400000);
       filtered = filtered.filter((a: any) => new Date(a.created_at) >= cutoff);
     }
@@ -162,7 +159,6 @@ const base = import.meta.env.BASE_URL;
         <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien</option>
         <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine</option>
         <option value="7days"${sortMode === '7days' ? ' selected' : ''}>7 derniers jours</option>
-        <option value="new-ew"${sortMode === 'new-ew' ? ' selected' : ''}>Nouveaux dans Early Watch</option>
       </select>
     </div>`;
 
@@ -188,7 +184,6 @@ const base = import.meta.env.BASE_URL;
         <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien</option>
         <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine</option>
         <option value="7days"${sortMode === '7days' ? ' selected' : ''}>7 derniers jours</option>
-        <option value="new-ew"${sortMode === 'new-ew' ? ' selected' : ''}>Nouveaux dans Early Watch</option>
       </select>
     </div>`;
 
