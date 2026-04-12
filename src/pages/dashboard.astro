@@ -227,8 +227,7 @@ const base = import.meta.env.BASE_URL;
     }
 
     document.getElementById('article-list')!.innerHTML = sortSelectHtml + filtered.map((a: any) => `
-      <div class="article-card" data-article-nav="${a.id}" style="position:relative">
-        ${a.original_url ? `<a href="${escHtml(a.original_url)}" target="_blank" rel="noopener" class="card-ext-link" onclick="event.stopPropagation()" title="Ouvrir la source">${LINK_ICON}</a>` : ''}
+      <div class="article-card" data-article-nav="${a.id}">
         <div class="article-meta">
           <span>${a.source_name || 'Source inconnue'}</span>
           <span>&middot;</span>
@@ -236,10 +235,15 @@ const base = import.meta.env.BASE_URL;
           ${a.detected_action_type ? actionBadge(a.detected_action_type) : ''}
           <span style="margin-left:auto">${statusBadge(a.status)}</span>
         </div>
-        <div class="article-title" style="padding-right:24px">${escHtml(a.title || 'Sans titre')}</div>
+        <div class="article-title-row">
+          ${a.original_url
+            ? `<a href="${escHtml(a.original_url)}" target="_blank" rel="noopener" class="article-title" onclick="event.stopPropagation()">${escHtml(a.title || 'Sans titre')}<span class="title-ext-icon">${LINK_ICON}</span></a>`
+            : `<div class="article-title">${escHtml(a.title || 'Sans titre')}</div>`
+          }
+        </div>
         ${a.has_impact && a.impacted_procedures && a.impacted_procedures.length > 0 ? `
-          <div class="article-impact" onclick="event.stopPropagation()">
-            ${a.severity === 'critical' ? '<span class="impact-dot-critical"></span>' : ''}Impacte \u2192 ${a.impacted_procedures.map((p: string) => `<span class="impact-ref" title="${escHtml(p)}">${escHtml(procLabel(p))}</span>`).join(' \u00b7 ')}
+          <div class="article-impact-row" onclick="event.stopPropagation()">
+            <span class="impact-badge">${a.severity === 'critical' ? '<span class="impact-dot-critical"></span>' : ''}Impacte \u2192 ${a.impacted_procedures.map((p: string) => `<span class="impact-ref" title="${escHtml(p)}">${escHtml(procLabel(p))}</span>`).join(' \u00b7 ')}</span>
             <a href="${BASE}controle" class="impact-link">Voir reminder</a>
           </div>` : ''}
         <div class="article-actions">
@@ -578,25 +582,39 @@ const base = import.meta.env.BASE_URL;
 </script>
 
 <style>
-  .card-ext-link {
-    position: absolute;
-    top: 10px;
-    right: 10px;
+  .article-title-row {
+    display: flex;
+    align-items: baseline;
+  }
+  .title-ext-icon {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 6px;
     color: #B0ADA7;
+    opacity: 0;
+    transition: opacity 0.15s;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  .article-card:hover .title-ext-icon {
+    opacity: 1;
+  }
+  .article-impact-row {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
+    gap: 8px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+  .impact-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #EEF0E8;
+    color: #5C6347;
+    font-size: 11px;
+    padding: 2px 10px;
     border-radius: 4px;
-    transition: color 0.15s, background 0.15s;
-    text-decoration: none;
-  }
-  .article-card:hover .card-ext-link {
-    color: #5C6347;
-  }
-  .card-ext-link:hover {
-    color: #5C6347;
-    background: rgba(92, 99, 71, 0.08);
+    flex-wrap: wrap;
   }
 </style>

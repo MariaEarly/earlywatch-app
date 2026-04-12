@@ -477,15 +477,6 @@ a.article-title {
   text-decoration: none;
 }
 a.article-title:hover { text-decoration: underline; }
-.article-impact {
-  font-size: 11px;
-  color: #5C6347;
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
-}
 .impact-ref { font-weight: 500; cursor: default; }
 .impact-dot-critical {
   display: inline-block;
@@ -493,14 +484,11 @@ a.article-title:hover { text-decoration: underline; }
   height: 6px;
   border-radius: 50%;
   background: #3D3B38;
-  margin-right: 4px;
   flex-shrink: 0;
 }
 .impact-link {
-  margin-left: auto;
-  color: var(--kaki);
+  color: #5C6347;
   text-decoration: none;
-  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 11px;
 }
 .impact-link:hover { text-decoration: underline; }
