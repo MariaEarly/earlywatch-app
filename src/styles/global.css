@@ -278,8 +278,8 @@ label {
 }
 .header-sub {
   height: 36px;
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border-light);
+  background: #D5D2CB;
+  border-bottom: 1px solid #C2BFB8;
   padding: 0 2rem;
   display: flex;
   align-items: center;
@@ -332,7 +332,7 @@ label {
   color: var(--text-primary);
   text-decoration: none;
 }
-.logo span { font-weight: 500; color: var(--kaki); }
+.logo span { font-weight: 500; color: #5C6347 !important; }
 
 .avatar {
   width: 28px;
