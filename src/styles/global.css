@@ -411,7 +411,7 @@ label {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: var(--text-muted);
+  color: #3D3B38;
 }
 .article-title {
   font-size: 14px;

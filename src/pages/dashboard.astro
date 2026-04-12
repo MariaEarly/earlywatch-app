@@ -22,6 +22,7 @@ const base = import.meta.env.BASE_URL;
   let sources: any[] = [];
   let activeFilter: string = 'all';
   let scoreFilter: string = 'all';
+  let sortMode: string = 'recent';
   let newsletterCounts: any = null;
 
   function newsletterEnabled(): boolean {
@@ -133,16 +134,60 @@ const base = import.meta.env.BASE_URL;
     else if (scoreFilter === 'med') filtered = filtered.filter((a: any) => (a.score || 0) >= 25 && (a.score || 0) < 50);
     else if (scoreFilter === 'low') filtered = filtered.filter((a: any) => (a.score || 0) < 25);
 
+    // Filtre temporel
+    const now = new Date();
+    if (sortMode === 'week') {
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay() + 1); // lundi
+      startOfWeek.setHours(0, 0, 0, 0);
+      filtered = filtered.filter((a: any) => new Date(a.published_at || a.created_at) >= startOfWeek);
+    } else if (sortMode === '7days') {
+      const cutoff = new Date(now.getTime() - 7 * 86400000);
+      filtered = filtered.filter((a: any) => new Date(a.published_at || a.created_at) >= cutoff);
+    }
+
+    // Tri par date
+    filtered.sort((a: any, b: any) => {
+      const da = new Date(a.published_at || a.created_at).getTime();
+      const db = new Date(b.published_at || b.created_at).getTime();
+      return sortMode === 'oldest' ? da - db : db - da;
+    });
+
+    const emptySortSelect = `<div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <select id="sort-select" style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 10px;border:1px solid #C2BFB8;border-radius:0;background:#EDEAE3;color:#1A1918;cursor:pointer;outline:none">
+        <option value="recent"${sortMode === 'recent' ? ' selected' : ''}>Plus r\u00e9cent</option>
+        <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien</option>
+        <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine</option>
+        <option value="7days"${sortMode === '7days' ? ' selected' : ''}>7 derniers jours</option>
+      </select>
+    </div>`;
+
     if (filtered.length === 0) {
-      document.getElementById('article-list')!.innerHTML = `
+      document.getElementById('article-list')!.innerHTML = emptySortSelect + `
         <div class="empty-state">
           <div class="icon">&#128196;</div>
           <p>Aucun article dans cette vue</p>
         </div>`;
+      const sortElEmpty = document.getElementById('sort-select') as HTMLSelectElement;
+      if (sortElEmpty) {
+        sortElEmpty.addEventListener('change', () => {
+          sortMode = sortElEmpty.value;
+          renderArticles();
+        });
+      }
       return;
     }
 
-    document.getElementById('article-list')!.innerHTML = filtered.map((a: any) => `
+    const sortSelect = `<div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <select id="sort-select" style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 10px;border:1px solid #C2BFB8;border-radius:0;background:#EDEAE3;color:#1A1918;cursor:pointer;outline:none">
+        <option value="recent"${sortMode === 'recent' ? ' selected' : ''}>Plus r\u00e9cent</option>
+        <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien</option>
+        <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine</option>
+        <option value="7days"${sortMode === '7days' ? ' selected' : ''}>7 derniers jours</option>
+      </select>
+    </div>`;
+
+    document.getElementById('article-list')!.innerHTML = sortSelect + filtered.map((a: any) => `
       <div class="article-card" data-article-nav="${a.id}">
         <div class="article-meta">
           <span>${a.source_name || 'Source inconnue'}</span>
@@ -165,6 +210,15 @@ const base = import.meta.env.BASE_URL;
         </div>
       </div>
     `).join('');
+
+    // Bind sort selector
+    const sortEl = document.getElementById('sort-select') as HTMLSelectElement;
+    if (sortEl) {
+      sortEl.addEventListener('change', () => {
+        sortMode = sortEl.value;
+        renderArticles();
+      });
+    }
 
     // Bind events
     document.querySelectorAll('[data-article-nav]').forEach((el: any) => {
