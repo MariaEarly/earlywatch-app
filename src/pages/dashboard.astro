@@ -297,12 +297,12 @@ const base = import.meta.env.BASE_URL;
         <h3>Newsletter</h3>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #D5D2CB">
           <span style="font-size:12px;font-weight:500;color:var(--text-primary)">Quotidien</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6B6860">${nc.quotidien_total} tagu\u00e9 \u00b7 ${nc.quotidien_published} publi\u00e9</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6B6860;white-space:nowrap">${nc.quotidien_total} tagu\u00e9 \u00b7 ${nc.quotidien_published} publi\u00e9</span>
           <button class="btn btn-sm btn-secondary" data-export="markdown" data-export-type="quotidien" style="padding:2px 8px;font-size:10px">Export</button>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0">
           <span style="font-size:12px;font-weight:500;color:var(--text-primary)">Hebdo</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6B6860">${nc.hebdo_total} tagu\u00e9 \u00b7 ${nc.hebdo_published} publi\u00e9</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6B6860;white-space:nowrap">${nc.hebdo_total} tagu\u00e9 \u00b7 ${nc.hebdo_published} publi\u00e9</span>
           <button class="btn btn-sm btn-secondary" data-export="markdown" data-export-type="hebdo" style="padding:2px 8px;font-size:10px">Export</button>
         </div>
       </div>` : '';
