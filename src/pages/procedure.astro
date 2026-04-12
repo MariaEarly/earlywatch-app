@@ -445,12 +445,13 @@ const base = import.meta.env.BASE_URL;
   //  Step 2 — Load mapping from API
   // -------------------------------------------------------------------------
   async function loadMapping(profil: string) {
+    console.log('[PROC] loadMapping called with profil:', profil);
     try {
       mappingData = await api(`/api/v1/procedures/mapping?profil=${profil}`);
+      console.log('[PROC] mappingData received:', mappingData);
       renderThematiques();
     } catch (e: any) {
-      console.error('Mapping error:', e);
-      // Fallback: show step 3 directly
+      console.error('[PROC] Mapping error:', e);
       document.getElementById('step2-wrap')!.style.display = 'none';
       document.getElementById('step3-wrap')!.style.display = 'none';
     }
@@ -863,17 +864,20 @@ const base = import.meta.env.BASE_URL;
       list.innerHTML = '<p style="font-size:12px; color:#B0ADA7">Aucune procédure générée</p>';
       return;
     }
-    list.innerHTML = procedures.map((p: any) => `
-      <div style="padding:8px 0; cursor:pointer; border-bottom:1px solid #E8E5DE" data-load-proc="${p.id}">
-        <div style="display:flex; align-items:center; justify-content:space-between">
-          <span style="font-size:13px; font-weight:500; color:#1A1918">${escHtml(p.text_id)}</span>
-          ${statusBadge(p.status)}
-        </div>
-        <div style="font-size:11px; color:#6B6860; margin-top:2px">
-          ${escHtml(p.profile)} &middot; ${p.obligation_count} obligations &middot; ${formatDate(p.created_at)}
-        </div>
-      </div>
-    `).join('');
+    list.innerHTML = procedures.map((p: any) => {
+      const profileLabel = ({ psp: 'PSP', banque: 'Banque', casp: 'CASP' } as Record<string,string>)[p.profile?.toLowerCase()] || p.profile;
+      const title = `Procédure LCB-FT — ${profileLabel}`;
+      return `
+        <div style="padding:8px 0; cursor:pointer; border-bottom:1px solid #E8E5DE" data-load-proc="${p.id}">
+          <div style="display:flex; align-items:center; justify-content:space-between">
+            <span style="font-size:13px; font-weight:500; color:#1A1918">${escHtml(title)}</span>
+            ${statusBadge(p.status)}
+          </div>
+          <div style="font-size:11px; color:#6B6860; margin-top:2px">
+            ${p.obligation_count} obligations &middot; ${formatDate(p.created_at)}
+          </div>
+        </div>`;
+    }).join('');
     list.querySelectorAll('[data-load-proc]').forEach((el: any) => {
       el.addEventListener('click', () => loadProcedure(el.dataset.loadProc));
     });
