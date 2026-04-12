@@ -66,7 +66,6 @@ const base = import.meta.env.BASE_URL;
   const LINK_ICON = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><path d="M10 6.5V10a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1h3.5M7.5 1H11v3.5M11 1L5 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   let articles: any[] = [];
-  let sources: any[] = [];
   let activeFilter: string = 'all';
   let scoreFilter: string = 'all';
   let sortMode: string = 'recent';
@@ -78,20 +77,11 @@ const base = import.meta.env.BASE_URL;
 
   async function init(): Promise<void> {
     try {
-      const [articlesData, sourcesData, countsData]: any[] = await Promise.all([
+      const [articlesData, countsData]: any[] = await Promise.all([
         api('/api/v1/articles'),
-        api('/api/v1/sources/health').catch(() => ({ items: [] })),
         newsletterEnabled() ? api('/api/v1/articles/newsletter/counts').catch(() => null) : Promise.resolve(null),
       ]);
       articles = Array.isArray(articlesData) ? articlesData : (articlesData?.items || []);
-      // sources/health may 500 — fallback to building from articles
-      if (Array.isArray(sourcesData)) {
-        sources = sourcesData;
-      } else if (sourcesData?.items && Array.isArray(sourcesData.items)) {
-        sources = sourcesData.items;
-      } else {
-        sources = [];
-      }
       newsletterCounts = countsData;
     } catch (e: any) {
       document.getElementById('article-list')!.innerHTML =
@@ -247,9 +237,9 @@ const base = import.meta.env.BASE_URL;
             <a href="${BASE}controle" class="impact-link">Voir reminder</a>
           </div>` : ''}
         <div class="article-actions">
-          <button class="btn btn-sm btn-triage${a.status === 'quotidien' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="quotidien">Quotidien</button>
-          <button class="btn btn-sm btn-triage${a.status === 'hebdo' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo</button>
-          <button class="btn btn-sm btn-triage${a.status === 'ignorer' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="ignorer">Ignorer</button>
+          <button class="btn btn-sm btn-triage${a.status === 'quotidien' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="quotidien">Quotidien${a.status === 'quotidien' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
+          <button class="btn btn-sm btn-triage${a.status === 'hebdo' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo${a.status === 'hebdo' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
+          <button class="btn btn-sm btn-triage${a.status === 'ignorer' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="ignorer">Ignorer${a.status === 'ignorer' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
           ${newsletterEnabled() && (a.status === 'quotidien' || a.status === 'hebdo') ? `
             <button class="btn btn-sm ${a.published_to_newsletter ? 'btn-primary' : 'btn-secondary'}"
                     data-publish="${a.id}"
@@ -272,6 +262,11 @@ const base = import.meta.env.BASE_URL;
     document.querySelectorAll('[data-triage]').forEach((el: any) => {
       el.addEventListener('click', (e: any) => {
         e.stopPropagation();
+        // If clicking the reset ✕, reset to nouveau instead
+        if ((e.target as HTMLElement).closest('.triage-reset')) {
+          triage(el.dataset.triage, 'nouveau');
+          return;
+        }
         triage(el.dataset.triage, el.dataset.triageStatus);
       });
     });
@@ -326,47 +321,6 @@ const base = import.meta.env.BASE_URL;
   }
 
   function renderRightPanel(): void {
-    const now: Date = new Date();
-    const today: Date = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekAgo: Date = new Date(today.getTime() - 7 * 86400000);
-
-    const daily: number = articles.filter((a: any) => new Date(a.created_at) >= today).length;
-    const weekly: number = articles.filter((a: any) => new Date(a.created_at) >= weekAgo).length;
-
-    // Build source list from articles if health endpoint failed
-    let srcList: any[] = Array.isArray(sources) && sources.length > 0 ? sources : [];
-    let sourcesHtml: string;
-    if (srcList.length) {
-      sourcesHtml = srcList.slice(0, 12).map((s: any) => `
-        <div class="source-row">
-          <span class="flex items-center">
-            <span class="source-dot ${s.status === 'OK' || s.status === 'ok' ? 'ok' : s.status === 'warning' ? 'warn' : 'err'}"></span>
-            <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name || s.slug}</span>
-          </span>
-          <span class="text-xs text-tertiary">${s.articles_48h ?? s.article_count ?? 0}</span>
-        </div>`).join('');
-    } else {
-      // Fallback: build from articles data
-      const srcMap: Record<string, number> = {};
-      articles.forEach((a: any) => {
-        const name = a.source_name || 'Autre';
-        srcMap[name] = (srcMap[name] || 0) + 1;
-      });
-      const srcEntries = Object.entries(srcMap).sort((a, b) => b[1] - a[1]).slice(0, 12);
-      if (srcEntries.length) {
-        sourcesHtml = srcEntries.map(([name, count]) => `
-          <div class="source-row">
-            <span class="flex items-center">
-              <span class="source-dot ok"></span>
-              <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
-            </span>
-            <span class="text-xs text-tertiary">${count}</span>
-          </div>`).join('');
-      } else {
-        sourcesHtml = '<p class="text-sm text-tertiary">Aucune source</p>';
-      }
-    }
-
     const nc: any = newsletterCounts;
     const hebdoCount: number = nc ? nc.hebdo_total : 0;
     const newsletterBlock: string = (newsletterEnabled() && nc) ? `
@@ -394,29 +348,11 @@ const base = import.meta.env.BASE_URL;
     document.getElementById('sidebar-right')!.innerHTML = `
       ${newsletterBlock}
       <div class="sidebar-section">
-        <h3>Quotidien</h3>
-        <div class="stat-card">
-          <div class="stat-value">${daily}</div>
-          <div class="stat-label">articles aujourd'hui</div>
-        </div>
-      </div>
-      <div class="sidebar-section">
-        <h3>Hebdomadaire</h3>
-        <div class="stat-card">
-          <div class="stat-value">${weekly}</div>
-          <div class="stat-label">articles cette semaine</div>
-        </div>
-      </div>
-      <div class="sidebar-section">
         <h3>Export</h3>
         <div class="flex flex-col gap-4">
           <button class="btn btn-secondary btn-sm" data-export="json">Export JSON</button>
           <button class="btn btn-secondary btn-sm" data-export="markdown">Export Markdown</button>
         </div>
-      </div>
-      <div class="sidebar-section">
-        <h3>Sources</h3>
-        <div id="sources-health">${sourcesHtml}</div>
       </div>`;
 
     document.querySelectorAll('[data-export]').forEach((el: any) => {
@@ -616,5 +552,15 @@ const base = import.meta.env.BASE_URL;
     padding: 2px 10px;
     border-radius: 4px;
     flex-wrap: wrap;
+  }
+  .triage-reset {
+    color: #B0ADA7;
+    font-size: 10px;
+    margin-left: 2px;
+    cursor: pointer;
+    transition: color 0.1s;
+  }
+  .triage-reset:hover {
+    color: #1A1918;
   }
 </style>
