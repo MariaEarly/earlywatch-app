@@ -251,7 +251,7 @@ const base = import.meta.env.BASE_URL;
     // ── SANCTIONS / VEILLE ──
     async function loadSanctions() {
       try {
-        const data = await api('/api/v1/articles?limit=5&sort=published_at&order=desc');
+        const data = await api('/api/v1/articles?page_size=5&score_min=11');
         const articles = data.articles || data || [];
         const el = document.getElementById('mod-sanctions')!;
 
