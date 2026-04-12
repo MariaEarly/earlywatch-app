@@ -373,7 +373,7 @@ const base = import.meta.env.BASE_URL;
             <span style="font-size:12px;font-weight:500;color:var(--text-primary)">Quotidien</span>
             <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B6860;white-space:nowrap">${nc.quotidien_published}/${nc.quotidien_total} publi\u00e9</span>
           </div>
-          <button class="btn btn-sm btn-secondary" data-export="markdown" data-export-type="quotidien" style="padding:2px 8px;font-size:10px;border-radius:4px;width:100%">Export Markdown</button>
+          <button class="btn btn-sm btn-secondary" data-copy-md="quotidien" style="padding:2px 8px;font-size:10px;border-radius:4px;width:100%">Copier Quotidien</button>
         </div>
         <div style="padding:6px 0">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
@@ -381,7 +381,7 @@ const base = import.meta.env.BASE_URL;
             <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B6860;white-space:nowrap">${nc.hebdo_published}/${nc.hebdo_total} publi\u00e9</span>
           </div>
           <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-secondary" data-export="markdown" data-export-type="hebdo" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1">Export</button>
+            <button class="btn btn-sm btn-secondary" data-copy-md="hebdo" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1">Copier Hebdo</button>
             <button class="btn btn-sm btn-secondary" id="btn-apercu-hebdo" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1${hebdoCount === 0 ? ';opacity:0.4;pointer-events:none' : ''}" ${hebdoCount === 0 ? 'disabled' : ''}>Aper\u00e7u</button>
           </div>
         </div>
@@ -418,6 +418,13 @@ const base = import.meta.env.BASE_URL;
     document.querySelectorAll('[data-export]').forEach((el: any) => {
       el.addEventListener('click', () => {
         exportArticles(el.dataset.export, el.dataset.exportType);
+      });
+    });
+
+    // Bind copy-to-clipboard buttons in newsletter section
+    document.querySelectorAll('[data-copy-md]').forEach((el: any) => {
+      el.addEventListener('click', () => {
+        copyMarkdownToClipboard(el.dataset.copyMd, el);
       });
     });
 
@@ -523,6 +530,25 @@ const base = import.meta.env.BASE_URL;
     URL.revokeObjectURL(url);
     closeApercu();
     toast('Export hebdo t\u00e9l\u00e9charg\u00e9');
+  }
+
+  async function copyMarkdownToClipboard(type: string, btn: HTMLButtonElement): Promise<void> {
+    try {
+      const data: any = await api(`/api/v1/articles/export/markdown?type=${type}`);
+      const text: string = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+      await navigator.clipboard.writeText(text);
+      const original = btn.textContent;
+      btn.textContent = '\u2713 Copi\u00e9 !';
+      btn.style.color = '#5C6347';
+      btn.style.fontWeight = '500';
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.style.color = '';
+        btn.style.fontWeight = '';
+      }, 2000);
+    } catch (e: any) {
+      toast(e.message || 'Erreur de copie', 'error');
+    }
   }
 
   async function exportArticles(format: string, type?: string): Promise<void> {
