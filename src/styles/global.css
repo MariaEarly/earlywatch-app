@@ -473,10 +473,21 @@ label {
   line-height: 1.4;
 }
 a.article-title {
-  display: block;
+  display: inline;
   text-decoration: none;
 }
 a.article-title:hover { text-decoration: underline; }
+.title-ext-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  color: #B0ADA7;
+  opacity: 0;
+  transition: opacity 0.15s;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.article-card:hover .title-ext-icon { opacity: 1; }
 .impact-ref { font-weight: 500; cursor: default; }
 .impact-dot-critical {
   display: inline-block;
