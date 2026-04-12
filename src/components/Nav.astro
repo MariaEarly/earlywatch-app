@@ -5,47 +5,58 @@ interface Props {
 const { activePage = '' } = Astro.props;
 const base = import.meta.env.BASE_URL;
 
-const links = [
-  { href: 'conformite', label: 'Conformite' },
+const primary = [
   { href: 'dashboard', label: 'Inbox' },
   { href: 'procedure', label: 'Procedures' },
+  { href: 'controle', label: 'Controle', hasBadge: true },
+  { href: 'bibliotheque', label: 'Bibliotheque' },
+];
+
+const secondary = [
+  { href: 'conformite', label: 'Conformite' },
   { href: 'gap-analysis', label: 'Gap Analysis' },
   { href: 'mes-procedures', label: 'Mes Procedures' },
-  { href: 'bibliotheque', label: 'Bibliotheque' },
   { href: 'situations', label: 'Fiches Reflexes' },
   { href: 'roadmap', label: 'Roadmap' },
   { href: 'pays-risque', label: 'Pays a risque' },
   { href: 'settings', label: 'Parametres' },
-  { href: 'controle', label: 'Controle', hasBadge: true },
 ];
 ---
 
-<header class="header">
-  <div class="flex items-center gap-16">
-    <a href={`${base}conformite`} class="logo">Early <span>Watch</span></a>
-    <nav class="flex gap-4">
-      {links.map(link => (
-        <a
-          href={`${base}${link.href}`}
-          class:list={['btn', 'btn-ghost', 'btn-sm', { active: activePage === link.href }]}
-          style={link.hasBadge ? 'position:relative' : undefined}
-        >
-          {link.label}
-          {link.hasBadge && (
-            <span
-              id="nav-badge-ctrl"
-              style="display:none;position:absolute;top:-4px;right:-10px;background:#DC2626;color:#fff;font-size:10px;font-weight:500;min-width:18px;height:18px;line-height:18px;text-align:center;border-radius:0;padding:0 5px;border:1px solid var(--noir)"
-            />
-          )}
-        </a>
-      ))}
-    </nav>
-  </div>
-  <div class="flex items-center gap-12">
-    <span id="nav-tenant" class="badge badge-accent" style="display:none"></span>
-    <a id="nav-avatar" href={`${base}account`} class="avatar" style="text-decoration:none">?</a>
-  </div>
-</header>
+<div class="header-wrap">
+  <header class="header">
+    <div class="flex items-center gap-24">
+      <a href={`${base}dashboard`} class="logo">Early <span>Watch</span></a>
+      <nav class="nav-primary">
+        {primary.map(link => (
+          <a
+            href={`${base}${link.href}`}
+            class:list={[{ active: activePage === link.href }]}
+          >
+            {link.label}
+            {link.hasBadge && (
+              <span id="nav-badge-ctrl" class="nav-badge" style="display:none"></span>
+            )}
+          </a>
+        ))}
+      </nav>
+    </div>
+    <div class="flex items-center gap-12">
+      <span id="nav-tenant" class="badge badge-accent" style="display:none"></span>
+      <a id="nav-avatar" href={`${base}account`} class="avatar" style="text-decoration:none">?</a>
+    </div>
+  </header>
+  <nav class="header-sub">
+    {secondary.map(link => (
+      <a
+        href={`${base}${link.href}`}
+        class:list={[{ active: activePage === link.href }]}
+      >
+        {link.label}
+      </a>
+    ))}
+  </nav>
+</div>
 
 <script>
   import { getUser, loadReminderBadge } from '../scripts/api';
@@ -63,7 +74,7 @@ const links = [
 
     const tenant = document.getElementById('nav-tenant');
     if (tenant && user.tenant_id) {
-      tenant.textContent = 'Demo';
+      tenant.textContent = 'DEMO';
       tenant.style.display = 'inline-flex';
     }
 
@@ -74,11 +85,3 @@ const links = [
   initNav();
   document.addEventListener('astro:after-swap', initNav);
 </script>
-
-<style>
-  .btn-ghost.active {
-    background: transparent;
-    color: var(--kaki);
-    font-weight: 500;
-  }
-</style>

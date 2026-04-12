@@ -179,7 +179,7 @@ export async function loadReminderBadge() {
     const badge = document.getElementById('nav-badge-ctrl');
     if (badge && total > 0) {
       badge.textContent = total > 99 ? '99+' : total;
-      badge.style.display = 'inline-block';
+      badge.style.display = 'inline-flex';
     }
   } catch (_) { /* silently ignore */ }
 }

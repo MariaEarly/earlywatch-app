@@ -154,7 +154,7 @@ const base = import.meta.env.BASE_URL;
     });
 
     const emptySortSelect = `<div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-      <select id="sort-select" style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 10px;border:1px solid #C2BFB8;border-radius:0;background:#EDEAE3;color:#1A1918;cursor:pointer;outline:none">
+      <select id="sort-select" style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 10px;border:1px solid #C2BFB8;border-radius:4px;background:#EDEAE3;color:#1A1918;cursor:pointer;outline:none">
         <option value="recent"${sortMode === 'recent' ? ' selected' : ''}>Plus r\u00e9cent</option>
         <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien</option>
         <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine</option>
@@ -179,7 +179,7 @@ const base = import.meta.env.BASE_URL;
     }
 
     const sortSelect = `<div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-      <select id="sort-select" style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 10px;border:1px solid #C2BFB8;border-radius:0;background:#EDEAE3;color:#1A1918;cursor:pointer;outline:none">
+      <select id="sort-select" style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 10px;border:1px solid #C2BFB8;border-radius:4px;background:#EDEAE3;color:#1A1918;cursor:pointer;outline:none">
         <option value="recent"${sortMode === 'recent' ? ' selected' : ''}>Plus r\u00e9cent</option>
         <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien</option>
         <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine</option>
@@ -196,7 +196,10 @@ const base = import.meta.env.BASE_URL;
           ${a.detected_action_type ? actionBadge(a.detected_action_type) : ''}
           <span style="margin-left:auto">${statusBadge(a.status)}</span>
         </div>
-        <div class="article-title">${escHtml(a.title || 'Sans titre')}</div>
+        ${a.original_url
+          ? `<a href="${escHtml(a.original_url)}" target="_blank" rel="noopener" class="article-title" onclick="event.stopPropagation()">${escHtml(a.title || 'Sans titre')}</a>`
+          : `<div class="article-title">${escHtml(a.title || 'Sans titre')}</div>`
+        }
         <div class="article-actions">
           <button class="btn btn-sm btn-triage${a.status === 'quotidien' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="quotidien">Quotidien</button>
           <button class="btn btn-sm btn-triage${a.status === 'hebdo' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo</button>
