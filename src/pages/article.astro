@@ -47,7 +47,7 @@ const base = import.meta.env.BASE_URL;
         <div class="article-meta" style="margin-bottom:8px">
           <span>${a.source_name || 'Source inconnue'}</span>
           <span>&middot;</span>
-          <span>${formatDate(a.published_at || a.created_at)}</span>
+          <span>${a.published_at ? formatDate(a.published_at) : '<span style="color:#9B9790;font-style:italic">Date inconnue</span>'}</span>
           ${statusBadge(a.status)}
         </div>
         <h1 style="font-size:18px; margin-bottom:8px">${escHtml(a.title || 'Sans titre')}</h1>

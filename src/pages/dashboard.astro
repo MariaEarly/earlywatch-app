@@ -190,8 +190,15 @@ const base = import.meta.env.BASE_URL;
       filtered = filtered.filter((a: any) => new Date(a.created_at) >= cutoff);
     }
 
-    // Tri par date
+    // Tri par date — NULLS LAST : articles sans published_at en dernier
     filtered.sort((a: any, b: any) => {
+      const hasA = !!a.published_at;
+      const hasB = !!b.published_at;
+      // Articles sans date de publication → toujours en dernier (ou premier si 'oldest')
+      if (hasA !== hasB) {
+        if (sortMode === 'oldest') return hasA ? -1 : 1;
+        return hasA ? -1 : 1;
+      }
       const da = new Date(a.published_at || a.created_at).getTime();
       const db = new Date(b.published_at || b.created_at).getTime();
       return sortMode === 'oldest' ? da - db : db - da;
@@ -221,7 +228,7 @@ const base = import.meta.env.BASE_URL;
         <div class="article-meta">
           <span>${a.source_name || 'Source inconnue'}</span>
           <span>&middot;</span>
-          <span>${formatDate(a.published_at || a.created_at)}</span>
+          <span>${a.published_at ? formatDate(a.published_at) : '<span style="color:#9B9790;font-style:italic">Date inconnue</span>'}</span>
           ${a.detected_action_type ? actionBadge(a.detected_action_type) : ''}
           <span style="margin-left:auto">${statusBadge(a.status)}</span>
         </div>
@@ -394,7 +401,10 @@ const base = import.meta.env.BASE_URL;
       ? (a: any) => a.status === 'quotidien'
       : (a: any) => a.status === 'hebdo' || a.status === 'quotidien';
     apercuOrder = articles.filter(statusFilter)
-      .sort((a: any, b: any) => new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime());
+      .sort((a: any, b: any) => {
+        if (!!a.published_at !== !!b.published_at) return a.published_at ? -1 : 1;
+        return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
+      });
 
     const overlay = document.getElementById('apercu-overlay')!;
     overlay.style.display = 'flex';
@@ -424,7 +434,7 @@ const base = import.meta.env.BASE_URL;
         <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B6860;flex-shrink:0;width:20px;text-align:center">${i + 1}</span>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:500;color:#1A1918;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.title || 'Sans titre')}</div>
-          <div style="font-size:11px;color:#6B6860;margin-top:2px">${a.source_name || ''} \u00b7 ${formatDate(a.published_at || a.created_at)}</div>
+          <div style="font-size:11px;color:#6B6860;margin-top:2px">${a.source_name || ''} \u00b7 ${a.published_at ? formatDate(a.published_at) : 'Date inconnue'}</div>
         </div>
       </div>
     `).join('');
@@ -467,7 +477,7 @@ const base = import.meta.env.BASE_URL;
     const today = new Date().toLocaleDateString('fr-FR');
     const lines = [`# Early Watch ${label} \u2014 ${today}`, ''];
     apercuOrder.forEach((a: any, i: number) => {
-      const pub = a.published_at ? new Date(a.published_at).toLocaleDateString('fr-FR') : new Date(a.created_at).toLocaleDateString('fr-FR');
+      const pub = a.published_at ? new Date(a.published_at).toLocaleDateString('fr-FR') : 'Date inconnue';
       lines.push(`## ${i + 1}. ${a.title}`);
       lines.push('');
       if (a.summary) { lines.push(a.summary); lines.push(''); }
