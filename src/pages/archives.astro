@@ -1,0 +1,328 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+const base = import.meta.env.BASE_URL;
+---
+
+<AppLayout title="Early Watch — Archives" activePage="archives">
+  <div class="flex">
+    <aside class="sidebar" id="sidebar-left"></aside>
+    <main class="content-main" id="article-list" style="padding:12px">
+      <div class="loading-overlay"><div class="spinner"></div> Chargement des archives...</div>
+    </main>
+  </div>
+</AppLayout>
+
+<script>
+  import { api, formatDate, toast, scoreClass, scoreBar } from '../scripts/api';
+
+  const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
+
+  const LINK_ICON = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><path d="M10 6.5V10a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1h3.5M7.5 1H11v3.5M11 1L5 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  let articles: any[] = [];
+  let weekFilter: string = 'all';
+  let sourceFilter: string = 'all';
+  let themeFilter: string = 'all';
+  let statusFilter: string = 'all';
+
+  async function init(): Promise<void> {
+    try {
+      const data: any = await api('/api/v1/articles?lifecycle_status=ignored,published&page_size=200');
+      articles = Array.isArray(data) ? data : (data?.items || []);
+    } catch (e: any) {
+      document.getElementById('article-list')!.innerHTML =
+        `<div class="empty-state"><div class="icon">!</div><p>${e.message}</p></div>`;
+      return;
+    }
+
+    // Sort newest first by default
+    articles.sort((a: any, b: any) => {
+      const da = new Date(a.published_at || a.created_at).getTime();
+      const db = new Date(b.published_at || b.created_at).getTime();
+      return db - da;
+    });
+
+    renderSidebar();
+    renderArticles();
+  }
+
+  // ---- Filters ----
+
+  function getWeekCutoff(key: string): Date | null {
+    const now = new Date();
+    if (key === 'this-week') {
+      const start = new Date(now);
+      start.setDate(now.getDate() - now.getDay() + 1);
+      start.setHours(0, 0, 0, 0);
+      return start;
+    }
+    if (key === 'last-week') {
+      const cutoff = new Date(now.getTime() - 7 * 86400000);
+      return cutoff;
+    }
+    if (key === '2-weeks') {
+      const cutoff = new Date(now.getTime() - 14 * 86400000);
+      return cutoff;
+    }
+    return null;
+  }
+
+  function applyFilters(): any[] {
+    let filtered = [...articles];
+
+    // Week filter
+    const cutoff = getWeekCutoff(weekFilter);
+    if (cutoff) {
+      filtered = filtered.filter((a: any) => new Date(a.published_at || a.created_at) >= cutoff);
+    }
+
+    // Source filter
+    if (sourceFilter !== 'all') {
+      filtered = filtered.filter((a: any) => (a.source_name || 'Autre') === sourceFilter);
+    }
+
+    // Theme filter
+    if (themeFilter !== 'all') {
+      filtered = filtered.filter((a: any) => (a.theme || a.detected_action_type || '') === themeFilter);
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((a: any) => a.lifecycle_status === statusFilter);
+    }
+
+    return filtered;
+  }
+
+  function renderSidebar(): void {
+    // Week counts
+    const weekCounts: any = {
+      'all': articles.length,
+      'this-week': articles.filter((a: any) => { const c = getWeekCutoff('this-week'); return c ? new Date(a.published_at || a.created_at) >= c : true; }).length,
+      'last-week': articles.filter((a: any) => { const c = getWeekCutoff('last-week'); return c ? new Date(a.published_at || a.created_at) >= c : true; }).length,
+      '2-weeks': articles.filter((a: any) => { const c = getWeekCutoff('2-weeks'); return c ? new Date(a.published_at || a.created_at) >= c : true; }).length,
+    };
+
+    // Source counts
+    const srcCounts: any = {};
+    articles.forEach((a: any) => {
+      const s: string = a.source_name || 'Autre';
+      srcCounts[s] = (srcCounts[s] || 0) + 1;
+    });
+
+    // Theme counts
+    const themeCounts: any = {};
+    articles.forEach((a: any) => {
+      const t: string = a.theme || a.detected_action_type || '';
+      if (t) themeCounts[t] = (themeCounts[t] || 0) + 1;
+    });
+    const hasThemes = Object.keys(themeCounts).length > 0;
+
+    // Status counts
+    const statusCounts: any = { all: articles.length, published: 0, ignored: 0 };
+    articles.forEach((a: any) => {
+      if (a.lifecycle_status === 'published') statusCounts.published++;
+      else if (a.lifecycle_status === 'ignored') statusCounts.ignored++;
+    });
+
+    document.getElementById('sidebar-left')!.innerHTML = `
+      <div class="sidebar-section">
+        <h3>Semaine</h3>
+        <div class="filter-group">
+          ${weekBtn('all', 'Tout', weekCounts['all'])}
+          ${weekBtn('this-week', 'Cette semaine', weekCounts['this-week'])}
+          ${weekBtn('last-week', 'Semaine dernière', weekCounts['last-week'])}
+          ${weekBtn('2-weeks', '2 semaines', weekCounts['2-weeks'])}
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Statut</h3>
+        <div class="filter-group">
+          ${statusBtn('all', 'Tous', statusCounts.all)}
+          ${statusBtn('published', 'Publié', statusCounts.published)}
+          ${statusBtn('ignored', 'Ignoré', statusCounts.ignored)}
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Source</h3>
+        <div class="filter-group" style="max-height:240px;overflow-y:auto">
+          ${sourceBtn('all', 'Toutes', articles.length)}
+          ${Object.entries(srcCounts).sort((a: any, b: any) => b[1] - a[1]).map(([name, count]: any) =>
+            sourceBtn(name, name, count)
+          ).join('')}
+        </div>
+      </div>
+      ${hasThemes ? `
+      <div class="sidebar-section">
+        <h3>Thème</h3>
+        <div class="filter-group" style="max-height:200px;overflow-y:auto">
+          ${themeBtn('all', 'Tous', articles.length)}
+          ${Object.entries(themeCounts).sort((a: any, b: any) => b[1] - a[1]).map(([name, count]: any) =>
+            themeBtn(name, name, count)
+          ).join('')}
+        </div>
+      </div>` : ''}`;
+
+    // Bind filter events
+    document.querySelectorAll('[data-week-filter]').forEach((el: any) => {
+      el.addEventListener('click', () => {
+        weekFilter = el.dataset.weekFilter;
+        renderSidebar();
+        renderArticles();
+      });
+    });
+    document.querySelectorAll('[data-status-filter]').forEach((el: any) => {
+      el.addEventListener('click', () => {
+        statusFilter = el.dataset.statusFilter;
+        renderSidebar();
+        renderArticles();
+      });
+    });
+    document.querySelectorAll('[data-source-filter]').forEach((el: any) => {
+      el.addEventListener('click', () => {
+        sourceFilter = el.dataset.sourceFilter;
+        renderSidebar();
+        renderArticles();
+      });
+    });
+    document.querySelectorAll('[data-theme-filter]').forEach((el: any) => {
+      el.addEventListener('click', () => {
+        themeFilter = el.dataset.themeFilter;
+        renderSidebar();
+        renderArticles();
+      });
+    });
+  }
+
+  function weekBtn(key: string, label: string, count: number): string {
+    const active: string = weekFilter === key ? 'active' : '';
+    return `<button class="filter-item ${active}" data-week-filter="${key}">
+      <span>${label}</span><span class="filter-count">${count}</span>
+    </button>`;
+  }
+  function statusBtn(key: string, label: string, count: number): string {
+    const active: string = statusFilter === key ? 'active' : '';
+    return `<button class="filter-item ${active}" data-status-filter="${key}">
+      <span>${label}</span><span class="filter-count">${count}</span>
+    </button>`;
+  }
+  function sourceBtn(key: string, label: string, count: number): string {
+    const active: string = sourceFilter === key ? 'active' : '';
+    return `<button class="filter-item ${active}" data-source-filter="${key}" style="font-size:12px">
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span><span class="filter-count">${count}</span>
+    </button>`;
+  }
+  function themeBtn(key: string, label: string, count: number): string {
+    const active: string = themeFilter === key ? 'active' : '';
+    return `<button class="filter-item ${active}" data-theme-filter="${key}" style="font-size:12px">
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span><span class="filter-count">${count}</span>
+    </button>`;
+  }
+
+  // ---- Render ----
+
+  function lifecycleBadge(status: string): string {
+    if (status === 'published') {
+      return '<span class="badge badge-success">Publié</span>';
+    }
+    return '<span class="badge badge-neutral">Ignoré</span>';
+  }
+
+  function renderArticles(): void {
+    const filtered = applyFilters();
+
+    if (filtered.length === 0) {
+      document.getElementById('article-list')!.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">&#128196;</div>
+          <p>Aucun article dans cette vue</p>
+        </div>`;
+      return;
+    }
+
+    document.getElementById('article-list')!.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 4px">
+        <span style="font-size:12px;color:var(--text-secondary)">${filtered.length} article${filtered.length > 1 ? 's' : ''}</span>
+      </div>
+    ` + filtered.map((a: any) => `
+      <div class="article-card" data-article-nav="${a.id}">
+        <div class="article-meta">
+          <span>${a.source_name || 'Source inconnue'}</span>
+          <span>&middot;</span>
+          <span>${a.published_at ? formatDate(a.published_at) : 'Date inconnue'}</span>
+          <span style="margin-left:auto;display:flex;align-items:center;gap:6px">
+            ${a.score != null ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-secondary)">${a.score}</span>` : ''}
+            ${lifecycleBadge(a.lifecycle_status)}
+          </span>
+        </div>
+        <div class="article-title-row">
+          ${a.original_url
+            ? `<a href="${escHtml(a.original_url)}" target="_blank" rel="noopener" class="article-title" onclick="event.stopPropagation()">${escHtml(a.title || 'Sans titre')}<span class="title-ext-icon">${LINK_ICON}</span></a>`
+            : `<div class="article-title">${escHtml(a.title || 'Sans titre')}</div>`
+          }
+        </div>
+        <div class="article-actions">
+          <button class="btn btn-sm btn-secondary" data-tracker="${a.id}" onclick="event.stopPropagation()">+ Tracker</button>
+        </div>
+      </div>
+    `).join('');
+
+    // Bind card navigation
+    document.querySelectorAll('[data-article-nav]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        if (e.target.closest('button') || e.target.closest('a')) return;
+        window.location.href = `${BASE}article?id=${el.dataset.articleNav}`;
+      });
+    });
+
+    // Bind tracker buttons
+    document.querySelectorAll('[data-tracker]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        e.stopPropagation();
+        addToTracker(el.dataset.tracker, el);
+      });
+    });
+  }
+
+  async function addToTracker(articleId: string, btn: HTMLButtonElement): Promise<void> {
+    try {
+      await api(`/api/v1/tracker/propose?article_id=${articleId}`, {
+        method: 'POST',
+        body: { source: '', date: '', sujet: '', synthese: '', type: 'TEXTE', lien: '', statut: 'Publié' },
+      });
+      btn.textContent = '✓ Tracker';
+      btn.disabled = true;
+      btn.classList.remove('btn-secondary');
+      btn.classList.add('btn-success');
+      toast('Article ajouté au tracker');
+    } catch (e: any) {
+      toast(e.message || 'Erreur', 'error');
+    }
+  }
+
+  function escHtml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  init();
+</script>
+
+<style>
+  .article-title-row {
+    display: flex;
+    align-items: baseline;
+  }
+  .title-ext-icon {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 6px;
+    color: #B0ADA7;
+    opacity: 0;
+    transition: opacity 0.15s;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  .article-card:hover .title-ext-icon {
+    opacity: 1;
+  }
+</style>

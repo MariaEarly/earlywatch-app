@@ -29,6 +29,54 @@ const base = import.meta.env.BASE_URL;
       </div>
     </div>
   </div>
+
+  <!-- Tracker drawer (slide-in panel from right) -->
+  <div id="tracker-overlay" style="display:none">
+    <div id="tracker-drawer">
+      <header style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid #D5D2CB">
+        <h3 style="margin:0;font-size:16px">Ajouter au Tracker</h3>
+        <button id="tracker-close" class="btn btn-ghost" style="font-size:18px">&times;</button>
+      </header>
+      <div id="tracker-form" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <label class="tracker-field">
+          <span>Source</span>
+          <input type="text" id="tracker-source" class="tracker-input" />
+        </label>
+        <label class="tracker-field">
+          <span>Date</span>
+          <input type="date" id="tracker-date" class="tracker-input" />
+        </label>
+        <label class="tracker-field">
+          <span>Sujet</span>
+          <input type="text" id="tracker-sujet" class="tracker-input" />
+        </label>
+        <label class="tracker-field">
+          <span>Synth\u00e8se</span>
+          <textarea id="tracker-synthese" class="tracker-input" rows="4"></textarea>
+        </label>
+        <label class="tracker-field">
+          <span>Type</span>
+          <select id="tracker-type" class="tracker-input">
+            <option value="TEXTE">TEXTE</option>
+            <option value="DECISION">DECISION</option>
+            <option value="CONSULTATION">CONSULTATION</option>
+          </select>
+        </label>
+        <label class="tracker-field">
+          <span>Lien</span>
+          <input type="url" id="tracker-lien" class="tracker-input" />
+        </label>
+        <label class="tracker-field">
+          <span>Statut</span>
+          <input type="text" id="tracker-statut" class="tracker-input" value="Publi\u00e9" />
+        </label>
+      </div>
+      <footer style="padding:16px;border-top:1px solid #D5D2CB;display:flex;gap:8px;justify-content:flex-end">
+        <button id="tracker-cancel" class="btn btn-secondary">Annuler</button>
+        <button id="tracker-confirm" class="btn btn-primary">Confirmer</button>
+      </footer>
+    </div>
+  </div>
 </AppLayout>
 
 <script>
@@ -269,6 +317,11 @@ const base = import.meta.env.BASE_URL;
                     ${a.published_to_newsletter ? 'disabled title="Publi\u00e9 le ' + formatDate(a.published_to_newsletter_at) + '"' : ''}>
               ${a.published_to_newsletter ? '\u2713 Publi\u00e9' : 'Publier'}
             </button>` : ''}
+          <span class="action-sep">|</span>
+          ${a.tracker_added
+            ? `<span class="badge-tracker-added">\u2713 Tracker</span>`
+            : `<button class="btn-tracker" data-tracker="${a.id}" data-source="${escHtml(a.source_name || '')}" data-date="${a.published_at || ''}" data-title="${escHtml(a.title || '')}" data-synthese="${escHtml(a.reminder_text || '')}" data-type="${a.impact_type || 'info'}" data-url="${escHtml(a.original_url || '')}">+ Tracker</button>`
+          }
         </div>
       </div>
     `).join('');
@@ -578,6 +631,83 @@ const base = import.meta.env.BASE_URL;
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
+  // --- Tracker drawer ---
+  let trackerArticleId: string | null = null;
+
+  document.addEventListener('click', (e: Event) => {
+    const btn = (e.target as HTMLElement).closest('[data-tracker]') as HTMLElement | null;
+    if (!btn) return;
+
+    trackerArticleId = btn.dataset.tracker!;
+
+    // Pre-fill form from data attributes
+    (document.getElementById('tracker-source') as HTMLInputElement).value = btn.dataset.source || '';
+    (document.getElementById('tracker-date') as HTMLInputElement).value = btn.dataset.date ? btn.dataset.date.slice(0, 10) : '';
+    (document.getElementById('tracker-sujet') as HTMLInputElement).value = btn.dataset.title || '';
+    (document.getElementById('tracker-synthese') as HTMLTextAreaElement).value = btn.dataset.synthese || '';
+    (document.getElementById('tracker-lien') as HTMLInputElement).value = btn.dataset.url || '';
+    (document.getElementById('tracker-statut') as HTMLInputElement).value = 'Publi\u00e9';
+
+    // Map impact_type to tracker type
+    const typeMap: Record<string, string> = { nouvelle_regle: 'TEXTE', mise_a_jour: 'TEXTE', sanction: 'DECISION', appel_vigilance: 'CONSULTATION', consultation: 'CONSULTATION', info: 'TEXTE' };
+    (document.getElementById('tracker-type') as HTMLSelectElement).value = typeMap[btn.dataset.type || ''] || 'TEXTE';
+
+    document.getElementById('tracker-overlay')!.style.display = 'flex';
+  });
+
+  document.getElementById('tracker-close')?.addEventListener('click', () => {
+    document.getElementById('tracker-overlay')!.style.display = 'none';
+  });
+  document.getElementById('tracker-cancel')?.addEventListener('click', () => {
+    document.getElementById('tracker-overlay')!.style.display = 'none';
+  });
+  document.getElementById('tracker-overlay')?.addEventListener('click', (e: Event) => {
+    if (e.target === e.currentTarget) (e.currentTarget as HTMLElement).style.display = 'none';
+  });
+
+  document.getElementById('tracker-confirm')?.addEventListener('click', async () => {
+    const body = {
+      source: (document.getElementById('tracker-source') as HTMLInputElement).value,
+      date: (document.getElementById('tracker-date') as HTMLInputElement).value,
+      sujet: (document.getElementById('tracker-sujet') as HTMLInputElement).value,
+      synthese: (document.getElementById('tracker-synthese') as HTMLTextAreaElement).value,
+      type: (document.getElementById('tracker-type') as HTMLSelectElement).value,
+      lien: (document.getElementById('tracker-lien') as HTMLInputElement).value,
+      statut: (document.getElementById('tracker-statut') as HTMLInputElement).value,
+    };
+
+    try {
+      const res: any = await api(`/api/v1/tracker/propose?article_id=${trackerArticleId}`, {
+        method: 'POST',
+        body: body,
+      });
+
+      if (res.success) {
+        // Update local data
+        const idx = articles.findIndex((a: any) => a.id === trackerArticleId);
+        if (idx !== -1) articles[idx].tracker_added = true;
+
+        // Replace button with badge
+        const btn = document.querySelector(`[data-tracker="${trackerArticleId}"]`) as HTMLElement | null;
+        if (btn) {
+          const badge = document.createElement('span');
+          badge.className = 'badge-tracker-added';
+          badge.textContent = '\u2713 Tracker';
+          btn.parentNode!.replaceChild(badge, btn);
+          // Also remove the separator before it
+          const sep = badge.previousElementSibling as HTMLElement | null;
+          if (sep && sep.classList.contains('action-sep')) sep.remove();
+        }
+        document.getElementById('tracker-overlay')!.style.display = 'none';
+        toast('Article ajout\u00e9 au Tracker');
+      } else {
+        toast('Erreur tracker', 'error');
+      }
+    } catch (err: any) {
+      toast('Erreur: ' + err.message, 'error');
+    }
+  });
+
   init();
 </script>
 
@@ -627,4 +757,67 @@ const base = import.meta.env.BASE_URL;
   .triage-reset:hover {
     color: #1A1918;
   }
+
+  /* Tracker button & drawer */
+  .action-sep { color: #B0ADA7; margin: 0 4px; font-size: 12px; }
+
+  .btn-tracker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border: 1px solid #5C6347;
+    border-radius: 4px;
+    background: transparent;
+    color: #5C6347;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-tracker:hover { background: #5C6347; color: white; }
+
+  .badge-tracker-added {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    background: #5C6347;
+    color: white;
+    border-radius: 4px;
+  }
+
+  #tracker-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 1000;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  #tracker-drawer {
+    width: 420px;
+    max-width: 90vw;
+    height: 100vh;
+    background: #EDEAE3;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+    animation: slideInRight 0.2s ease-out;
+  }
+
+  @keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+
+  .tracker-field { display: flex; flex-direction: column; gap: 4px; }
+  .tracker-field span { font-size: 11px; font-weight: 600; color: #6B6860; text-transform: uppercase; letter-spacing: 0.5px; }
+  .tracker-input {
+    padding: 8px 10px;
+    border: 1px solid #D5D2CB;
+    border-radius: 6px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    background: white;
+    color: #1A1918;
+  }
+  .tracker-input:focus { outline: none; border-color: #5C6347; }
 </style>
