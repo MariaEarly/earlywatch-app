@@ -53,7 +53,9 @@ export async function api(path, opts = {}) {
     throw new Error(err.detail || 'Erreur serveur');
   }
   if (res.status === 204) return null;
-  return res.json();
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) return res.json();
+  return res.text();
 }
 
 // ---- Toast ----

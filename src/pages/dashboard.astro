@@ -68,6 +68,7 @@ const base = import.meta.env.BASE_URL;
   let articles: any[] = [];
   let activeFilter: string = 'all';
   let scoreFilter: string = 'all';
+  let sourceFilter: string = 'all';
   let sortMode: string = 'recent';
   let newsletterCounts: any = null;
 
@@ -133,9 +134,10 @@ const base = import.meta.env.BASE_URL;
       </div>
       <div class="sidebar-section">
         <h3>Source</h3>
-        <div class="filter-group" style="max-height:200px;overflow-y:auto">
-          ${Object.entries(srcCounts).sort((a: any, b: any) => b[1] - a[1]).slice(0, 10).map(([name, count]: any) =>
-            `<div class="filter-item text-sm"><span style="flex:1;overflow:hidden;text-overflow:ellipsis">${name}</span><span class="filter-count">${count}</span></div>`
+        <div class="filter-group" style="max-height:240px;overflow-y:auto">
+          ${sourceFilterBtn('all', 'Toutes', articles.length)}
+          ${Object.entries(srcCounts).sort((a: any, b: any) => b[1] - a[1]).map(([name, count]: any) =>
+            sourceFilterBtn(name, name, count)
           ).join('')}
         </div>
       </div>`;
@@ -154,6 +156,13 @@ const base = import.meta.env.BASE_URL;
         renderArticles();
       });
     });
+    document.querySelectorAll('[data-source-filter]').forEach((el: any) => {
+      el.addEventListener('click', () => {
+        sourceFilter = el.dataset.sourceFilter;
+        renderSidebar();
+        renderArticles();
+      });
+    });
   }
 
   function filterBtn(key: string, label: string, count: number): string {
@@ -168,6 +177,12 @@ const base = import.meta.env.BASE_URL;
       <span>${label}</span><span class="filter-count">${count}</span>
     </button>`;
   }
+  function sourceFilterBtn(key: string, label: string, count: number): string {
+    const active: string = sourceFilter === key ? 'active' : '';
+    return `<button class="filter-item ${active}" data-source-filter="${key}" style="font-size:12px">
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span><span class="filter-count">${count}</span>
+    </button>`;
+  }
 
   function renderArticles(): void {
     let filtered: any[] = [...articles];
@@ -177,6 +192,7 @@ const base = import.meta.env.BASE_URL;
     if (scoreFilter === 'high') filtered = filtered.filter((a: any) => (a.score || 0) >= 50);
     else if (scoreFilter === 'med') filtered = filtered.filter((a: any) => (a.score || 0) >= 25 && (a.score || 0) < 50);
     else if (scoreFilter === 'low') filtered = filtered.filter((a: any) => (a.score || 0) < 25);
+    if (sourceFilter !== 'all') filtered = filtered.filter((a: any) => (a.source_name || 'Autre') === sourceFilter);
 
     // Filtre temporel — toujours bas\u00e9 sur created_at (date d'ingestion dans Early Watch)
     const now = new Date();
