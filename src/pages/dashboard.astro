@@ -58,6 +58,10 @@ const base = import.meta.env.BASE_URL;
           <input type="text" id="pub-titre" class="tracker-input" />
         </label>
         <label class="tracker-field">
+          <span>Synth&egrave;se</span>
+          <textarea id="pub-synthese" class="tracker-input" rows="3" placeholder="Description op&eacute;rationnelle courte"></textarea>
+        </label>
+        <label class="tracker-field">
           <span>Lien</span>
           <input type="url" id="pub-lien" class="tracker-input" />
         </label>
@@ -958,10 +962,12 @@ const base = import.meta.env.BASE_URL;
 
     pubArticleId = btn.dataset.pub!;
 
-    // Pre-fill form from data attributes
+    // Pre-fill form from data attributes + article data
+    const pubArticle = articles.find((a: any) => a.id === pubArticleId);
     (document.getElementById('pub-date') as HTMLInputElement).value = btn.dataset.date ? btn.dataset.date.slice(0, 10) : '';
     (document.getElementById('pub-source') as HTMLInputElement).value = btn.dataset.source || '';
     (document.getElementById('pub-titre') as HTMLInputElement).value = btn.dataset.title || '';
+    (document.getElementById('pub-synthese') as HTMLTextAreaElement).value = pubArticle?.summary || '';
     (document.getElementById('pub-lien') as HTMLInputElement).value = btn.dataset.url || '';
 
     // Map impact_type to Rapport/Intelligence
@@ -987,6 +993,7 @@ const base = import.meta.env.BASE_URL;
       source: (document.getElementById('pub-source') as HTMLInputElement).value,
       type: (document.getElementById('pub-type') as HTMLSelectElement).value,
       titre: (document.getElementById('pub-titre') as HTMLInputElement).value,
+      synthese: (document.getElementById('pub-synthese') as HTMLTextAreaElement).value,
       lien: (document.getElementById('pub-lien') as HTMLInputElement).value,
     };
 
