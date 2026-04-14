@@ -119,6 +119,7 @@ const base = import.meta.env.BASE_URL;
   let sourceFilter: string = 'all';
   let sortMode: string = 'recent';
   let newsletterCounts: any = null;
+  let trackerPendingCount: number = 0;
 
   function newsletterEnabled(): boolean {
     return !!getUser()?.tenant_newsletter_enabled;
@@ -126,12 +127,14 @@ const base = import.meta.env.BASE_URL;
 
   async function init(): Promise<void> {
     try {
-      const [articlesData, countsData]: any[] = await Promise.all([
+      const [articlesData, countsData, trackerData]: any[] = await Promise.all([
         api('/api/v1/articles?page_size=200&score_min=11'),
         newsletterEnabled() ? api('/api/v1/articles/newsletter/counts').catch(() => null) : Promise.resolve(null),
+        api('/api/v1/tracker/pending-count').catch(() => ({ pending: 0 })),
       ]);
       articles = Array.isArray(articlesData) ? articlesData : (articlesData?.items || []);
       newsletterCounts = countsData;
+      trackerPendingCount = trackerData?.pending || 0;
     } catch (e: any) {
       document.getElementById('article-list')!.innerHTML =
         `<div class="empty-state"><div class="icon">!</div><p>${e.message}</p></div>`;
@@ -425,15 +428,12 @@ const base = import.meta.env.BASE_URL;
     const hebdoCount: number = nc ? nc.hebdo_total : 0;
     const qDisabled: string = quotidienCount === 0 ? ';opacity:0.4;cursor:not-allowed;pointer-events:none' : '';
     const hDisabled: string = hebdoCount === 0 ? ';opacity:0.4;cursor:not-allowed;pointer-events:none' : '';
-    // Tracker eligible: high/critical severity, not yet added, not ignored
-    const trackerEligible = articles.filter((a: any) =>
-      !a.tracker_added && (a.severity === 'high' || a.severity === 'critical') && a.lifecycle_status !== 'ignored'
-    );
-    const trackerBlock: string = trackerEligible.length > 0 ? `
+    // Tracker eligible — uses backend count (includes archives)
+    const trackerBlock: string = trackerPendingCount > 0 ? `
       <div class="sidebar-section">
         <h3>Tracker</h3>
         <div style="font-size:11px;color:#6B6860">
-          <span style="color:#E8A23E;font-weight:600">${trackerEligible.length}</span> article${trackerEligible.length > 1 ? 's' : ''} éligible${trackerEligible.length > 1 ? 's' : ''} non ajouté${trackerEligible.length > 1 ? 's' : ''}
+          <span style="color:#E8A23E;font-weight:600">${trackerPendingCount}</span> article${trackerPendingCount > 1 ? 's' : ''} éligible${trackerPendingCount > 1 ? 's' : ''} non ajouté${trackerPendingCount > 1 ? 's' : ''}
         </div>
       </div>` : '';
 
@@ -825,6 +825,10 @@ const base = import.meta.env.BASE_URL;
           if (sep && sep.classList.contains('action-sep')) sep.remove();
         }
         document.getElementById('tracker-overlay')!.style.display = 'none';
+        // Refresh tracker pending count from backend
+        const tc: any = await api('/api/v1/tracker/pending-count').catch(() => ({ pending: 0 }));
+        trackerPendingCount = tc?.pending || 0;
+        renderRightPanel();
         toast('Article ajout\u00e9 au Tracker');
       } else {
         toast('Erreur tracker', 'error');
