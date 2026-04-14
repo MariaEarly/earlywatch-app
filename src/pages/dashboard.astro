@@ -147,18 +147,22 @@ const base = import.meta.env.BASE_URL;
   }
 
   function renderSidebar(): void {
-    const counts: any = { all: articles.length, nouveau: 0, quotidien: 0, hebdo: 0, ignorer: 0 };
-    articles.forEach((a: any) => { if (counts[a.status] !== undefined) counts[a.status]++; });
+    // Only count visible articles (inbox + triaged)
+    const visible: any[] = articles.filter((a: any) =>
+      a.lifecycle_status === 'inbox' || a.lifecycle_status === 'triaged'
+    );
+    const counts: any = { all: visible.length, nouveau: 0, quotidien: 0, hebdo: 0, ignorer: 0 };
+    visible.forEach((a: any) => { if (counts[a.status] !== undefined) counts[a.status]++; });
 
-    const scoreCounts: any = { all: articles.length, high: 0, med: 0, low: 0 };
-    articles.forEach((a: any) => {
+    const scoreCounts: any = { all: visible.length, high: 0, med: 0, low: 0 };
+    visible.forEach((a: any) => {
       if ((a.score || 0) >= 50) scoreCounts.high++;
       else if ((a.score || 0) >= 25) scoreCounts.med++;
       else scoreCounts.low++;
     });
 
     const srcCounts: any = {};
-    articles.forEach((a: any) => {
+    visible.forEach((a: any) => {
       const s: string = a.source_name || 'Autre';
       srcCounts[s] = (srcCounts[s] || 0) + 1;
     });
@@ -236,7 +240,10 @@ const base = import.meta.env.BASE_URL;
   }
 
   function renderArticles(): void {
-    let filtered: any[] = [...articles];
+    // Inbox shows only inbox + triaged — hide ignored/published immediately
+    let filtered: any[] = articles.filter((a: any) =>
+      a.lifecycle_status === 'inbox' || a.lifecycle_status === 'triaged'
+    );
     if (activeFilter !== 'all') {
       filtered = filtered.filter((a: any) => a.status === activeFilter);
     }
