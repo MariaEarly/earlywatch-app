@@ -30,6 +30,45 @@ const base = import.meta.env.BASE_URL;
     </div>
   </div>
 
+  <!-- Pub drawer (slide-in panel from right — Autres Publications) -->
+  <div id="pub-overlay" style="display:none">
+    <div id="pub-drawer">
+      <header style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid #D5D2CB">
+        <h3 style="margin:0;font-size:16px">Ajouter aux Autres Publications</h3>
+        <button id="pub-close" class="btn btn-ghost" style="font-size:18px">&times;</button>
+      </header>
+      <div id="pub-form" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <label class="tracker-field">
+          <span>Date</span>
+          <input type="date" id="pub-date" class="tracker-input" />
+        </label>
+        <label class="tracker-field">
+          <span>Source</span>
+          <input type="text" id="pub-source" class="tracker-input" />
+        </label>
+        <label class="tracker-field">
+          <span>Type</span>
+          <select id="pub-type" class="tracker-input">
+            <option value="Rapport">Rapport</option>
+            <option value="Intelligence">Intelligence</option>
+          </select>
+        </label>
+        <label class="tracker-field">
+          <span>Titre</span>
+          <input type="text" id="pub-titre" class="tracker-input" />
+        </label>
+        <label class="tracker-field">
+          <span>Lien</span>
+          <input type="url" id="pub-lien" class="tracker-input" />
+        </label>
+      </div>
+      <footer style="padding:16px;border-top:1px solid #D5D2CB;display:flex;gap:8px;justify-content:flex-end">
+        <button id="pub-cancel" class="btn btn-secondary">Annuler</button>
+        <button id="pub-confirm" class="btn btn-primary">Confirmer</button>
+      </footer>
+    </div>
+  </div>
+
   <!-- Tracker drawer (slide-in panel from right) -->
   <div id="tracker-overlay" style="display:none">
     <div id="tracker-drawer">
@@ -331,6 +370,11 @@ const base = import.meta.env.BASE_URL;
           ${a.tracker_added
             ? `<span class="badge-tracker-added">\u2713 Tracker</span>`
             : `<button class="btn btn-sm btn-triage btn-tracker${(!a.tracker_added && (a.severity === 'high' || a.severity === 'critical') && a.lifecycle_status !== 'ignored') ? ' btn-tracker-pending' : ''}" data-tracker="${a.id}" data-source="${escHtml(a.source_name || '')}" data-date="${a.published_at || ''}" data-title="${escHtml(a.title || '')}" data-synthese="${escHtml(a.reminder_text || '')}" data-type="${a.impact_type || 'info'}" data-url="${escHtml(a.original_url || '')}">+ Tracker</button>`
+          }
+          <span class="action-sep">|</span>
+          ${a.pub_added
+            ? `<span class="badge-tracker-added">\u2713 Pub</span>`
+            : `<button class="btn btn-sm btn-triage btn-tracker" data-pub="${a.id}" data-source="${escHtml(a.source_name || '')}" data-date="${a.published_at || ''}" data-title="${escHtml(a.title || '')}" data-type="${a.impact_type || 'info'}" data-url="${escHtml(a.original_url || '')}">+ Pub</button>`
           }
         </div>
       </div>
@@ -854,6 +898,80 @@ const base = import.meta.env.BASE_URL;
     }
   });
 
+  // --- Pub drawer (Autres Publications) ---
+  let pubArticleId: string | null = null;
+
+  const PUB_TYPE_MAP: Record<string, string> = {
+    rapport: 'Rapport', etude: 'Rapport', evaluation: 'Rapport',
+  };
+
+  document.addEventListener('click', (e: Event) => {
+    const btn = (e.target as HTMLElement).closest('[data-pub]') as HTMLElement | null;
+    if (!btn) return;
+
+    pubArticleId = btn.dataset.pub!;
+
+    // Pre-fill form from data attributes
+    (document.getElementById('pub-date') as HTMLInputElement).value = btn.dataset.date ? btn.dataset.date.slice(0, 10) : '';
+    (document.getElementById('pub-source') as HTMLInputElement).value = btn.dataset.source || '';
+    (document.getElementById('pub-titre') as HTMLInputElement).value = btn.dataset.title || '';
+    (document.getElementById('pub-lien') as HTMLInputElement).value = btn.dataset.url || '';
+
+    // Map impact_type to Rapport/Intelligence
+    const impactType = btn.dataset.type || 'info';
+    (document.getElementById('pub-type') as HTMLSelectElement).value = PUB_TYPE_MAP[impactType] || 'Intelligence';
+
+    document.getElementById('pub-overlay')!.style.display = 'flex';
+  });
+
+  document.getElementById('pub-close')?.addEventListener('click', () => {
+    document.getElementById('pub-overlay')!.style.display = 'none';
+  });
+  document.getElementById('pub-cancel')?.addEventListener('click', () => {
+    document.getElementById('pub-overlay')!.style.display = 'none';
+  });
+  document.getElementById('pub-overlay')?.addEventListener('click', (e: Event) => {
+    if (e.target === e.currentTarget) (e.currentTarget as HTMLElement).style.display = 'none';
+  });
+
+  document.getElementById('pub-confirm')?.addEventListener('click', async () => {
+    const body = {
+      date: (document.getElementById('pub-date') as HTMLInputElement).value,
+      source: (document.getElementById('pub-source') as HTMLInputElement).value,
+      type: (document.getElementById('pub-type') as HTMLSelectElement).value,
+      titre: (document.getElementById('pub-titre') as HTMLInputElement).value,
+      lien: (document.getElementById('pub-lien') as HTMLInputElement).value,
+    };
+
+    try {
+      const res: any = await api(`/api/v1/tracker/pub/propose?article_id=${pubArticleId}`, {
+        method: 'POST',
+        body: body,
+      });
+
+      if (res.success) {
+        // Update local data
+        const idx = articles.findIndex((a: any) => a.id === pubArticleId);
+        if (idx !== -1) articles[idx].pub_added = true;
+
+        // Replace button with badge
+        const btn = document.querySelector(`[data-pub="${pubArticleId}"]`) as HTMLElement | null;
+        if (btn) {
+          const badge = document.createElement('span');
+          badge.className = 'badge-tracker-added';
+          badge.textContent = '\u2713 Pub';
+          btn.parentNode!.replaceChild(badge, btn);
+        }
+        document.getElementById('pub-overlay')!.style.display = 'none';
+        toast('Ajouté aux autres publications');
+      } else {
+        toast('Erreur publication', 'error');
+      }
+    } catch (err: any) {
+      toast('Erreur: ' + err.message, 'error');
+    }
+  });
+
   init();
 </script>
 
@@ -972,4 +1090,25 @@ const base = import.meta.env.BASE_URL;
     color: #1A1918;
   }
   .tracker-input:focus { outline: none; border-color: #5C6347; }
+
+  /* Pub drawer — same pattern as tracker */
+  #pub-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 1000;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  #pub-drawer {
+    width: 420px;
+    max-width: 90vw;
+    height: 100vh;
+    background: #EDEAE3;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+    animation: slideInRight 0.2s ease-out;
+  }
 </style>

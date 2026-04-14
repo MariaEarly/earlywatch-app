@@ -262,7 +262,15 @@ const base = import.meta.env.BASE_URL;
           }
         </div>
         <div class="article-actions">
-          <button class="btn btn-sm btn-secondary" data-tracker="${a.id}" onclick="event.stopPropagation()">+ Tracker</button>
+          ${a.tracker_added
+            ? `<span class="badge-tracker-added">\u2713 Tracker</span>`
+            : `<button class="btn btn-sm btn-secondary" data-tracker="${a.id}" onclick="event.stopPropagation()">+ Tracker</button>`
+          }
+          <span class="action-sep">|</span>
+          ${a.pub_added
+            ? `<span class="badge-tracker-added">\u2713 Pub</span>`
+            : `<button class="btn btn-sm btn-secondary" data-pub="${a.id}" onclick="event.stopPropagation()">+ Pub</button>`
+          }
         </div>
       </div>
     `).join('');
@@ -282,6 +290,14 @@ const base = import.meta.env.BASE_URL;
         addToTracker(el.dataset.tracker, el);
       });
     });
+
+    // Bind pub buttons
+    document.querySelectorAll('[data-pub]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        e.stopPropagation();
+        addToPub(el.dataset.pub, el);
+      });
+    });
   }
 
   async function addToTracker(articleId: string, btn: HTMLButtonElement): Promise<void> {
@@ -290,11 +306,38 @@ const base = import.meta.env.BASE_URL;
         method: 'POST',
         body: { source: '', date: '', sujet: '', synthese: '', type: 'TEXTE', lien: '', statut: 'Publié' },
       });
-      btn.textContent = '✓ Tracker';
-      btn.disabled = true;
-      btn.classList.remove('btn-secondary');
-      btn.classList.add('btn-success');
+      const badge = document.createElement('span');
+      badge.className = 'badge-tracker-added';
+      badge.textContent = '\u2713 Tracker';
+      btn.parentNode!.replaceChild(badge, btn);
+      const idx = articles.findIndex((a: any) => a.id === articleId);
+      if (idx !== -1) articles[idx].tracker_added = true;
       toast('Article ajouté au tracker');
+    } catch (e: any) {
+      toast(e.message || 'Erreur', 'error');
+    }
+  }
+
+  async function addToPub(articleId: string, btn: HTMLButtonElement): Promise<void> {
+    const article = articles.find((a: any) => a.id === articleId);
+    try {
+      await api(`/api/v1/tracker/pub/propose?article_id=${articleId}`, {
+        method: 'POST',
+        body: {
+          date: article?.published_at ? article.published_at.slice(0, 10) : '',
+          source: article?.source_name || '',
+          type: 'Intelligence',
+          titre: article?.title || '',
+          lien: article?.original_url || '',
+        },
+      });
+      const badge = document.createElement('span');
+      badge.className = 'badge-tracker-added';
+      badge.textContent = '\u2713 Pub';
+      btn.parentNode!.replaceChild(badge, btn);
+      const idx = articles.findIndex((a: any) => a.id === articleId);
+      if (idx !== -1) articles[idx].pub_added = true;
+      toast('Ajouté aux autres publications');
     } catch (e: any) {
       toast(e.message || 'Erreur', 'error');
     }
@@ -324,5 +367,14 @@ const base = import.meta.env.BASE_URL;
   }
   .article-card:hover .title-ext-icon {
     opacity: 1;
+  }
+  .action-sep { color: #B0ADA7; margin: 0 4px; font-size: 12px; }
+  .badge-tracker-added {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    background: #5C6347;
+    color: white;
+    border-radius: 4px;
   }
 </style>
