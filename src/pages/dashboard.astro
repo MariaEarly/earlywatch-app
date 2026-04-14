@@ -320,7 +320,7 @@ const base = import.meta.env.BASE_URL;
           <span class="action-sep">|</span>
           ${a.tracker_added
             ? `<span class="badge-tracker-added">\u2713 Tracker</span>`
-            : `<button class="btn-tracker" data-tracker="${a.id}" data-source="${escHtml(a.source_name || '')}" data-date="${a.published_at || ''}" data-title="${escHtml(a.title || '')}" data-synthese="${escHtml(a.reminder_text || '')}" data-type="${a.impact_type || 'info'}" data-url="${escHtml(a.original_url || '')}">+ Tracker</button>`
+            : `<button class="btn-tracker${(!a.tracker_added && (a.severity === 'high' || a.severity === 'critical') && a.lifecycle_status !== 'ignored') ? ' btn-tracker-pending' : ''}" data-tracker="${a.id}" data-source="${escHtml(a.source_name || '')}" data-date="${a.published_at || ''}" data-title="${escHtml(a.title || '')}" data-synthese="${escHtml(a.reminder_text || '')}" data-type="${a.impact_type || 'info'}" data-url="${escHtml(a.original_url || '')}">+ Tracker</button>`
           }
         </div>
       </div>
@@ -425,6 +425,18 @@ const base = import.meta.env.BASE_URL;
     const hebdoCount: number = nc ? nc.hebdo_total : 0;
     const qDisabled: string = quotidienCount === 0 ? ';opacity:0.4;cursor:not-allowed;pointer-events:none' : '';
     const hDisabled: string = hebdoCount === 0 ? ';opacity:0.4;cursor:not-allowed;pointer-events:none' : '';
+    // Tracker eligible: high/critical severity, not yet added, not ignored
+    const trackerEligible = articles.filter((a: any) =>
+      !a.tracker_added && (a.severity === 'high' || a.severity === 'critical') && a.lifecycle_status !== 'ignored'
+    );
+    const trackerBlock: string = trackerEligible.length > 0 ? `
+      <div class="sidebar-section">
+        <h3>Tracker</h3>
+        <div style="font-size:11px;color:#6B6860">
+          <span style="color:#E8A23E;font-weight:600">${trackerEligible.length}</span> article${trackerEligible.length > 1 ? 's' : ''} éligible${trackerEligible.length > 1 ? 's' : ''} non ajouté${trackerEligible.length > 1 ? 's' : ''}
+        </div>
+      </div>` : '';
+
     // Flash articles: triaged quotidien, not yet published
     const flashArticles = articles.filter((a: any) => a.lifecycle_status === 'triaged' && a.status === 'quotidien' && !a.published_to_newsletter);
     const flashBlock: string = (newsletterEnabled() && flashArticles.length > 0) ? `
@@ -474,6 +486,7 @@ const base = import.meta.env.BASE_URL;
     document.getElementById('sidebar-right')!.innerHTML = `
       ${flashBlock}
       ${newsletterBlock}
+      ${trackerBlock}
       <div class="sidebar-section">
         <h3>Export</h3>
         <div class="flex flex-col gap-4" style="gap:6px">
@@ -886,6 +899,17 @@ const base = import.meta.env.BASE_URL;
     transition: all 0.15s;
   }
   .btn-tracker:hover { background: #5C6347; color: white; }
+  .btn-tracker-pending::after {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background-color: #5C6347;
+    border-radius: 50%;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .btn-tracker-pending:hover::after { background-color: white; }
 
   .badge-tracker-added {
     font-family: 'IBM Plex Mono', monospace;
