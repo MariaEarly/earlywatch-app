@@ -115,6 +115,7 @@ const base = import.meta.env.BASE_URL;
 </AppLayout>
 
 <style>
+  /* Layout — static elements, safe to scope */
   .proc-layout {
     display: flex;
     height: calc(100vh - 85px);
@@ -222,6 +223,70 @@ const base = import.meta.env.BASE_URL;
     color: #1C3A2F;
   }
 
+  /* Static elements: selected recap container, generate button, dropzone, error */
+  .selected-recap {
+    background: #F8F6F1;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    min-height: 40px;
+  }
+  .generate-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #1C3A2F;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    letter-spacing: 0.02em;
+    transition: opacity 0.15s;
+  }
+  .generate-btn:hover {
+    opacity: 0.9;
+  }
+  .generate-btn:disabled {
+    background: #B0ADA6;
+    cursor: not-allowed;
+  }
+  .proc-dropzone {
+    border: 1px dashed #E4E0D6;
+    border-radius: 4px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin: 0 20px;
+  }
+  .proc-dropzone:hover,
+  .proc-dropzone.dragover {
+    background: #ECF1EE;
+  }
+  .proc-drop-main {
+    font-size: 13px;
+    color: #3D3B38;
+  }
+  .proc-drop-sub {
+    font-size: 11px;
+    color: #B0ADA7;
+    margin-top: 4px;
+  }
+  .proc-error {
+    margin: 12px 20px 0;
+    padding: 10px 12px;
+    background: #FDF2F2;
+    border: 1px solid #E5C5C5;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #8B3A3A;
+  }
+</style>
+
+<!-- Global styles for JS-generated DOM elements (innerHTML) -->
+<style is:global>
   /* Section labels */
   .section-label {
     font-size: 9px;
@@ -316,14 +381,7 @@ const base = import.meta.env.BASE_URL;
     border: 0.5px solid #E4E0D6;
   }
 
-  /* Selected recap */
-  .selected-recap {
-    background: #F8F6F1;
-    border-radius: 4px;
-    padding: 10px 12px;
-    margin-bottom: 12px;
-    min-height: 40px;
-  }
+  /* Recap items (JS-generated) */
   .recap-item {
     font-size: 11px;
     color: #6A6760;
@@ -344,64 +402,6 @@ const base = import.meta.env.BASE_URL;
     font-size: 11px;
     color: #B0ADA6;
     font-style: italic;
-  }
-
-  /* Generate button */
-  .generate-btn {
-    width: 100%;
-    padding: 10px;
-    font-size: 12px;
-    font-weight: 600;
-    background: #1C3A2F;
-    color: #FFFFFF;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: 'IBM Plex Sans', sans-serif;
-    letter-spacing: 0.02em;
-    transition: opacity 0.15s;
-  }
-  .generate-btn:hover {
-    opacity: 0.9;
-  }
-  .generate-btn:disabled {
-    background: #B0ADA6;
-    cursor: not-allowed;
-  }
-
-  /* Drop zone */
-  .proc-dropzone {
-    border: 1px dashed #E4E0D6;
-    border-radius: 4px;
-    padding: 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: background 0.15s;
-    margin: 0 20px;
-  }
-  .proc-dropzone:hover,
-  .proc-dropzone.dragover {
-    background: #ECF1EE;
-  }
-  .proc-drop-main {
-    font-size: 13px;
-    color: #3D3B38;
-  }
-  .proc-drop-sub {
-    font-size: 11px;
-    color: #B0ADA7;
-    margin-top: 4px;
-  }
-
-  /* Error */
-  .proc-error {
-    margin: 12px 20px 0;
-    padding: 10px 12px;
-    background: #FDF2F2;
-    border: 1px solid #E5C5C5;
-    border-radius: 4px;
-    font-size: 12px;
-    color: #8B3A3A;
   }
 
   /* Generated procedures list */
