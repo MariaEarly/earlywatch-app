@@ -8,43 +8,47 @@ const base = import.meta.env.BASE_URL;
     <div class="proc-left">
 
       <!-- Two entry paths -->
-      <div class="proc-tabs">
-        <button id="tab-scratch" class="proc-tab active">Je pars de zéro</button>
-        <button id="tab-gap" class="proc-tab">J'ai déjà une procédure</button>
+      <div class="toggle-container">
+        <button id="tab-scratch" class="toggle-btn active">Je pars de zero</button>
+        <button id="tab-gap" class="toggle-btn">J'ai deja une procedure</button>
       </div>
 
       <!-- PATH 1: From scratch -->
       <div id="form-scratch">
 
         <!-- Step 1 — Profile -->
-        <div class="proc-step">
-          <div class="proc-step-num">1</div>
-          <div class="proc-step-label">Profil réglementaire</div>
-        </div>
-        <div class="proc-toggle-group" id="profile-toggle">
-          <button class="proc-toggle" data-profile="PSP">PSP</button>
-          <button class="proc-toggle" data-profile="Banque">Banque</button>
-          <button class="proc-toggle" data-profile="CASP">CASP / PSAN</button>
+        <div class="step" id="step-1">
+          <div class="step-header">
+            <div class="step-num">1</div>
+            <div class="step-title">Profil reglementaire</div>
+          </div>
+          <div class="profil-btns" id="profile-toggle">
+            <button class="profil-btn" data-profile="PSP">PSP</button>
+            <button class="profil-btn" data-profile="Banque">Banque</button>
+            <button class="profil-btn" data-profile="CASP">CASP / PSAN</button>
+          </div>
         </div>
 
         <!-- Step 2 — Thematiques (dynamic) -->
-        <div id="step2-wrap" style="display:none">
-          <div class="proc-step">
-            <div class="proc-step-num">2</div>
-            <div class="proc-step-label">Thématiques</div>
+        <div class="step" id="step-2" style="display:none">
+          <div class="step-header">
+            <div class="step-num">2</div>
+            <div class="step-title">Thematiques</div>
           </div>
-          <div id="thematiques-list" class="proc-checks"></div>
+          <div id="thematiques-list"></div>
         </div>
 
-        <!-- Step 3 — Templates -->
-        <div id="step3-wrap" style="display:none">
-          <div class="proc-step">
-            <div class="proc-step-num">3</div>
-            <div class="proc-step-label">Procédures à générer</div>
+        <!-- Step 3 — Recap + Generate -->
+        <div class="step" id="step-3" style="display:none">
+          <div class="step-header">
+            <div class="step-num">3</div>
+            <div class="step-title">Procedures a generer</div>
           </div>
-          <div id="templates-list" class="proc-templates"></div>
-          <button class="btn-generate" id="generateBtn" style="display:none">
-            Générer ces procédures
+          <div class="selected-recap" id="selected-recap">
+            <div class="recap-empty">Selectionnez au moins une thematique</div>
+          </div>
+          <button class="generate-btn" id="generateBtn" disabled>
+            Generer ces procedures
           </button>
         </div>
 
@@ -54,19 +58,23 @@ const base = import.meta.env.BASE_URL;
       <!-- PATH 2: Gap analysis -->
       <div id="form-gap" style="display:none">
 
-        <div class="proc-step">
-          <div class="proc-step-num">1</div>
-          <div class="proc-step-label">Profil réglementaire</div>
-        </div>
-        <div class="proc-toggle-group" id="gap-profile-toggle">
-          <button class="proc-toggle" data-profile="PSP">PSP</button>
-          <button class="proc-toggle" data-profile="Banque">Banque</button>
-          <button class="proc-toggle" data-profile="CASP">CASP / PSAN</button>
+        <div class="step">
+          <div class="step-header">
+            <div class="step-num">1</div>
+            <div class="step-title">Profil reglementaire</div>
+          </div>
+          <div class="profil-btns" id="gap-profile-toggle">
+            <button class="profil-btn" data-profile="PSP">PSP</button>
+            <button class="profil-btn" data-profile="Banque">Banque</button>
+            <button class="profil-btn" data-profile="CASP">CASP / PSAN</button>
+          </div>
         </div>
 
-        <div class="proc-step" style="margin-top:20px">
-          <div class="proc-step-num">2</div>
-          <div class="proc-step-label">Procédure existante</div>
+        <div class="step">
+          <div class="step-header">
+            <div class="step-num">2</div>
+            <div class="step-title">Procedure existante</div>
+          </div>
         </div>
         <div id="drop-zone" class="proc-dropzone">
           <input id="gapFile" type="file" accept=".pdf,.docx,.doc,.txt" style="display:none">
@@ -82,7 +90,7 @@ const base = import.meta.env.BASE_URL;
           </div>
         </div>
 
-        <button class="btn-generate" id="gapBtn" disabled style="margin-top:16px">
+        <button class="generate-btn" id="gapBtn" disabled style="margin-top:16px">
           Lancer le gap analysis
         </button>
 
@@ -90,8 +98,8 @@ const base = import.meta.env.BASE_URL;
       </div>
 
       <!-- Procedure list -->
-      <div class="proc-list-section">
-        <h3 class="proc-list-title">Procédures générées</h3>
+      <div class="generated-section">
+        <div class="generated-label">Procedures generees</div>
         <div id="procedure-list">
           <div class="loading-overlay" style="padding:20px"><div class="spinner"></div></div>
         </div>
@@ -114,9 +122,9 @@ const base = import.meta.env.BASE_URL;
   .proc-left {
     width: 420px;
     min-width: 420px;
-    border-right: 1px solid #D5D2CB;
+    border-right: 1px solid #E4E0D6;
     overflow-y: auto;
-    padding: 20px 24px;
+    padding: 0;
     background: #EDEAE3;
   }
   .proc-right {
@@ -125,48 +133,53 @@ const base = import.meta.env.BASE_URL;
     background: #EDEAE3;
   }
 
-  /* Tabs */
-  .proc-tabs {
-    display: flex;
-    margin-bottom: 24px;
+  /* Toggle tabs */
+  .toggle-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 0.5px solid #E4E0D6;
   }
-  .proc-tab {
-    flex: 1;
-    padding: 10px 12px;
-    font-size: 13px;
-    font-family: 'IBM Plex Sans', sans-serif;
-    background: transparent;
+  .toggle-btn {
+    padding: 12px 16px;
+    font-size: 11.5px;
+    text-align: center;
+    background: #F8F6F1;
+    color: #6A6760;
     border: none;
     cursor: pointer;
-    color: #6B6860;
-    transition: all 0.15s;
+    font-family: 'IBM Plex Sans', sans-serif;
+    letter-spacing: 0.01em;
+    transition: all 0.12s;
   }
-  .proc-tab:first-child {
-    border-right: 1px solid #D5D2CB;
+  .toggle-btn.active {
+    background: #FFFFFF;
+    color: #18160F;
+    font-weight: 600;
   }
-  .proc-tab.active {
-    background: #E6E3DC;
-    color: #1A1918;
-    font-weight: 500;
+  .toggle-btn:first-child {
+    border-right: 0.5px solid #E4E0D6;
   }
 
   /* Steps */
-  .proc-step {
+  .step {
+    padding: 0 20px;
+    margin-top: 20px;
+  }
+  .step:first-child {
+    margin-top: 16px;
+  }
+  .step-header {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 12px;
-    margin-top: 20px;
   }
-  .proc-step:first-child {
-    margin-top: 0;
-  }
-  .proc-step-num {
+  .step-num {
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: #5C6347;
-    color: #EDEAE3;
+    background: #1C3A2F;
+    color: #FFFFFF;
     font-size: 11px;
     font-weight: 600;
     display: flex;
@@ -174,155 +187,201 @@ const base = import.meta.env.BASE_URL;
     justify-content: center;
     flex-shrink: 0;
   }
-  .proc-step-label {
+  .step-title {
     font-size: 13px;
     font-weight: 500;
-    color: #1A1918;
+    color: #18160F;
   }
 
-  /* Profile toggles */
-  .proc-toggle-group {
+  /* Profile buttons */
+  .profil-btns {
     display: flex;
     gap: 8px;
-    margin-bottom: 4px;
   }
-  .proc-toggle {
+  .profil-btn {
     flex: 1;
-    padding: 8px 12px;
-    font-size: 13px;
-    font-family: 'IBM Plex Sans', sans-serif;
-    border: 1px solid #D5D2CB;
+    padding: 8px 4px;
+    font-size: 11px;
+    font-weight: 500;
     border-radius: 4px;
-    background: transparent;
-    color: #3D3B38;
+    border: 1px solid #E4E0D6;
+    background: #FFFFFF;
+    color: #6A6760;
     cursor: pointer;
+    text-align: center;
+    font-family: 'IBM Plex Sans', sans-serif;
     transition: all 0.15s;
   }
-  .proc-toggle.active {
-    background: #5C6347;
-    color: #EDEAE3;
-    border-color: #5C6347;
+  .profil-btn.active {
+    background: #1C3A2F;
+    color: #FFFFFF;
+    border-color: #1C3A2F;
+  }
+  .profil-btn:hover:not(.active) {
+    border-color: #1C3A2F;
+    color: #1C3A2F;
   }
 
-  /* Checkboxes */
-  .proc-checks {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
+  /* Section labels */
+  .section-label {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #B0ADA6;
+    font-weight: 700;
+    margin: 10px 0 6px;
   }
-  .proc-check-item {
+
+  /* Template items (clickable list) */
+  .tpl-item {
     display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    padding: 6px 8px;
-    font-size: 13px;
-    color: #3D3B38;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    border: 1px solid #E4E0D6;
+    border-radius: 4px;
     cursor: pointer;
+    transition: all 0.12s;
+    background: #FFFFFF;
+    margin-bottom: 6px;
   }
-  .proc-check-item input[type="checkbox"] {
-    margin-top: 2px;
-    accent-color: #5C6347;
+  .tpl-item:hover {
+    border-color: #1C3A2F;
+    background: #ECF1EE;
   }
-  .proc-check-label {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+  .tpl-item.checked {
+    border-color: #1C3A2F;
+    background: #ECF1EE;
   }
-  .proc-check-name {
-    font-size: 13px;
-    line-height: 1.3;
-  }
-  .badge-obligatoire {
-    display: inline-block;
-    margin-left: 6px;
-    font-size: 10px;
-    font-family: 'IBM Plex Mono', monospace;
-    padding: 1px 6px;
-    border-radius: 0;
-    border: 1px solid #5C6347;
-    background: transparent;
-    color: #5C6347;
-    font-weight: 500;
-  }
-  .badge-optionnel {
-    display: inline-block;
-    margin-left: 6px;
-    font-size: 10px;
-    font-family: 'IBM Plex Mono', monospace;
-    padding: 1px 6px;
-    border-radius: 0;
-    border: 1px solid #C2BFB8;
-    background: transparent;
-    color: #8C8880;
-    font-weight: 500;
-  }
-
-  /* Templates list */
-  .proc-templates {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    margin-bottom: 16px;
-  }
-  .proc-template-item {
+  .tpl-left {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 14px;
-    background: transparent;
-    border: 1px solid #D5D2CB;
-    border-radius: 8px;
-    margin-bottom: 6px;
+    flex: 1;
+    min-width: 0;
   }
-  .proc-template-code {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    color: #8C8880;
+  .tpl-check {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1.5px solid #E4E0D6;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.12s;
+  }
+  .tpl-item.checked .tpl-check {
+    background: #1C3A2F;
+    border-color: #1C3A2F;
+  }
+  .tpl-check::after {
+    content: '';
+    display: none;
+    width: 9px;
+    height: 6px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg) translateY(-1px);
+  }
+  .tpl-item.checked .tpl-check::after {
+    display: block;
+  }
+  .tpl-name {
+    font-size: 11.5px;
+    color: #18160F;
     font-weight: 500;
     white-space: nowrap;
-    margin-right: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .proc-template-name {
-    font-size: 13px;
-    font-family: 'IBM Plex Sans', sans-serif;
-    color: #1A1918;
-    flex: 1;
+
+  /* Badges */
+  .badge-tpl {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .badge-obligatoire {
+    background: #FEF2F2;
+    color: #B91C1C;
+  }
+  .badge-optionnel {
+    background: #F8F6F1;
+    color: #B0ADA6;
+    border: 0.5px solid #E4E0D6;
+  }
+
+  /* Selected recap */
+  .selected-recap {
+    background: #F8F6F1;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    min-height: 40px;
+  }
+  .recap-item {
+    font-size: 11px;
+    color: #6A6760;
+    padding: 3px 0;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .recap-item::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #1C3A2F;
+    flex-shrink: 0;
+  }
+  .recap-empty {
+    font-size: 11px;
+    color: #B0ADA6;
+    font-style: italic;
   }
 
   /* Generate button */
-  .btn-generate {
+  .generate-btn {
     width: 100%;
-    padding: 10px 16px;
-    font-size: 13px;
-    font-weight: 500;
-    font-family: 'IBM Plex Sans', sans-serif;
-    background: #5C6347;
-    color: #EDEAE3;
+    padding: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #1C3A2F;
+    color: #FFFFFF;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    letter-spacing: 0.02em;
     transition: opacity 0.15s;
   }
-  .btn-generate:hover {
+  .generate-btn:hover {
     opacity: 0.9;
   }
-  .btn-generate:disabled {
-    opacity: 0.4;
+  .generate-btn:disabled {
+    background: #B0ADA6;
     cursor: not-allowed;
   }
 
   /* Drop zone */
   .proc-dropzone {
-    border: 1px dashed #D5D2CB;
+    border: 1px dashed #E4E0D6;
     border-radius: 4px;
     padding: 24px;
     text-align: center;
     cursor: pointer;
     transition: background 0.15s;
+    margin: 0 20px;
   }
   .proc-dropzone:hover,
   .proc-dropzone.dragover {
-    background: #E8E5DE;
+    background: #ECF1EE;
   }
   .proc-drop-main {
     font-size: 13px;
@@ -336,7 +395,7 @@ const base = import.meta.env.BASE_URL;
 
   /* Error */
   .proc-error {
-    margin-top: 12px;
+    margin: 12px 20px 0;
     padding: 10px 12px;
     background: #FDF2F2;
     border: 1px solid #E5C5C5;
@@ -345,19 +404,61 @@ const base = import.meta.env.BASE_URL;
     color: #8B3A3A;
   }
 
-  /* Procedure list */
-  .proc-list-section {
-    margin-top: 28px;
-    padding-top: 20px;
-    border-top: 1px solid #D5D2CB;
+  /* Generated procedures list */
+  .generated-section {
+    padding: 14px 20px;
+    margin-top: 16px;
+    border-top: 0.5px solid #E4E0D6;
   }
-  .proc-list-title {
-    font-size: 12px;
-    font-weight: 500;
-    color: #6B6860;
+  .generated-label {
+    font-size: 9px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 12px;
+    color: #B0ADA6;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .gen-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 0.5px solid #E4E0D6;
+    cursor: pointer;
+  }
+  .gen-item:last-child {
+    border: none;
+  }
+  .gen-name {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #18160F;
+  }
+  .gen-meta {
+    font-size: 10px;
+    color: #B0ADA6;
+    margin-top: 2px;
+  }
+  .validation-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+    border: 1px solid #D97706;
+    color: #D97706;
+    background: #FFFBEB;
+    flex-shrink: 0;
+  }
+  .validation-badge.validated {
+    border-color: #1C3A2F;
+    color: #1C3A2F;
+    background: #ECF1EE;
+  }
+  .validation-badge.rejected {
+    border-color: #B91C1C;
+    color: #B91C1C;
+    background: #FEF2F2;
   }
 
   /* Empty state */
@@ -421,7 +522,7 @@ const base = import.meta.env.BASE_URL;
     mode = m;
     document.getElementById('form-scratch')!.style.display = m === 'scratch' ? 'block' : 'none';
     document.getElementById('form-gap')!.style.display = m === 'gap' ? 'block' : 'none';
-    document.querySelectorAll('.proc-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.toggle-btn').forEach(t => t.classList.remove('active'));
     document.getElementById(m === 'scratch' ? 'tab-scratch' : 'tab-gap')!.classList.add('active');
   }
 
@@ -431,9 +532,9 @@ const base = import.meta.env.BASE_URL;
   // -------------------------------------------------------------------------
   //  Profile toggle (scratch)
   // -------------------------------------------------------------------------
-  document.querySelectorAll('#profile-toggle .proc-toggle').forEach(btn => {
+  document.querySelectorAll('#profile-toggle .profil-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('#profile-toggle .proc-toggle').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#profile-toggle .profil-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       selectedProfile = (btn as HTMLElement).dataset.profile || '';
       loadMapping(selectedProfile);
@@ -443,9 +544,9 @@ const base = import.meta.env.BASE_URL;
   // -------------------------------------------------------------------------
   //  Profile toggle (gap)
   // -------------------------------------------------------------------------
-  document.querySelectorAll('#gap-profile-toggle .proc-toggle').forEach(btn => {
+  document.querySelectorAll('#gap-profile-toggle .profil-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('#gap-profile-toggle .proc-toggle').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#gap-profile-toggle .profil-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       gapProfile = (btn as HTMLElement).dataset.profile || '';
     });
@@ -469,81 +570,79 @@ const base = import.meta.env.BASE_URL;
 
   function renderThematiques() {
     if (!mappingData) return;
-    const wrap = document.getElementById('step2-wrap')!;
+    const step2 = document.getElementById('step-2')!;
     const list = document.getElementById('thematiques-list')!;
-    wrap.style.display = 'block';
+    step2.style.display = 'block';
 
-    const allItems = [
-      ...mappingData.obligatoires.map((o: any) => ({ ...o, type: 'obligatoire' })),
-      ...mappingData.contextuels.map((o: any) => ({ ...o, type: 'optionnel' })),
-    ];
-
+    // Pre-check obligatoires
     checkedCodes = new Set(mappingData.obligatoires.map((o: any) => o.code));
 
-    list.innerHTML = allItems.map((item: any) => {
-      const checked = item.type === 'obligatoire' ? 'checked' : '';
-      const badge = item.type === 'obligatoire'
-        ? '<span class="badge-obligatoire">Obligatoire</span>'
-        : '<span class="badge-optionnel">Optionnel</span>';
-      return `
-        <label class="proc-check-item">
-          <input type="checkbox" value="${item.code}" ${checked} data-type="${item.type}">
-          <span class="proc-check-label">
-            <span class="proc-check-name">${escHtml(item.label)}</span>
-            ${badge}
-          </span>
-        </label>`;
-    }).join('');
+    let html = '';
 
-    // Listen to checkbox changes
-    list.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-      cb.addEventListener('change', () => {
-        updateCheckedCodes();
-        renderTemplates();
+    // Obligatoires section
+    if (mappingData.obligatoires.length) {
+      html += '<div class="section-label">Obligatoires</div>';
+      html += mappingData.obligatoires.map((item: any) => renderTplItem(item, 'obligatoire', true)).join('');
+    }
+
+    // Contextuels section
+    if (mappingData.contextuels.length) {
+      html += '<div class="section-label">Selon contexte</div>';
+      html += mappingData.contextuels.map((item: any) => renderTplItem(item, 'optionnel', false)).join('');
+    }
+
+    list.innerHTML = html;
+
+    // Click handler on items
+    list.querySelectorAll('.tpl-item').forEach((item: any) => {
+      item.addEventListener('click', () => {
+        item.classList.toggle('checked');
+        const code = item.dataset.code;
+        if (item.classList.contains('checked')) {
+          checkedCodes.add(code);
+        } else {
+          checkedCodes.delete(code);
+        }
+        updateSelectedList();
       });
     });
 
-    renderTemplates();
+    // Show step 3
+    document.getElementById('step-3')!.style.display = 'block';
+    updateSelectedList();
   }
 
-  function updateCheckedCodes() {
-    checkedCodes = new Set();
-    document.querySelectorAll('#thematiques-list input[type="checkbox"]:checked').forEach(cb => {
-      checkedCodes.add((cb as HTMLInputElement).value);
-    });
+  function renderTplItem(item: any, type: string, isChecked: boolean): string {
+    const badge = type === 'obligatoire'
+      ? '<span class="badge-tpl badge-obligatoire">Obligatoire</span>'
+      : '<span class="badge-tpl badge-optionnel">Optionnel</span>';
+    const label = PROC_LABELS[item.code] || item.label || item.code;
+    return `
+      <div class="tpl-item ${isChecked ? 'checked' : ''}" data-code="${item.code}" data-ref="${item.code}">
+        <div class="tpl-left">
+          <div class="tpl-check"></div>
+          <span class="tpl-name">${escHtml(label)}</span>
+        </div>
+        ${badge}
+      </div>`;
   }
 
-  // -------------------------------------------------------------------------
-  //  Step 3 — Templates
-  // -------------------------------------------------------------------------
-  function renderTemplates() {
-    const wrap = document.getElementById('step3-wrap')!;
-    const list = document.getElementById('templates-list')!;
-    const btn = document.getElementById('generateBtn')!;
+  function updateSelectedList() {
+    const checked = document.querySelectorAll('.tpl-item.checked');
+    const recap = document.getElementById('selected-recap')!;
+    const btn = document.getElementById('generateBtn') as HTMLButtonElement;
 
-    if (checkedCodes.size === 0) {
-      wrap.style.display = 'none';
+    if (checked.length === 0) {
+      recap.innerHTML = '<div class="recap-empty">Selectionnez au moins une thematique</div>';
+      btn.disabled = true;
       return;
     }
 
-    wrap.style.display = 'block';
-    btn.style.display = 'block';
-
-    const obligCodes = new Set(mappingData.obligatoires.map((o: any) => o.code));
-
-    const sorted = [...checkedCodes].sort();
-    list.innerHTML = sorted.map(code => {
-      const label = PROC_LABELS[code] || code;
-      const isOblig = obligCodes.has(code);
-      const badge = isOblig
-        ? '<span class="badge-obligatoire">Obligatoire</span>'
-        : '<span class="badge-optionnel">Optionnel</span>';
-      return `
-        <div class="proc-template-item">
-          <span class="proc-template-code">${code}</span>
-          <span class="proc-template-name">${escHtml(label)}</span>
-          ${badge}
-        </div>`;
+    btn.disabled = false;
+    recap.innerHTML = Array.from(checked).map((item: any) => {
+      const ref = item.dataset.ref;
+      const name = item.querySelector('.tpl-name')!.textContent;
+      return `<div class="recap-item">${ref} &mdash; ${escHtml(name)}</div>`;
     }).join('');
   }
 
@@ -567,7 +666,7 @@ const base = import.meta.env.BASE_URL;
     }
 
     btn.disabled = true;
-    btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:1px;display:inline-block;vertical-align:middle;margin-right:8px"></div>Génération en cours\u2026';
+    btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:1px;display:inline-block;vertical-align:middle;margin-right:8px"></div>Generation en cours\u2026';
     showLoading('Extraction des obligations depuis Legifrance\u2026');
 
     const thematiques = [...checkedCodes].map(code => PROC_LABELS[code] || code);
@@ -592,7 +691,7 @@ const base = import.meta.env.BASE_URL;
         </div>`;
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Générer ces procédures';
+      btn.textContent = 'Generer ces procedures';
     }
   });
 
@@ -824,9 +923,15 @@ const base = import.meta.env.BASE_URL;
     const sections: any[] = [];
     let current: any = null;
     for (const line of lines) {
+      // Match bold numbered headings: **1 — Title** or **2 — Title**
+      const mBold = line.match(/^\*\*(\d+)\s*[-—]\s*(.+?)\*\*/);
+      // Fallback: match Markdown ## headings (legacy format)
       const m2 = line.match(/^## \d*\.?\s*(.+)/);
       const m1 = line.match(/^# (.+)/);
-      if (m2) {
+      if (mBold) {
+        if (current) sections.push(current);
+        current = { title: `${mBold[1]} — ${mBold[2]}`, content: '' };
+      } else if (m2) {
         if (current) sections.push(current);
         current = { title: m2[1], content: '' };
       } else if (m1 && !current) {
@@ -837,7 +942,7 @@ const base = import.meta.env.BASE_URL;
       }
     }
     if (current) sections.push(current);
-    if (sections.length === 0) sections.push({ title: 'Procédure', content: md });
+    if (sections.length === 0) sections.push({ title: 'Procedure', content: md });
     return sections;
   }
 
@@ -871,21 +976,21 @@ const base = import.meta.env.BASE_URL;
   function renderProcedureList() {
     const list = document.getElementById('procedure-list')!;
     if (!procedures.length) {
-      list.innerHTML = '<p style="font-size:12px; color:#B0ADA7">Aucune procédure générée</p>';
+      list.innerHTML = '<p style="font-size:11px; color:#B0ADA6">Aucune procedure generee</p>';
       return;
     }
     list.innerHTML = procedures.map((p: any) => {
       const profileLabel = ({ psp: 'PSP', banque: 'Banque', casp: 'CASP' } as Record<string,string>)[p.profile?.toLowerCase()] || p.profile;
-      const title = `Procédure LCB-FT — ${profileLabel}`;
+      const title = `Procedure LCB-FT — ${profileLabel}`;
+      const statusClass = p.status === 'validated' ? 'validated' : p.status === 'rejected' ? 'rejected' : '';
+      const statusLabel = p.status === 'validated' ? 'Valide' : p.status === 'rejected' ? 'Rejete' : 'A valider';
       return `
-        <div style="padding:8px 0; cursor:pointer; border-bottom:1px solid #E8E5DE" data-load-proc="${p.id}">
-          <div style="display:flex; align-items:center; justify-content:space-between">
-            <span style="font-size:13px; font-weight:500; color:#1A1918">${escHtml(title)}</span>
-            ${statusBadge(p.status)}
+        <div class="gen-item" data-load-proc="${p.id}">
+          <div>
+            <div class="gen-name">${escHtml(title)}</div>
+            <div class="gen-meta">${p.obligation_count} obligations &middot; ${formatDate(p.created_at)}</div>
           </div>
-          <div style="font-size:11px; color:#6B6860; margin-top:2px">
-            ${p.obligation_count} obligations &middot; ${formatDate(p.created_at)}
-          </div>
+          <span class="validation-badge ${statusClass}">${statusLabel}</span>
         </div>`;
     }).join('');
     list.querySelectorAll('[data-load-proc]').forEach((el: any) => {
