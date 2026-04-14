@@ -69,6 +69,21 @@ const base = import.meta.env.BASE_URL;
     </div>
   </div>
 
+  <!-- Modale confirmation clôture -->
+  <div id="cloturer-overlay" style="display:none">
+    <div id="cloturer-modal">
+      <div style="padding:20px 24px 16px">
+        <div style="font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:15px;color:#1A1918;margin-bottom:10px">&#9888; Articles non ajoutés au tracker</div>
+        <p id="cloturer-msg" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:#1A1918;margin:0 0 6px;line-height:1.5"></p>
+        <p style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:#6B6860;margin:0;line-height:1.4">Vous pourrez les retrouver dans les Archives.</p>
+      </div>
+      <div style="padding:14px 24px;border-top:1px solid #D5D2CB;display:flex;gap:10px;justify-content:flex-end">
+        <button id="cloturer-cancel" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:7px 18px;border:1px solid #D5D2CB;background:transparent;color:#1A1918;border-radius:0;cursor:pointer">Annuler</button>
+        <button id="cloturer-confirm" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:7px 18px;border:none;background:#5C6347;color:white;border-radius:0;cursor:pointer">Clôturer quand même</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Tracker drawer (slide-in panel from right) -->
   <div id="tracker-overlay" style="display:none">
     <div id="tracker-drawer">
@@ -482,6 +497,38 @@ const base = import.meta.env.BASE_URL;
     }
   }
 
+  async function executePublishAll(): Promise<void> {
+    const publishAllBtn = document.getElementById('btn-publish-all') as HTMLButtonElement | null;
+    const triaged = articles.filter((a: any) => a.lifecycle_status === 'triaged' && (a.status === 'quotidien' || a.status === 'hebdo'));
+    if (triaged.length === 0) return;
+    if (publishAllBtn) {
+      publishAllBtn.disabled = true;
+      publishAllBtn.textContent = 'Publication...';
+    }
+    try {
+      const res: any = await api('/api/v1/articles/publish-all', { method: 'POST', body: {} });
+      for (const a of triaged) {
+        const idx = articles.findIndex((x: any) => x.id === a.id);
+        if (idx !== -1) {
+          articles[idx].published_to_newsletter = true;
+          articles[idx].lifecycle_status = 'published';
+        }
+      }
+      newsletterCounts = await api('/api/v1/articles/newsletter/counts').catch(() => newsletterCounts);
+      const tc: any = await api('/api/v1/tracker/pending-count').catch(() => ({ pending: 0 }));
+      trackerPendingCount = tc?.pending || 0;
+      renderArticles();
+      renderRightPanel();
+      toast(`${res.published || triaged.length} article${(res.published || triaged.length) > 1 ? 's' : ''} publiés — session clôturée`);
+    } catch (e: any) {
+      toast('Erreur: ' + (e.message || 'publication échouée'), 'error');
+      if (publishAllBtn) {
+        publishAllBtn.disabled = false;
+        publishAllBtn.textContent = 'Clôturer la session';
+      }
+    }
+  }
+
   function renderRightPanel(): void {
     const nc: any = newsletterCounts;
     const quotidienCount: number = nc ? nc.quotidien_total : 0;
@@ -578,35 +625,35 @@ const base = import.meta.env.BASE_URL;
       apercuQuotidien.addEventListener('click', () => openApercu('quotidien'));
     }
 
-    // Bind bulk publish button — single API call
+    // Bind bulk publish button — with tracker warning modal
     const publishAllBtn = document.getElementById('btn-publish-all');
     if (publishAllBtn) {
-      publishAllBtn.addEventListener('click', async () => {
+      publishAllBtn.addEventListener('click', () => {
         const triaged = articles.filter((a: any) => a.lifecycle_status === 'triaged' && (a.status === 'quotidien' || a.status === 'hebdo'));
         if (triaged.length === 0) return;
-        (publishAllBtn as HTMLButtonElement).disabled = true;
-        publishAllBtn.textContent = 'Publication...';
-        try {
-          const res: any = await api('/api/v1/articles/publish-all', { method: 'POST', body: {} });
-          // Update local state
-          for (const a of triaged) {
-            const idx = articles.findIndex((x: any) => x.id === a.id);
-            if (idx !== -1) {
-              articles[idx].published_to_newsletter = true;
-              articles[idx].lifecycle_status = 'published';
-            }
-          }
-          newsletterCounts = await api('/api/v1/articles/newsletter/counts').catch(() => newsletterCounts);
-          renderArticles();
-          renderRightPanel();
-          toast(`${res.published || triaged.length} article${(res.published || triaged.length) > 1 ? 's' : ''} publiés — session clôturée`);
-        } catch (e: any) {
-          toast('Erreur: ' + (e.message || 'publication échouée'), 'error');
-          (publishAllBtn as HTMLButtonElement).disabled = false;
-          publishAllBtn.textContent = 'Clôturer la session';
+
+        if (trackerPendingCount > 0) {
+          // Show confirmation modal
+          document.getElementById('cloturer-msg')!.textContent =
+            `${trackerPendingCount} article${trackerPendingCount > 1 ? 's' : ''} éligible${trackerPendingCount > 1 ? 's' : ''} n'${trackerPendingCount > 1 ? 'ont' : 'a'} pas été ajouté${trackerPendingCount > 1 ? 's' : ''} au tracker.`;
+          document.getElementById('cloturer-overlay')!.style.display = 'flex';
+        } else {
+          executePublishAll();
         }
       });
     }
+
+    // Bind clôturer modal buttons
+    document.getElementById('cloturer-cancel')?.addEventListener('click', () => {
+      document.getElementById('cloturer-overlay')!.style.display = 'none';
+    });
+    document.getElementById('cloturer-overlay')?.addEventListener('click', (e: Event) => {
+      if (e.target === e.currentTarget) (e.currentTarget as HTMLElement).style.display = 'none';
+    });
+    document.getElementById('cloturer-confirm')?.addEventListener('click', () => {
+      document.getElementById('cloturer-overlay')!.style.display = 'none';
+      executePublishAll();
+    });
 
     // Bind Flash publish buttons — individual article publish
     document.querySelectorAll('[data-flash-publish]').forEach((el: any) => {
@@ -1090,6 +1137,26 @@ const base = import.meta.env.BASE_URL;
     color: #1A1918;
   }
   .tracker-input:focus { outline: none; border-color: #5C6347; }
+
+  /* Clôturer confirmation modal */
+  #cloturer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26,25,24,0.4);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #cloturer-modal {
+    background: #EDEAE3;
+    border: 1px solid #D5D2CB;
+    border-radius: 0;
+    box-shadow: none;
+    width: 440px;
+    max-width: 90vw;
+  }
 
   /* Pub drawer — same pattern as tracker */
   #pub-overlay {
