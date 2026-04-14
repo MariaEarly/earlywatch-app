@@ -308,9 +308,9 @@ const base = import.meta.env.BASE_URL;
             <a href="${BASE}controle" class="impact-link">Voir reminder</a>
           </div>` : ''}
         <div class="article-actions">
-          <button class="btn btn-sm btn-triage${a.status === 'quotidien' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="quotidien">Quotidien${a.status === 'quotidien' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
-          <button class="btn btn-sm btn-triage${a.status === 'hebdo' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo${a.status === 'hebdo' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
-          <button class="btn btn-sm btn-triage${a.status === 'ignorer' ? ' btn-triage-active' : ''}" data-triage="${a.id}" data-triage-status="ignorer">Ignorer${a.status === 'ignorer' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
+          <button class="btn btn-sm btn-triage${a.status === 'quotidien' ? (a.lifecycle_status === 'published' ? ' btn-triage-published' : ' btn-triage-active') : ''}" data-triage="${a.id}" data-triage-status="quotidien">Quotidien${a.status === 'quotidien' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
+          <button class="btn btn-sm btn-triage${a.status === 'hebdo' ? (a.lifecycle_status === 'published' ? ' btn-triage-published' : ' btn-triage-active') : ''}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo${a.status === 'hebdo' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
+          <button class="btn btn-sm btn-triage${a.status === 'ignorer' ? (a.lifecycle_status === 'published' ? ' btn-triage-published' : ' btn-triage-active') : ''}" data-triage="${a.id}" data-triage-status="ignorer">Ignorer${a.status === 'ignorer' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
           ${newsletterEnabled() && (a.status === 'quotidien' || a.status === 'hebdo') ? `
             <button class="btn btn-sm ${a.published_to_newsletter ? 'btn-primary' : 'btn-secondary'}"
                     data-publish="${a.id}"

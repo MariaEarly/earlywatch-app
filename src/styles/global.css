@@ -178,6 +178,27 @@ h3 { font-size: 13px; font-weight: 500; }
 }
 .btn-triage-active { font-weight: 500; }
 
+/* Published state — outline only, muted: "traité, pas d'action requise" */
+.article-actions .btn-triage:nth-child(1).btn-triage-published,
+.article-actions .btn-triage:nth-child(2).btn-triage-published {
+  background: transparent;
+  color: var(--kaki);
+  border: 1px solid var(--kaki);
+  opacity: 0.6;
+  font-weight: 500;
+}
+.article-actions .btn-triage:nth-child(1).btn-triage-published .triage-reset,
+.article-actions .btn-triage:nth-child(2).btn-triage-published .triage-reset {
+  opacity: 0.5;
+}
+.article-actions .btn-triage:nth-child(3).btn-triage-published {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+  opacity: 0.6;
+  font-weight: 500;
+}
+
 /* ---- Badge ---- */
 .badge {
   display: inline-flex;
