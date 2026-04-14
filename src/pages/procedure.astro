@@ -29,6 +29,44 @@ const base = import.meta.env.BASE_URL;
           </div>
         </div>
 
+        <!-- Step 1.5 — Questionnaire contextuel -->
+        <div class="step" id="step-questionnaire" style="display:none">
+          <div class="step-header">
+            <div class="step-num" style="font-size:9px">1.5</div>
+            <div class="step-title">Votre contexte</div>
+          </div>
+
+          <div class="q-block">
+            <div class="q-label">Types de clients</div>
+            <div class="q-options" id="q-clients">
+              <label class="q-option"><input type="radio" name="q-clients" value="particuliers"><span>Particuliers uniquement</span></label>
+              <label class="q-option"><input type="radio" name="q-clients" value="entreprises"><span>Entreprises uniquement</span></label>
+              <label class="q-option"><input type="radio" name="q-clients" value="mixte"><span>Mixte B2B + B2C</span></label>
+            </div>
+          </div>
+
+          <div class="q-block">
+            <div class="q-label">Activites specifiques</div>
+            <div class="q-options" id="q-activites">
+              <label class="q-option"><input type="checkbox" value="transferts_fonds"><span>Transferts de fonds</span></label>
+              <label class="q-option"><input type="checkbox" value="risque_eleve"><span>Clients a risque eleve</span></label>
+              <label class="q-option"><input type="checkbox" value="pep"><span>Personnes politiquement exposees (PPE)</span></label>
+              <label class="q-option" id="q-cbk-option" style="display:none"><input type="checkbox" value="correspondance_bancaire"><span>Correspondance bancaire</span></label>
+            </div>
+          </div>
+
+          <div class="q-block">
+            <div class="q-label">Perimetre geographique</div>
+            <div class="q-options" id="q-geo">
+              <label class="q-option"><input type="radio" name="q-geo" value="france"><span>France uniquement</span></label>
+              <label class="q-option"><input type="radio" name="q-geo" value="ue"><span>Union europeenne</span></label>
+              <label class="q-option"><input type="radio" name="q-geo" value="international"><span>International (hors UE)</span></label>
+            </div>
+          </div>
+
+          <button class="continue-btn" id="btn-continue">Continuer</button>
+        </div>
+
         <!-- Step 2 — Thematiques (dynamic) -->
         <div class="step" id="step-2" style="display:none">
           <div class="step-header">
@@ -223,6 +261,72 @@ const base = import.meta.env.BASE_URL;
     color: #1C3A2F;
   }
 
+  /* Questionnaire */
+  .q-block {
+    margin-bottom: 16px;
+  }
+  .q-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6A6760;
+    margin-bottom: 8px;
+  }
+  .q-options {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .q-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border: 1px solid #E4E0D6;
+    border-radius: 4px;
+    background: #FFFFFF;
+    cursor: pointer;
+    transition: all 0.12s;
+    font-size: 11.5px;
+    color: #18160F;
+  }
+  .q-option:hover {
+    border-color: #1C3A2F;
+    background: #ECF1EE;
+  }
+  .q-option:has(input:checked) {
+    border-color: #1C3A2F;
+    background: #ECF1EE;
+  }
+  .q-option input[type="radio"],
+  .q-option input[type="checkbox"] {
+    accent-color: #1C3A2F;
+    margin: 0;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+  .continue-btn {
+    width: 100%;
+    padding: 9px;
+    font-size: 11.5px;
+    font-weight: 600;
+    background: #FFFFFF;
+    color: #1C3A2F;
+    border: 1px solid #1C3A2F;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    letter-spacing: 0.02em;
+    transition: all 0.15s;
+    margin-top: 8px;
+  }
+  .continue-btn:hover {
+    background: #1C3A2F;
+    color: #FFFFFF;
+  }
+
   /* Static elements: selected recap container, generate button, dropzone, error */
   .selected-recap {
     background: #F8F6F1;
@@ -380,6 +484,11 @@ const base = import.meta.env.BASE_URL;
     color: #B0ADA6;
     border: 0.5px solid #E4E0D6;
   }
+  .badge-promu {
+    background: #FFFBEB;
+    color: #D97706;
+    border: 0.5px solid #F5D68A;
+  }
 
   /* Recap items (JS-generated) */
   .recap-item {
@@ -530,15 +639,76 @@ const base = import.meta.env.BASE_URL;
   document.getElementById('tab-gap')!.addEventListener('click', () => switchMode('gap'));
 
   // -------------------------------------------------------------------------
-  //  Profile toggle (scratch)
+  //  Questionnaire state
+  // -------------------------------------------------------------------------
+  let promotedCodes: Set<string> = new Set();
+
+  // -------------------------------------------------------------------------
+  //  Profile toggle (scratch) — shows questionnaire instead of mapping
   // -------------------------------------------------------------------------
   document.querySelectorAll('#profile-toggle .profil-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#profile-toggle .profil-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       selectedProfile = (btn as HTMLElement).dataset.profile || '';
-      loadMapping(selectedProfile);
+
+      // Show questionnaire, hide steps 2+3
+      document.getElementById('step-questionnaire')!.style.display = 'block';
+      document.getElementById('step-2')!.style.display = 'none';
+      document.getElementById('step-3')!.style.display = 'none';
+
+      // Show "Correspondance bancaire" only for Banque
+      const cbkOption = document.getElementById('q-cbk-option')!;
+      cbkOption.style.display = selectedProfile === 'Banque' ? 'flex' : 'none';
+
+      // Reset questionnaire
+      document.querySelectorAll('#step-questionnaire input').forEach((inp: any) => {
+        inp.checked = false;
+      });
     });
+  });
+
+  // -------------------------------------------------------------------------
+  //  "Continuer" — process questionnaire answers, load mapping, promote codes
+  // -------------------------------------------------------------------------
+  document.getElementById('btn-continue')!.addEventListener('click', async () => {
+    // Collect answers
+    const clientType = (document.querySelector('input[name="q-clients"]:checked') as HTMLInputElement)?.value || '';
+    const activites: string[] = [];
+    document.querySelectorAll('#q-activites input[type="checkbox"]:checked').forEach((cb: any) => {
+      activites.push(cb.value);
+    });
+
+    // Build promotion set: codes that should be forced to "obligatoire"
+    promotedCodes = new Set();
+
+    // B2B or Mixte → EB-UBO-001 obligatoire
+    if (clientType === 'entreprises' || clientType === 'mixte') {
+      promotedCodes.add('EB-UBO-001');
+    }
+    // PPE in Mixte → EB-PEP-001 obligatoire
+    if (clientType === 'mixte') {
+      promotedCodes.add('EB-PEP-001');
+    }
+    // Activites
+    if (activites.includes('transferts_fonds')) {
+      promotedCodes.add('EB-TRV-001');
+    }
+    if (activites.includes('risque_eleve')) {
+      promotedCodes.add('EB-EDD-001');
+    }
+    if (activites.includes('pep')) {
+      promotedCodes.add('EB-PEP-001');
+    }
+    if (activites.includes('correspondance_bancaire')) {
+      promotedCodes.add('EB-CBK-001');
+    }
+
+    // Hide questionnaire
+    document.getElementById('step-questionnaire')!.style.display = 'none';
+
+    // Load mapping and render with promotions
+    await loadMapping(selectedProfile);
   });
 
   // -------------------------------------------------------------------------
@@ -563,8 +733,8 @@ const base = import.meta.env.BASE_URL;
       renderThematiques();
     } catch (e: any) {
       console.error('[PROC] Mapping error:', e);
-      document.getElementById('step2-wrap')!.style.display = 'none';
-      document.getElementById('step3-wrap')!.style.display = 'none';
+      document.getElementById('step-2')!.style.display = 'none';
+      document.getElementById('step-3')!.style.display = 'none';
     }
   }
 
@@ -574,21 +744,38 @@ const base = import.meta.env.BASE_URL;
     const list = document.getElementById('thematiques-list')!;
     step2.style.display = 'block';
 
-    // Pre-check obligatoires
-    checkedCodes = new Set(mappingData.obligatoires.map((o: any) => o.code));
+    // Split items: obligatoires (base + promoted) vs contextuels (remaining)
+    const baseObligCodes = new Set(mappingData.obligatoires.map((o: any) => o.code));
+    const allObligatoires: any[] = [...mappingData.obligatoires];
+    const remainingContextuels: any[] = [];
+
+    for (const item of mappingData.contextuels) {
+      if (promotedCodes.has(item.code)) {
+        allObligatoires.push(item);
+      } else {
+        remainingContextuels.push(item);
+      }
+    }
+
+    // Pre-check all obligatoires (base + promoted)
+    checkedCodes = new Set(allObligatoires.map((o: any) => o.code));
 
     let html = '';
 
     // Obligatoires section
-    if (mappingData.obligatoires.length) {
+    if (allObligatoires.length) {
       html += '<div class="section-label">Obligatoires</div>';
-      html += mappingData.obligatoires.map((item: any) => renderTplItem(item, 'obligatoire', true)).join('');
+      html += allObligatoires.map((item: any) => {
+        const isPromoted = promotedCodes.has(item.code) && !baseObligCodes.has(item.code);
+        const badgeType = isPromoted ? 'promu' : 'obligatoire';
+        return renderTplItem(item, badgeType, true);
+      }).join('');
     }
 
     // Contextuels section
-    if (mappingData.contextuels.length) {
+    if (remainingContextuels.length) {
       html += '<div class="section-label">Selon contexte</div>';
-      html += mappingData.contextuels.map((item: any) => renderTplItem(item, 'optionnel', false)).join('');
+      html += remainingContextuels.map((item: any) => renderTplItem(item, 'optionnel', false)).join('');
     }
 
     list.innerHTML = html;
@@ -615,6 +802,8 @@ const base = import.meta.env.BASE_URL;
   function renderTplItem(item: any, type: string, isChecked: boolean): string {
     const badge = type === 'obligatoire'
       ? '<span class="badge-tpl badge-obligatoire">Obligatoire</span>'
+      : type === 'promu'
+      ? '<span class="badge-tpl badge-promu">Promu</span>'
       : '<span class="badge-tpl badge-optionnel">Optionnel</span>';
     const label = PROC_LABELS[item.code] || item.label || item.code;
     return `
