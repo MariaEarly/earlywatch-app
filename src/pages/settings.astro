@@ -168,6 +168,26 @@ const base = import.meta.env.BASE_URL;
       return `<button class="st-chip ${active}" data-sev="${sv}">${SEV_LABELS[sv]}</button>`;
     }).join('');
 
+    // Organisation profile data
+    const org: any = s.organisation || {};
+    const conf: any = s.conformite || {};
+    const sys_: any = s.systemes || {};
+    const perim: any = s.perimetre || {};
+    const seuils: any = s.seuils || {};
+
+    const CLIENT_TYPES: string[] = ['Particuliers', 'Entreprises', 'Mixte'];
+    const GEO_ZONES: string[] = ['France', 'UE', 'International'];
+
+    const clientChips: string = CLIENT_TYPES.map((ct: string) => {
+      const active: string = (perim.types_clients || []).includes(ct) ? 'active' : '';
+      return `<button class="st-chip ${active}" data-client="${ct}">${ct}</button>`;
+    }).join('');
+
+    const zoneChips: string = GEO_ZONES.map((z: string) => {
+      const active: string = (perim.zones_geographiques || []).includes(z) ? 'active' : '';
+      return `<button class="st-chip ${active}" data-zone="${z}">${z}</button>`;
+    }).join('');
+
     const planCls: string = t.plan === 'pro' ? 'st-plan-pro' : t.plan === 'starter' ? 'st-plan-starter' : 'st-plan-demo';
 
     const usersRows: string = users.map((u: any) => {
@@ -212,6 +232,172 @@ const base = import.meta.env.BASE_URL;
           <div class="st-form-group">
             <label>Reglementations applicables</label>
             <div class="st-chips" id="chips-reg">${regChips}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="st-section">
+        <div class="st-section-header">Profil organisation</div>
+        <div class="st-section-body">
+          <div class="st-form-row">
+            <div class="st-form-group">
+              <label>Nom de l'etablissement</label>
+              <input type="text" id="f-org-nom" value="${org.nom_etablissement || ''}">
+            </div>
+            <div class="st-form-group">
+              <label>Forme juridique</label>
+              <input type="text" id="f-org-forme" value="${org.forme_juridique || ''}" placeholder="Ex: SA, SAS, SE">
+            </div>
+          </div>
+          <div class="st-form-row">
+            <div class="st-form-group">
+              <label>Numero d'agrement</label>
+              <input type="text" id="f-org-agrement" value="${org.numero_agrement || ''}">
+            </div>
+            <div class="st-form-group">
+              <label>Autorite d'agrement</label>
+              <select id="f-org-autorite">
+                <option value="ACPR" ${org.autorite_agrement === 'ACPR' || !org.autorite_agrement ? 'selected' : ''}>ACPR</option>
+                <option value="AMF" ${org.autorite_agrement === 'AMF' ? 'selected' : ''}>AMF</option>
+                <option value="Banque de France" ${org.autorite_agrement === 'Banque de France' ? 'selected' : ''}>Banque de France</option>
+              </select>
+            </div>
+          </div>
+          <div class="st-form-row">
+            <div class="st-form-group">
+              <label>Date d'agrement</label>
+              <input type="date" id="f-org-date" value="${org.date_agrement || ''}">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="st-section">
+        <div class="st-section-header">Equipe conformite</div>
+        <div class="st-section-body">
+          <div class="st-form-row">
+            <div class="st-form-group">
+              <label>Declarant Tracfin — Nom</label>
+              <input type="text" id="f-conf-tracfin-nom" value="${conf.declarant_tracfin_nom || ''}">
+            </div>
+            <div class="st-form-group">
+              <label>Declarant Tracfin — Fonction</label>
+              <input type="text" id="f-conf-tracfin-fn" value="${conf.declarant_tracfin_fonction || ''}">
+            </div>
+          </div>
+          <div class="st-form-row">
+            <div class="st-form-group">
+              <label>RCCL — Nom</label>
+              <input type="text" id="f-conf-rccl-nom" value="${conf.rccl_nom || ''}">
+            </div>
+            <div class="st-form-group">
+              <label>RCCL — Fonction</label>
+              <input type="text" id="f-conf-rccl-fn" value="${conf.rccl_fonction || ''}">
+            </div>
+          </div>
+          <div class="st-form-row">
+            <div class="st-form-group">
+              <label>Responsable LCB-FT — Nom</label>
+              <input type="text" id="f-conf-lcbft-nom" value="${conf.responsable_lcbft_nom || ''}">
+            </div>
+            <div class="st-form-group">
+              <label>Responsable LCB-FT — Fonction</label>
+              <input type="text" id="f-conf-lcbft-fn" value="${conf.responsable_lcbft_fonction || ''}">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="st-section">
+        <div class="st-section-header">Systemes</div>
+        <div class="st-section-body">
+          <div class="st-form-row">
+            <div class="st-form-group">
+              <label>Outil de monitoring transactionnel</label>
+              <input type="text" id="f-sys-monitoring" value="${sys_.outil_monitoring || ''}" placeholder="Ex: Actimize, Fircosoft">
+            </div>
+            <div class="st-form-group">
+              <label>Outil d'archivage</label>
+              <input type="text" id="f-sys-archivage" value="${sys_.outil_archivage || ''}">
+            </div>
+          </div>
+          <div class="st-form-row">
+            <div class="st-form-group">
+              <label>Outil KYC</label>
+              <input type="text" id="f-sys-kyc" value="${sys_.outil_kyc || ''}" placeholder="Ex: Onfido, IDnow">
+            </div>
+            <div class="st-form-group">
+              <label>Canal de signalement interne</label>
+              <input type="text" id="f-sys-canal" value="${sys_.canal_signalement_interne || ''}" placeholder="Ex: email, ticket Jira">
+            </div>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Acces ERMES configure</div>
+              <div class="toggle-desc">Portail de declaration Tracfin</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="f-sys-ermes" ${sys_.portail_ermes_acces ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="st-section">
+        <div class="st-section-header">Perimetre</div>
+        <div class="st-section-body">
+          <div class="st-form-group">
+            <label>Types de clients</label>
+            <div class="st-chips" id="chips-clients">${clientChips}</div>
+          </div>
+          <div class="st-form-group" style="margin-top:12px">
+            <label>Zones geographiques</label>
+            <div class="st-chips" id="chips-zones">${zoneChips}</div>
+          </div>
+          <div style="margin-top:16px">
+            <div class="toggle-row">
+              <div><div class="toggle-label">Presence de transferts de fonds</div></div>
+              <label class="toggle"><input type="checkbox" id="f-per-transferts" ${perim.presence_transferts_fonds ? 'checked' : ''}><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">Clients a risque eleve</div></div>
+              <label class="toggle"><input type="checkbox" id="f-per-risque" ${perim.presence_clients_risque_eleve ? 'checked' : ''}><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">Presence de PPE</div></div>
+              <label class="toggle"><input type="checkbox" id="f-per-pep" ${perim.presence_pep ? 'checked' : ''}><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">Correspondance bancaire</div></div>
+              <label class="toggle"><input type="checkbox" id="f-per-corr" ${perim.presence_correspondance_bancaire ? 'checked' : ''}><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="st-section">
+        <div class="st-section-header">Seuils</div>
+        <div class="st-section-body">
+          <div class="st-form-row">
+            <div class="st-form-group">
+              <label>Seuil de surveillance (montant)</label>
+              <input type="number" id="f-seuil-montant" value="${seuils.seuil_surveillance_montant || ''}" placeholder="Ex: 15000">
+            </div>
+            <div class="st-form-group">
+              <label>Devise</label>
+              <select id="f-seuil-devise">
+                <option value="EUR" ${seuils.seuil_surveillance_devise !== 'USD' && seuils.seuil_surveillance_devise !== 'GBP' ? 'selected' : ''}>EUR</option>
+                <option value="USD" ${seuils.seuil_surveillance_devise === 'USD' ? 'selected' : ''}>USD</option>
+                <option value="GBP" ${seuils.seuil_surveillance_devise === 'GBP' ? 'selected' : ''}>GBP</option>
+              </select>
+            </div>
+          </div>
+          <div class="st-form-row">
+            <div class="st-form-group">
+              <label>Delai traitement signalement (heures)</label>
+              <input type="number" id="f-seuil-delai" value="${seuils.delai_traitement_signalement_heures || 24}">
+            </div>
           </div>
         </div>
       </div>
@@ -332,6 +518,9 @@ const base = import.meta.env.BASE_URL;
       const regs: string[] = Array.from(document.querySelectorAll('#chips-reg .st-chip.active')).map((c: any) => c.dataset.reg);
       const sevs: string[] = Array.from(document.querySelectorAll('#chips-sev .st-chip.active')).map((c: any) => c.dataset.sev);
 
+      const clients: string[] = Array.from(document.querySelectorAll('#chips-clients .st-chip.active')).map((c: any) => c.dataset.client);
+      const zones: string[] = Array.from(document.querySelectorAll('#chips-zones .st-chip.active')).map((c: any) => c.dataset.zone);
+
       await api('/api/v1/settings', {
         method: 'PUT',
         body: {
@@ -347,6 +536,41 @@ const base = import.meta.env.BASE_URL;
           country_risk_enabled: (document.getElementById('f-mod-country') as HTMLInputElement).checked,
           roadmap_enabled: (document.getElementById('f-mod-roadmap') as HTMLInputElement).checked,
           situations_enabled: (document.getElementById('f-mod-situations') as HTMLInputElement).checked,
+          organisation: {
+            nom_etablissement: (document.getElementById('f-org-nom') as HTMLInputElement).value,
+            forme_juridique: (document.getElementById('f-org-forme') as HTMLInputElement).value,
+            numero_agrement: (document.getElementById('f-org-agrement') as HTMLInputElement).value,
+            autorite_agrement: (document.getElementById('f-org-autorite') as HTMLSelectElement).value,
+            date_agrement: (document.getElementById('f-org-date') as HTMLInputElement).value,
+          },
+          conformite: {
+            declarant_tracfin_nom: (document.getElementById('f-conf-tracfin-nom') as HTMLInputElement).value,
+            declarant_tracfin_fonction: (document.getElementById('f-conf-tracfin-fn') as HTMLInputElement).value,
+            rccl_nom: (document.getElementById('f-conf-rccl-nom') as HTMLInputElement).value,
+            rccl_fonction: (document.getElementById('f-conf-rccl-fn') as HTMLInputElement).value,
+            responsable_lcbft_nom: (document.getElementById('f-conf-lcbft-nom') as HTMLInputElement).value,
+            responsable_lcbft_fonction: (document.getElementById('f-conf-lcbft-fn') as HTMLInputElement).value,
+          },
+          systemes: {
+            outil_monitoring: (document.getElementById('f-sys-monitoring') as HTMLInputElement).value,
+            outil_archivage: (document.getElementById('f-sys-archivage') as HTMLInputElement).value,
+            outil_kyc: (document.getElementById('f-sys-kyc') as HTMLInputElement).value,
+            canal_signalement_interne: (document.getElementById('f-sys-canal') as HTMLInputElement).value,
+            portail_ermes_acces: (document.getElementById('f-sys-ermes') as HTMLInputElement).checked,
+          },
+          perimetre: {
+            types_clients: clients,
+            zones_geographiques: zones,
+            presence_transferts_fonds: (document.getElementById('f-per-transferts') as HTMLInputElement).checked,
+            presence_clients_risque_eleve: (document.getElementById('f-per-risque') as HTMLInputElement).checked,
+            presence_pep: (document.getElementById('f-per-pep') as HTMLInputElement).checked,
+            presence_correspondance_bancaire: (document.getElementById('f-per-corr') as HTMLInputElement).checked,
+          },
+          seuils: {
+            seuil_surveillance_montant: parseFloat((document.getElementById('f-seuil-montant') as HTMLInputElement).value) || null,
+            seuil_surveillance_devise: (document.getElementById('f-seuil-devise') as HTMLSelectElement).value,
+            delai_traitement_signalement_heures: parseInt((document.getElementById('f-seuil-delai') as HTMLInputElement).value) || 24,
+          },
         },
       });
 
