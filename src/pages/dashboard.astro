@@ -323,7 +323,7 @@ const base = import.meta.env.BASE_URL;
           <span class="action-sep">|</span>
           ${a.tracker_added
             ? `<span class="badge-tracker-added">\u2713 Tracker</span>`
-            : `<button class="btn-tracker${(!a.tracker_added && (a.severity === 'high' || a.severity === 'critical') && a.lifecycle_status !== 'ignored') ? ' btn-tracker-pending' : ''}" data-tracker="${a.id}" data-source="${escHtml(a.source_name || '')}" data-date="${a.published_at || ''}" data-title="${escHtml(a.title || '')}" data-synthese="${escHtml(a.reminder_text || '')}" data-type="${a.impact_type || 'info'}" data-url="${escHtml(a.original_url || '')}">+ Tracker</button>`
+            : `<button class="btn btn-sm btn-triage btn-tracker${(!a.tracker_added && (a.severity === 'high' || a.severity === 'critical') && a.lifecycle_status !== 'ignored') ? ' btn-tracker-pending' : ''}" data-tracker="${a.id}" data-source="${escHtml(a.source_name || '')}" data-date="${a.published_at || ''}" data-title="${escHtml(a.title || '')}" data-synthese="${escHtml(a.reminder_text || '')}" data-type="${a.impact_type || 'info'}" data-url="${escHtml(a.original_url || '')}">+ Tracker</button>`
           }
         </div>
       </div>
@@ -409,11 +409,20 @@ const base = import.meta.env.BASE_URL;
     }
   }
 
+  const LIFECYCLE_MAP: Record<string, string> = {
+    nouveau: 'inbox', important: 'inbox', relu: 'inbox',
+    quotidien: 'triaged', hebdo: 'triaged',
+    ignorer: 'ignored', archive: 'published',
+  };
+
   async function triage(id: string, status: string): Promise<void> {
     try {
       await api(`/api/v1/articles/${id}/triage`, { method: 'PATCH', body: { status } });
       const idx: number = articles.findIndex((a: any) => a.id === id);
-      if (idx !== -1) articles[idx].status = status;
+      if (idx !== -1) {
+        articles[idx].status = status;
+        articles[idx].lifecycle_status = LIFECYCLE_MAP[status] || articles[idx].lifecycle_status;
+      }
       renderSidebar();
       renderArticles();
       toast(`Article \u2192 ${status === 'quotidien' ? 'Quotidien' : status === 'hebdo' ? 'Hebdo' : 'Ignor\u00e9'}`);
@@ -892,15 +901,10 @@ const base = import.meta.env.BASE_URL;
   .action-sep { color: #B0ADA7; margin: 0 4px; font-size: 12px; }
 
   .btn-tracker {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    padding: 2px 8px;
-    border: 1px solid #5C6347;
-    border-radius: 4px;
-    background: transparent;
+    /* Inherits from .btn .btn-sm .btn-triage via HTML classes */
+    /* Only difference: kaki accent color instead of neutral */
     color: #5C6347;
-    cursor: pointer;
-    transition: all 0.15s;
+    border-color: #5C6347;
   }
   .btn-tracker:hover { background: #5C6347; color: white; }
   .btn-tracker-pending::after {
