@@ -190,9 +190,9 @@ const base = import.meta.env.BASE_URL;
               <div class="proc-bar-fill proc-fill-avalider" style="width:${pctA}%"></div>
             </div>
             <div class="proc-legend">
-              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:#1A6B3A"></span> ${valide} validees</div>
+              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-kaki-text)"></span> ${valide} validees</div>
               <div class="proc-legend-item"><span class="proc-legend-dot" style="background:#9A4F1A"></span> ${encours} en cours</div>
-              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:#C0304A"></span> ${avalider} a valider</div>
+              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-coral-text)"></span> ${avalider} a valider</div>
             </div>
           </div>
           ${procs.filter((p: any) => p.status !== 'valide').slice(0, 4).map((p: any) => `
@@ -376,7 +376,7 @@ const base = import.meta.env.BASE_URL;
   }
   .rem-item:last-child { border-bottom: none; }
   .rem-sev { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
-  :global(.sev-critical) { background: #C0304A; }
+  :global(.sev-critical) { background: var(--ew-coral-text); }
   :global(.sev-high) { background: #9A4F1A; }
   :global(.sev-medium) { background: #7A7A20; }
   :global(.sev-low) { background: #737370; }
