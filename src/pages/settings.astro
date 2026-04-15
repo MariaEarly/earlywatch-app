@@ -114,6 +114,46 @@ const base = import.meta.env.BASE_URL;
   .st-plan-demo { background: rgba(92,99,71,0.1); color: #5C6347; border: 1px solid #5C6347; }
   .st-plan-starter { background: rgba(92,99,71,0.15); color: #5C6347; border: 1px solid #5C6347; }
   .st-plan-pro { background: rgba(92,99,71,0.25); color: #5C6347; border: 1px solid #5C6347; }
+
+  /* Wizard progress bar */
+  .wiz-progress { display: flex; align-items: center; gap: 0; margin-bottom: 8px; }
+  .wiz-dot {
+    width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border-medium);
+    background: var(--beige); font-size: 12px; font-weight: 600; color: var(--color-text-tertiary);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: all 0.2s; font-family: inherit;
+  }
+  .wiz-dot.active { background: #5C6347; color: #fff; border-color: #5C6347; }
+  .wiz-dot.done { background: rgba(92,99,71,0.2); color: #5C6347; border-color: #5C6347; }
+  .wiz-line { flex: 1; height: 2px; background: var(--border-medium); }
+  .wiz-step-label {
+    font-size: 12px; font-weight: 500; color: #5C6347; margin-bottom: 16px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .wiz-step { min-height: 120px; }
+
+  /* Wizard radios */
+  .wiz-radios { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .wiz-radio {
+    padding: 8px 16px; border: 1px solid var(--border-medium); border-radius: 4px;
+    font-size: 13px; cursor: pointer; transition: all 0.15s; background: var(--beige);
+    color: var(--noir); font-family: inherit;
+  }
+  .wiz-radio input { display: none; }
+  .wiz-radio.selected { background: #5C6347; color: #fff; border-color: #5C6347; }
+  .wiz-radio:hover { border-color: #5C6347; }
+
+  /* Wizard navigation */
+  .wiz-nav { display: flex; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border); }
+  .wiz-btn {
+    padding: 8px 24px; border-radius: 4px; font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: inherit; border: 1px solid var(--border-medium);
+    transition: all 0.15s;
+  }
+  .wiz-btn-prev { background: var(--beige); color: var(--noir); }
+  .wiz-btn-next { background: #5C6347; color: #fff; border-color: #5C6347; }
+  .wiz-btn-save { background: #5C6347; color: #fff; border-color: #5C6347; }
+  .wiz-btn:hover { opacity: 0.9; }
 </style>
 
 <script>
@@ -168,15 +208,21 @@ const base = import.meta.env.BASE_URL;
       return `<button class="st-chip ${active}" data-sev="${sv}">${SEV_LABELS[sv]}</button>`;
     }).join('');
 
-    // Organisation profile data
-    const org: any = s.organisation || {};
+    // Organisation profile data — v2 keys (with v1 fallbacks)
+    const profil_v2: any = s.profil || {};
     const conf: any = s.conformite || {};
-    const sys_: any = s.systemes || {};
+    const outils: any = s.outils || {};
     const perim: any = s.perimetre || {};
+    // v1 legacy fallbacks
+    const org: any = s.organisation || {};
+    const sys_: any = s.systemes || {};
     const seuils: any = s.seuils || {};
+    // Resolve entity_type: v2 > root > v1
+    const resolvedEntityType: string = profil_v2.entity_type || s.entity_type || '';
+    const resolvedNom: string = profil_v2.nom_etablissement || org.nom_etablissement || t.name || '';
 
-    const CLIENT_TYPES: string[] = ['Particuliers', 'Entreprises', 'Mixte'];
-    const GEO_ZONES: string[] = ['France', 'UE', 'International'];
+    const CLIENT_TYPES: string[] = ['Particuliers', 'Entreprises', 'Institutionnels'];
+    const GEO_ZONES: string[] = ['France uniquement', 'Union europeenne', 'International'];
 
     const clientChips: string = CLIENT_TYPES.map((ct: string) => {
       const active: string = (perim.types_clients || []).includes(ct) ? 'active' : '';
@@ -236,168 +282,192 @@ const base = import.meta.env.BASE_URL;
         </div>
       </div>
 
-      <div class="st-section">
+      <!-- ═══ PROFIL ORGANISATION v2 — Wizard 4 étapes ═══ -->
+      <div class="st-section" id="wizard-org">
         <div class="st-section-header">Profil organisation</div>
         <div class="st-section-body">
-          <div class="st-form-row">
-            <div class="st-form-group">
-              <label>Nom de l'etablissement</label>
-              <input type="text" id="f-org-nom" value="${org.nom_etablissement || ''}">
+          <!-- Progress bar -->
+          <div class="wiz-progress">
+            <button class="wiz-dot active" data-wstep="1">1</button>
+            <div class="wiz-line"></div>
+            <button class="wiz-dot" data-wstep="2">2</button>
+            <div class="wiz-line"></div>
+            <button class="wiz-dot" data-wstep="3">3</button>
+            <div class="wiz-line"></div>
+            <button class="wiz-dot" data-wstep="4">4</button>
+          </div>
+          <div class="wiz-step-label" id="wiz-step-label">Etape 1 — Etablissement</div>
+
+          <!-- Step 1: Etablissement -->
+          <div class="wiz-step" id="wiz-step-1">
+            <div class="st-form-group" style="margin-bottom:16px">
+              <label>Nom de l'etablissement *</label>
+              <input type="text" id="f-profil-nom" value="${resolvedNom}" required>
             </div>
             <div class="st-form-group">
-              <label>Forme juridique</label>
-              <input type="text" id="f-org-forme" value="${org.forme_juridique || ''}" placeholder="Ex: SA, SAS, SE">
+              <label>Type d'entite *</label>
+              <div class="wiz-radios" id="wiz-entity-radios">
+                <label class="wiz-radio ${resolvedEntityType === 'PSP' ? 'selected' : ''}"><input type="radio" name="wiz-entity" value="PSP" ${resolvedEntityType === 'PSP' ? 'checked' : ''}> PSP</label>
+                <label class="wiz-radio ${resolvedEntityType === 'Banque' || resolvedEntityType === 'EC' ? 'selected' : ''}"><input type="radio" name="wiz-entity" value="Banque" ${resolvedEntityType === 'Banque' || resolvedEntityType === 'EC' ? 'checked' : ''}> Banque</label>
+                <label class="wiz-radio ${resolvedEntityType === 'CASP' ? 'selected' : ''}"><input type="radio" name="wiz-entity" value="CASP" ${resolvedEntityType === 'CASP' ? 'checked' : ''}> CASP</label>
+                <label class="wiz-radio ${resolvedEntityType === 'EME' ? 'selected' : ''}"><input type="radio" name="wiz-entity" value="EME" ${resolvedEntityType === 'EME' ? 'checked' : ''}> EME</label>
+              </div>
             </div>
           </div>
-          <div class="st-form-row">
-            <div class="st-form-group">
-              <label>Numero d'agrement</label>
-              <input type="text" id="f-org-agrement" value="${org.numero_agrement || ''}">
+
+          <!-- Step 2: Equipe conformite -->
+          <div class="wiz-step" id="wiz-step-2" style="display:none">
+            <div class="st-form-row">
+              <div class="st-form-group"><label>Responsable LCB-FT — Nom *</label><input type="text" id="f-conf-lcbft-nom" value="${conf.responsable_lcbft_nom || ''}"></div>
+              <div class="st-form-group"><label>Responsable LCB-FT — Fonction *</label><input type="text" id="f-conf-lcbft-fn" value="${conf.responsable_lcbft_fonction || ''}"></div>
             </div>
-            <div class="st-form-group">
-              <label>Autorite d'agrement</label>
-              <select id="f-org-autorite">
-                <option value="ACPR" ${org.autorite_agrement === 'ACPR' || !org.autorite_agrement ? 'selected' : ''}>ACPR</option>
-                <option value="AMF" ${org.autorite_agrement === 'AMF' ? 'selected' : ''}>AMF</option>
-                <option value="Banque de France" ${org.autorite_agrement === 'Banque de France' ? 'selected' : ''}>Banque de France</option>
+            <div class="st-form-row">
+              <div class="st-form-group"><label>Suppleant — Nom</label><input type="text" id="f-conf-suppleant" value="${conf.responsable_lcbft_suppleant || ''}"></div>
+            </div>
+            <div class="toggle-row" style="margin:12px 0">
+              <div><div class="toggle-label">Le declarant Tracfin est le responsable LCB-FT</div></div>
+              <label class="toggle"><input type="checkbox" id="f-conf-declarant-est-resp" ${conf.declarant_est_responsable ? 'checked' : ''}><span class="toggle-slider"></span></label>
+            </div>
+            <div id="declarant-fields" style="${conf.declarant_est_responsable ? 'display:none' : ''}">
+              <div class="st-form-row">
+                <div class="st-form-group"><label>Declarant Tracfin — Nom *</label><input type="text" id="f-conf-tracfin-nom" value="${conf.declarant_tracfin_nom || ''}"></div>
+                <div class="st-form-group"><label>Declarant Tracfin — Fonction *</label><input type="text" id="f-conf-tracfin-fn" value="${conf.declarant_tracfin_fonction || ''}"></div>
+              </div>
+            </div>
+            <div class="st-form-group" style="margin-top:12px">
+              <label>Controle periodique *</label>
+              <div class="wiz-radios" id="wiz-controle-radios">
+                <label class="wiz-radio ${(conf.controle_periodique || 'interne') === 'interne' ? 'selected' : ''}"><input type="radio" name="wiz-controle" value="interne" ${(conf.controle_periodique || 'interne') === 'interne' ? 'checked' : ''}> Internalise</label>
+                <label class="wiz-radio ${conf.controle_periodique === 'externe' ? 'selected' : ''}"><input type="radio" name="wiz-controle" value="externe" ${conf.controle_periodique === 'externe' ? 'checked' : ''}> Externalise</label>
+              </div>
+            </div>
+            <div id="controle-prestataire" style="${conf.controle_periodique === 'externe' ? '' : 'display:none'}">
+              <div class="st-form-group" style="margin-top:8px"><label>Nom du prestataire</label><input type="text" id="f-conf-prestataire" value="${conf.controle_periodique_prestataire || ''}"></div>
+            </div>
+          </div>
+
+          <!-- Step 3: Outils -->
+          <div class="wiz-step" id="wiz-step-3" style="display:none">
+            <div class="st-form-row">
+              <div class="st-form-group">
+                <label>Screening / criblage *</label>
+                <select id="f-outils-screening">
+                  <option value="">— Choisir —</option>
+                  <option value="Comply Advantage" ${outils.screening === 'Comply Advantage' ? 'selected' : ''}>Comply Advantage</option>
+                  <option value="Dow Jones" ${outils.screening === 'Dow Jones' ? 'selected' : ''}>Dow Jones</option>
+                  <option value="Synaps" ${outils.screening === 'Synaps' ? 'selected' : ''}>Synaps</option>
+                  <option value="WorldCheck" ${outils.screening === 'WorldCheck' ? 'selected' : ''}>WorldCheck</option>
+                  <option value="autre" ${outils.screening === 'autre' ? 'selected' : ''}>Autre</option>
+                </select>
+              </div>
+              <div class="st-form-group" id="screening-autre-group" style="${outils.screening === 'autre' ? '' : 'display:none'}">
+                <label>Preciser</label>
+                <input type="text" id="f-outils-screening-autre" value="${outils.screening_autre || ''}">
+              </div>
+            </div>
+            <div class="st-form-row">
+              <div class="st-form-group">
+                <label>Verification d'identite *</label>
+                <select id="f-outils-kyc">
+                  <option value="">— Choisir —</option>
+                  <option value="Synaps" ${outils.kyc === 'Synaps' ? 'selected' : ''}>Synaps</option>
+                  <option value="Onfido" ${outils.kyc === 'Onfido' ? 'selected' : ''}>Onfido</option>
+                  <option value="Sumsub" ${outils.kyc === 'Sumsub' ? 'selected' : ''}>Sumsub</option>
+                  <option value="autre" ${outils.kyc === 'autre' ? 'selected' : ''}>Autre</option>
+                  <option value="Manuel" ${outils.kyc === 'Manuel' ? 'selected' : ''}>Manuel</option>
+                </select>
+              </div>
+              <div class="st-form-group" id="kyc-autre-group" style="${outils.kyc === 'autre' ? '' : 'display:none'}">
+                <label>Preciser</label>
+                <input type="text" id="f-outils-kyc-autre" value="${outils.kyc_autre || ''}">
+              </div>
+            </div>
+            <div class="st-form-group" style="margin-bottom:12px">
+              <label>Monitoring transactionnel *</label>
+              <div class="wiz-radios" id="wiz-monitoring-radios">
+                <label class="wiz-radio ${(outils.monitoring || 'interne') === 'interne' ? 'selected' : ''}"><input type="radio" name="wiz-monitoring" value="interne" ${(outils.monitoring || 'interne') === 'interne' ? 'checked' : ''}> Interne (pas d'outil dedie)</label>
+                <label class="wiz-radio ${outils.monitoring === 'outil' ? 'selected' : ''}"><input type="radio" name="wiz-monitoring" value="outil" ${outils.monitoring === 'outil' ? 'checked' : ''}> Outil dedie</label>
+              </div>
+            </div>
+            <div id="monitoring-outil-group" style="${outils.monitoring === 'outil' ? '' : 'display:none'}">
+              <div class="st-form-group"><label>Nom de l'outil</label><input type="text" id="f-outils-monitoring-outil" value="${outils.monitoring_outil || ''}"></div>
+            </div>
+            <div class="st-form-group" style="margin-top:12px">
+              <label>Canal signalement interne *</label>
+              <select id="f-outils-signalement">
+                <option value="">— Choisir —</option>
+                <option value="email" ${outils.signalement_interne === 'email' ? 'selected' : ''}>Email dedie conformite</option>
+                <option value="ticketing" ${outils.signalement_interne === 'ticketing' ? 'selected' : ''}>Outil de ticketing</option>
+                <option value="direct" ${outils.signalement_interne === 'direct' ? 'selected' : ''}>Remontee directe au responsable LCB-FT</option>
               </select>
             </div>
-          </div>
-          <div class="st-form-row">
-            <div class="st-form-group">
-              <label>Date d'agrement</label>
-              <input type="date" id="f-org-date" value="${org.date_agrement || ''}">
+            <!-- Blockchain analytics — CASP only -->
+            <div id="blockchain-section" style="${resolvedEntityType === 'CASP' ? '' : 'display:none'}">
+              <hr style="margin:16px 0;border:none;border-top:1px solid var(--color-border)">
+              <div class="st-form-row">
+                <div class="st-form-group">
+                  <label>Blockchain analytics *</label>
+                  <select id="f-outils-blockchain">
+                    <option value="">— Choisir —</option>
+                    <option value="Scorechain" ${outils.blockchain_analytics === 'Scorechain' ? 'selected' : ''}>Scorechain</option>
+                    <option value="Chainalysis" ${outils.blockchain_analytics === 'Chainalysis' ? 'selected' : ''}>Chainalysis</option>
+                    <option value="Elliptic" ${outils.blockchain_analytics === 'Elliptic' ? 'selected' : ''}>Elliptic</option>
+                    <option value="autre" ${outils.blockchain_analytics === 'autre' ? 'selected' : ''}>Autre</option>
+                  </select>
+                </div>
+                <div class="st-form-group" id="blockchain-autre-group" style="${outils.blockchain_analytics === 'autre' ? '' : 'display:none'}">
+                  <label>Preciser</label>
+                  <input type="text" id="f-outils-blockchain-autre" value="${outils.blockchain_analytics_autre || ''}">
+                </div>
+              </div>
+              <div class="st-form-group">
+                <label>Seuil d'alerte (defaut : 75)</label>
+                <input type="number" id="f-outils-blockchain-seuil" min="0" max="100" value="${outils.blockchain_seuil ?? 75}">
+                <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:4px;font-style:italic">La valeur standard reglementaire est 75. Ne modifier que si votre outil applique une echelle differente.</div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div class="st-section">
-        <div class="st-section-header">Equipe conformite</div>
-        <div class="st-section-body">
-          <div class="st-form-row">
+          <!-- Step 4: Perimetre -->
+          <div class="wiz-step" id="wiz-step-4" style="display:none">
             <div class="st-form-group">
-              <label>Declarant Tracfin — Nom</label>
-              <input type="text" id="f-conf-tracfin-nom" value="${conf.declarant_tracfin_nom || ''}">
+              <label>Types de clients</label>
+              <div class="st-chips" id="chips-clients">${clientChips}</div>
             </div>
-            <div class="st-form-group">
-              <label>Declarant Tracfin — Fonction</label>
-              <input type="text" id="f-conf-tracfin-fn" value="${conf.declarant_tracfin_fonction || ''}">
+            <div class="st-form-group" style="margin-top:12px">
+              <label>Zones geographiques</label>
+              <div class="st-chips" id="chips-zones">${zoneChips}</div>
+            </div>
+            <div class="st-form-group" style="margin-top:12px">
+              <label>Canal d'entree en relation *</label>
+              <div class="wiz-radios" id="wiz-canal-radios">
+                <label class="wiz-radio ${perim.canal_entree_relation === 'digital' ? 'selected' : ''}"><input type="radio" name="wiz-canal" value="digital" ${perim.canal_entree_relation === 'digital' ? 'checked' : ''}> 100% digital</label>
+                <label class="wiz-radio ${perim.canal_entree_relation === 'mixte' ? 'selected' : ''}"><input type="radio" name="wiz-canal" value="mixte" ${perim.canal_entree_relation === 'mixte' ? 'checked' : ''}> Mixte</label>
+                <label class="wiz-radio ${perim.canal_entree_relation === 'presentiel' ? 'selected' : ''}"><input type="radio" name="wiz-canal" value="presentiel" ${perim.canal_entree_relation === 'presentiel' ? 'checked' : ''}> Presentiel</label>
+              </div>
+            </div>
+            <div style="margin-top:16px">
+              <div class="toggle-row" id="toggle-transferts" style="${['PSP','EME'].includes(resolvedEntityType) ? '' : 'display:none'}">
+                <div><div class="toggle-label">Transferts de fonds</div></div>
+                <label class="toggle"><input type="checkbox" id="f-per-transferts" ${perim.transferts_fonds ? 'checked' : ''}><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row" id="toggle-correspondance" style="${resolvedEntityType === 'Banque' || resolvedEntityType === 'EC' ? '' : 'display:none'}">
+                <div><div class="toggle-label">Correspondance bancaire</div></div>
+                <label class="toggle"><input type="checkbox" id="f-per-correspondance" ${perim.correspondance_bancaire ? 'checked' : ''}><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div><div class="toggle-label">Agents ou distributeurs</div></div>
+                <label class="toggle"><input type="checkbox" id="f-per-agents" ${perim.agents_distributeurs ? 'checked' : ''}><span class="toggle-slider"></span></label>
+              </div>
             </div>
           </div>
-          <div class="st-form-row">
-            <div class="st-form-group">
-              <label>RCCL — Nom</label>
-              <input type="text" id="f-conf-rccl-nom" value="${conf.rccl_nom || ''}">
-            </div>
-            <div class="st-form-group">
-              <label>RCCL — Fonction</label>
-              <input type="text" id="f-conf-rccl-fn" value="${conf.rccl_fonction || ''}">
-            </div>
-          </div>
-          <div class="st-form-row">
-            <div class="st-form-group">
-              <label>Responsable LCB-FT — Nom</label>
-              <input type="text" id="f-conf-lcbft-nom" value="${conf.responsable_lcbft_nom || ''}">
-            </div>
-            <div class="st-form-group">
-              <label>Responsable LCB-FT — Fonction</label>
-              <input type="text" id="f-conf-lcbft-fn" value="${conf.responsable_lcbft_fonction || ''}">
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div class="st-section">
-        <div class="st-section-header">Systemes</div>
-        <div class="st-section-body">
-          <div class="st-form-row">
-            <div class="st-form-group">
-              <label>Outil de monitoring transactionnel</label>
-              <input type="text" id="f-sys-monitoring" value="${sys_.outil_monitoring || ''}" placeholder="Ex: Actimize, Fircosoft">
-            </div>
-            <div class="st-form-group">
-              <label>Outil d'archivage</label>
-              <input type="text" id="f-sys-archivage" value="${sys_.outil_archivage || ''}">
-            </div>
-          </div>
-          <div class="st-form-row">
-            <div class="st-form-group">
-              <label>Outil KYC</label>
-              <input type="text" id="f-sys-kyc" value="${sys_.outil_kyc || ''}" placeholder="Ex: Onfido, IDnow">
-            </div>
-            <div class="st-form-group">
-              <label>Canal de signalement interne</label>
-              <input type="text" id="f-sys-canal" value="${sys_.canal_signalement_interne || ''}" placeholder="Ex: email, ticket Jira">
-            </div>
-          </div>
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-label">Acces ERMES configure</div>
-              <div class="toggle-desc">Portail de declaration Tracfin</div>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="f-sys-ermes" ${sys_.portail_ermes_acces ? 'checked' : ''}>
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div class="st-section">
-        <div class="st-section-header">Perimetre</div>
-        <div class="st-section-body">
-          <div class="st-form-group">
-            <label>Types de clients</label>
-            <div class="st-chips" id="chips-clients">${clientChips}</div>
-          </div>
-          <div class="st-form-group" style="margin-top:12px">
-            <label>Zones geographiques</label>
-            <div class="st-chips" id="chips-zones">${zoneChips}</div>
-          </div>
-          <div style="margin-top:16px">
-            <div class="toggle-row">
-              <div><div class="toggle-label">Presence de transferts de fonds</div></div>
-              <label class="toggle"><input type="checkbox" id="f-per-transferts" ${perim.presence_transferts_fonds ? 'checked' : ''}><span class="toggle-slider"></span></label>
-            </div>
-            <div class="toggle-row">
-              <div><div class="toggle-label">Clients a risque eleve</div></div>
-              <label class="toggle"><input type="checkbox" id="f-per-risque" ${perim.presence_clients_risque_eleve ? 'checked' : ''}><span class="toggle-slider"></span></label>
-            </div>
-            <div class="toggle-row">
-              <div><div class="toggle-label">Presence de PPE</div></div>
-              <label class="toggle"><input type="checkbox" id="f-per-pep" ${perim.presence_pep ? 'checked' : ''}><span class="toggle-slider"></span></label>
-            </div>
-            <div class="toggle-row">
-              <div><div class="toggle-label">Correspondance bancaire</div></div>
-              <label class="toggle"><input type="checkbox" id="f-per-corr" ${perim.presence_correspondance_bancaire ? 'checked' : ''}><span class="toggle-slider"></span></label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="st-section">
-        <div class="st-section-header">Seuils</div>
-        <div class="st-section-body">
-          <div class="st-form-row">
-            <div class="st-form-group">
-              <label>Seuil de surveillance (montant)</label>
-              <input type="number" id="f-seuil-montant" value="${seuils.seuil_surveillance_montant || ''}" placeholder="Ex: 15000">
-            </div>
-            <div class="st-form-group">
-              <label>Devise</label>
-              <select id="f-seuil-devise">
-                <option value="EUR" ${seuils.seuil_surveillance_devise !== 'USD' && seuils.seuil_surveillance_devise !== 'GBP' ? 'selected' : ''}>EUR</option>
-                <option value="USD" ${seuils.seuil_surveillance_devise === 'USD' ? 'selected' : ''}>USD</option>
-                <option value="GBP" ${seuils.seuil_surveillance_devise === 'GBP' ? 'selected' : ''}>GBP</option>
-              </select>
-            </div>
-          </div>
-          <div class="st-form-row">
-            <div class="st-form-group">
-              <label>Delai traitement signalement (heures)</label>
-              <input type="number" id="f-seuil-delai" value="${seuils.delai_traitement_signalement_heures || 24}">
-            </div>
+          <!-- Navigation buttons -->
+          <div class="wiz-nav">
+            <button class="wiz-btn wiz-btn-prev" id="wiz-prev" style="display:none">Precedent</button>
+            <div style="flex:1"></div>
+            <button class="wiz-btn wiz-btn-next" id="wiz-next">Suivant</button>
+            <button class="wiz-btn wiz-btn-save" id="wiz-save" style="display:none">Enregistrer</button>
           </div>
         </div>
       </div>
@@ -521,11 +591,17 @@ const base = import.meta.env.BASE_URL;
       const clients: string[] = Array.from(document.querySelectorAll('#chips-clients .st-chip.active')).map((c: any) => c.dataset.client);
       const zones: string[] = Array.from(document.querySelectorAll('#chips-zones .st-chip.active')).map((c: any) => c.dataset.zone);
 
+      // Build entity type from wizard
+      const wizEntity: string = (document.querySelector('input[name="wiz-entity"]:checked') as HTMLInputElement)?.value || '';
+      const declarantEstResp: boolean = (document.getElementById('f-conf-declarant-est-resp') as HTMLInputElement)?.checked || false;
+      const respNom: string = (document.getElementById('f-conf-lcbft-nom') as HTMLInputElement)?.value || '';
+      const respFn: string = (document.getElementById('f-conf-lcbft-fn') as HTMLInputElement)?.value || '';
+
       await api('/api/v1/settings', {
         method: 'PUT',
         body: {
           name: (document.getElementById('f-name') as HTMLInputElement).value,
-          entity_type: (document.getElementById('f-entity-type') as HTMLSelectElement).value,
+          entity_type: wizEntity || (document.getElementById('f-entity-type') as HTMLSelectElement).value,
           entity_subtype: (document.getElementById('f-entity-subtype') as HTMLInputElement).value,
           acpr_number: (document.getElementById('f-acpr') as HTMLInputElement).value,
           regulations: regs,
@@ -536,40 +612,40 @@ const base = import.meta.env.BASE_URL;
           country_risk_enabled: (document.getElementById('f-mod-country') as HTMLInputElement).checked,
           roadmap_enabled: (document.getElementById('f-mod-roadmap') as HTMLInputElement).checked,
           situations_enabled: (document.getElementById('f-mod-situations') as HTMLInputElement).checked,
-          organisation: {
-            nom_etablissement: (document.getElementById('f-org-nom') as HTMLInputElement).value,
-            forme_juridique: (document.getElementById('f-org-forme') as HTMLInputElement).value,
-            numero_agrement: (document.getElementById('f-org-agrement') as HTMLInputElement).value,
-            autorite_agrement: (document.getElementById('f-org-autorite') as HTMLSelectElement).value,
-            date_agrement: (document.getElementById('f-org-date') as HTMLInputElement).value,
+          // v2 profil organisation
+          profil: {
+            nom_etablissement: (document.getElementById('f-profil-nom') as HTMLInputElement)?.value || '',
+            entity_type: wizEntity,
           },
           conformite: {
-            declarant_tracfin_nom: (document.getElementById('f-conf-tracfin-nom') as HTMLInputElement).value,
-            declarant_tracfin_fonction: (document.getElementById('f-conf-tracfin-fn') as HTMLInputElement).value,
-            rccl_nom: (document.getElementById('f-conf-rccl-nom') as HTMLInputElement).value,
-            rccl_fonction: (document.getElementById('f-conf-rccl-fn') as HTMLInputElement).value,
-            responsable_lcbft_nom: (document.getElementById('f-conf-lcbft-nom') as HTMLInputElement).value,
-            responsable_lcbft_fonction: (document.getElementById('f-conf-lcbft-fn') as HTMLInputElement).value,
+            responsable_lcbft_nom: respNom,
+            responsable_lcbft_fonction: respFn,
+            responsable_lcbft_suppleant: (document.getElementById('f-conf-suppleant') as HTMLInputElement)?.value || '',
+            declarant_tracfin_nom: declarantEstResp ? respNom : ((document.getElementById('f-conf-tracfin-nom') as HTMLInputElement)?.value || ''),
+            declarant_tracfin_fonction: declarantEstResp ? respFn : ((document.getElementById('f-conf-tracfin-fn') as HTMLInputElement)?.value || ''),
+            declarant_est_responsable: declarantEstResp,
+            controle_periodique: (document.querySelector('input[name="wiz-controle"]:checked') as HTMLInputElement)?.value || 'interne',
+            controle_periodique_prestataire: (document.getElementById('f-conf-prestataire') as HTMLInputElement)?.value || '',
           },
-          systemes: {
-            outil_monitoring: (document.getElementById('f-sys-monitoring') as HTMLInputElement).value,
-            outil_archivage: (document.getElementById('f-sys-archivage') as HTMLInputElement).value,
-            outil_kyc: (document.getElementById('f-sys-kyc') as HTMLInputElement).value,
-            canal_signalement_interne: (document.getElementById('f-sys-canal') as HTMLInputElement).value,
-            portail_ermes_acces: (document.getElementById('f-sys-ermes') as HTMLInputElement).checked,
+          outils: {
+            screening: (document.getElementById('f-outils-screening') as HTMLSelectElement)?.value || '',
+            screening_autre: (document.getElementById('f-outils-screening-autre') as HTMLInputElement)?.value || '',
+            kyc: (document.getElementById('f-outils-kyc') as HTMLSelectElement)?.value || '',
+            kyc_autre: (document.getElementById('f-outils-kyc-autre') as HTMLInputElement)?.value || '',
+            monitoring: (document.querySelector('input[name="wiz-monitoring"]:checked') as HTMLInputElement)?.value || 'interne',
+            monitoring_outil: (document.getElementById('f-outils-monitoring-outil') as HTMLInputElement)?.value || '',
+            signalement_interne: (document.getElementById('f-outils-signalement') as HTMLSelectElement)?.value || '',
+            blockchain_analytics: (document.getElementById('f-outils-blockchain') as HTMLSelectElement)?.value || '',
+            blockchain_analytics_autre: (document.getElementById('f-outils-blockchain-autre') as HTMLInputElement)?.value || '',
+            blockchain_seuil: parseInt((document.getElementById('f-outils-blockchain-seuil') as HTMLInputElement)?.value) || 75,
           },
           perimetre: {
             types_clients: clients,
             zones_geographiques: zones,
-            presence_transferts_fonds: (document.getElementById('f-per-transferts') as HTMLInputElement).checked,
-            presence_clients_risque_eleve: (document.getElementById('f-per-risque') as HTMLInputElement).checked,
-            presence_pep: (document.getElementById('f-per-pep') as HTMLInputElement).checked,
-            presence_correspondance_bancaire: (document.getElementById('f-per-corr') as HTMLInputElement).checked,
-          },
-          seuils: {
-            seuil_surveillance_montant: parseFloat((document.getElementById('f-seuil-montant') as HTMLInputElement).value) || null,
-            seuil_surveillance_devise: (document.getElementById('f-seuil-devise') as HTMLSelectElement).value,
-            delai_traitement_signalement_heures: parseInt((document.getElementById('f-seuil-delai') as HTMLInputElement).value) || 24,
+            canal_entree_relation: (document.querySelector('input[name="wiz-canal"]:checked') as HTMLInputElement)?.value || '',
+            transferts_fonds: (document.getElementById('f-per-transferts') as HTMLInputElement)?.checked || false,
+            correspondance_bancaire: (document.getElementById('f-per-correspondance') as HTMLInputElement)?.checked || false,
+            agents_distributeurs: (document.getElementById('f-per-agents') as HTMLInputElement)?.checked || false,
           },
         },
       });
@@ -592,6 +668,117 @@ const base = import.meta.env.BASE_URL;
   }
 
   document.getElementById('btn-save')!.addEventListener('click', saveAll);
+
+  // ═══ Wizard step logic ═══
+  const STEP_LABELS: string[] = ['', 'Etape 1 — Etablissement', 'Etape 2 — Equipe conformite', 'Etape 3 — Outils', 'Etape 4 — Perimetre'];
+  let wizStep: number = 1;
+
+  function showWizStep(step: number): void {
+    wizStep = step;
+    for (let i = 1; i <= 4; i++) {
+      const el: HTMLElement | null = document.getElementById(`wiz-step-${i}`);
+      if (el) el.style.display = i === step ? '' : 'none';
+    }
+    // Update dots
+    document.querySelectorAll('.wiz-dot').forEach((dot: any) => {
+      const s: number = parseInt(dot.dataset.wstep);
+      dot.classList.remove('active', 'done');
+      if (s === step) dot.classList.add('active');
+      else if (s < step) dot.classList.add('done');
+    });
+    // Update label
+    const label: HTMLElement | null = document.getElementById('wiz-step-label');
+    if (label) label.textContent = STEP_LABELS[step] || '';
+    // Update buttons
+    const prev: HTMLElement | null = document.getElementById('wiz-prev');
+    const next: HTMLElement | null = document.getElementById('wiz-next');
+    const save: HTMLElement | null = document.getElementById('wiz-save');
+    if (prev) prev.style.display = step > 1 ? '' : 'none';
+    if (next) next.style.display = step < 4 ? '' : 'none';
+    if (save) save.style.display = step === 4 ? '' : 'none';
+  }
+
+  function initWizard(): void {
+    // Dot click navigation
+    document.querySelectorAll('.wiz-dot').forEach((dot: any) => {
+      dot.addEventListener('click', () => showWizStep(parseInt(dot.dataset.wstep)));
+    });
+    // Prev/Next
+    document.getElementById('wiz-prev')?.addEventListener('click', () => { if (wizStep > 1) showWizStep(wizStep - 1); });
+    document.getElementById('wiz-next')?.addEventListener('click', () => { if (wizStep < 4) showWizStep(wizStep + 1); });
+    // Save button triggers main save
+    document.getElementById('wiz-save')?.addEventListener('click', saveAll);
+
+    // Radio button styling
+    document.querySelectorAll('.wiz-radios').forEach((group: any) => {
+      group.querySelectorAll('.wiz-radio').forEach((label: any) => {
+        label.addEventListener('click', () => {
+          group.querySelectorAll('.wiz-radio').forEach((l: any) => l.classList.remove('selected'));
+          label.classList.add('selected');
+          markChanged();
+          // Entity type change → toggle conditional fields
+          const radio: HTMLInputElement | null = label.querySelector('input[name="wiz-entity"]');
+          if (radio) onEntityTypeChange(radio.value);
+          // Controle periodique change
+          const ctrlRadio: HTMLInputElement | null = label.querySelector('input[name="wiz-controle"]');
+          if (ctrlRadio) {
+            const el: HTMLElement | null = document.getElementById('controle-prestataire');
+            if (el) el.style.display = ctrlRadio.value === 'externe' ? '' : 'none';
+          }
+          // Monitoring change
+          const monRadio: HTMLInputElement | null = label.querySelector('input[name="wiz-monitoring"]');
+          if (monRadio) {
+            const el: HTMLElement | null = document.getElementById('monitoring-outil-group');
+            if (el) el.style.display = monRadio.value === 'outil' ? '' : 'none';
+          }
+        });
+      });
+    });
+
+    // Declarant est responsable toggle
+    document.getElementById('f-conf-declarant-est-resp')?.addEventListener('change', (e: any) => {
+      const el: HTMLElement | null = document.getElementById('declarant-fields');
+      if (el) el.style.display = e.target.checked ? 'none' : '';
+      markChanged();
+    });
+
+    // Select "Autre" toggles
+    document.getElementById('f-outils-screening')?.addEventListener('change', (e: any) => {
+      const el: HTMLElement | null = document.getElementById('screening-autre-group');
+      if (el) el.style.display = e.target.value === 'autre' ? '' : 'none';
+      markChanged();
+    });
+    document.getElementById('f-outils-kyc')?.addEventListener('change', (e: any) => {
+      const el: HTMLElement | null = document.getElementById('kyc-autre-group');
+      if (el) el.style.display = e.target.value === 'autre' ? '' : 'none';
+      markChanged();
+    });
+    document.getElementById('f-outils-blockchain')?.addEventListener('change', (e: any) => {
+      const el: HTMLElement | null = document.getElementById('blockchain-autre-group');
+      if (el) el.style.display = e.target.value === 'autre' ? '' : 'none';
+      markChanged();
+    });
+  }
+
+  function onEntityTypeChange(entityType: string): void {
+    // Blockchain analytics: visible only for CASP
+    const bc: HTMLElement | null = document.getElementById('blockchain-section');
+    if (bc) bc.style.display = entityType === 'CASP' ? '' : 'none';
+    // Transferts de fonds: PSP or EME
+    const tf: HTMLElement | null = document.getElementById('toggle-transferts');
+    if (tf) tf.style.display = ['PSP', 'EME'].includes(entityType) ? '' : 'none';
+    // Correspondance bancaire: Banque only
+    const cb: HTMLElement | null = document.getElementById('toggle-correspondance');
+    if (cb) cb.style.display = entityType === 'Banque' ? '' : 'none';
+  }
+
+  // Initialize after render
+  const _origRender: typeof renderSettings = renderSettings;
+  (renderSettings as any) = function(data: any): void {
+    _origRender(data);
+    initWizard();
+    showWizStep(1);
+  };
 
   loadSettings();
 </script>
