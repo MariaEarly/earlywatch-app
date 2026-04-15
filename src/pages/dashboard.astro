@@ -376,24 +376,22 @@ const base = import.meta.env.BASE_URL;
             <a href="${BASE}controle" class="impact-link">Voir reminder</a>
           </div>` : ''}
         <div class="article-actions">
-          <button class="btn btn-sm btn-triage${a.status === 'quotidien' ? (a.lifecycle_status === 'published' ? ' btn-triage-published' : ' btn-triage-active') : ''}" data-triage="${a.id}" data-triage-status="quotidien">Quotidien${a.status === 'quotidien' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
-          <button class="btn btn-sm btn-triage${a.status === 'hebdo' ? (a.lifecycle_status === 'published' ? ' btn-triage-published' : ' btn-triage-active') : ''}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo${a.status === 'hebdo' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
-          <button class="btn btn-sm btn-triage${a.status === 'ignorer' ? (a.lifecycle_status === 'published' ? ' btn-triage-published' : ' btn-triage-active') : ''}" data-triage="${a.id}" data-triage-status="ignorer">Ignorer${a.status === 'ignorer' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
+          <button class="btn-triage${a.status === 'quotidien' ? (a.lifecycle_status === 'published' ? ' btn-triage-published' : ' btn-triage-active') : ''}" data-triage="${a.id}" data-triage-status="quotidien">Quotidien${a.status === 'quotidien' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
+          <button class="btn-triage${a.status === 'hebdo' ? (a.lifecycle_status === 'published' ? ' btn-triage-published' : ' btn-triage-active') : ''}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo${a.status === 'hebdo' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
+          <button class="btn-triage${a.status === 'ignorer' ? (a.lifecycle_status === 'published' ? ' btn-triage-published' : ' btn-triage-active') : ''}" data-triage="${a.id}" data-triage-status="ignorer">Ignorer${a.status === 'ignorer' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
           ${newsletterEnabled() && (a.status === 'quotidien' || a.status === 'hebdo') ? `
             <button class="btn btn-sm ${a.published_to_newsletter ? 'btn-primary' : 'btn-secondary'}"
                     data-publish="${a.id}"
                     ${a.published_to_newsletter ? 'disabled title="Publi\u00e9 le ' + formatDate(a.published_to_newsletter_at) + '"' : ''}>
               ${a.published_to_newsletter ? '\u2713 Publi\u00e9' : 'Publier'}
             </button>` : ''}
-          <span class="action-sep">|</span>
           ${a.tracker_added
             ? `<span class="badge-tracker-added">\u2713 Tracker</span>`
-            : `<button class="btn btn-sm btn-triage btn-tracker${(!a.tracker_added && (a.severity === 'high' || a.severity === 'critical') && a.lifecycle_status !== 'ignored') ? ' btn-tracker-pending' : ''}" data-tracker="${a.id}" data-source="${escHtml(a.source_name || '')}" data-date="${a.published_at || ''}" data-title="${escHtml(a.title || '')}" data-synthese="${escHtml(a.reminder_text || '')}" data-type="${a.impact_type || 'info'}" data-url="${escHtml(a.original_url || '')}">+ Tracker</button>`
+            : `<button class="btn-triage btn-tracker${(!a.tracker_added && (a.severity === 'high' || a.severity === 'critical') && a.lifecycle_status !== 'ignored') ? ' btn-tracker-pending' : ''}" data-tracker="${a.id}" data-source="${escHtml(a.source_name || '')}" data-date="${a.published_at || ''}" data-title="${escHtml(a.title || '')}" data-synthese="${escHtml(a.reminder_text || '')}" data-type="${a.impact_type || 'info'}" data-url="${escHtml(a.original_url || '')}">+ Tracker</button>`
           }
-          <span class="action-sep">|</span>
           ${a.pub_added
             ? `<span class="badge-tracker-added">\u2713 Pub</span>`
-            : `<button class="btn btn-sm btn-triage btn-tracker" data-pub="${a.id}" data-source="${escHtml(a.source_name || '')}" data-date="${a.published_at || ''}" data-title="${escHtml(a.title || '')}" data-type="${a.impact_type || 'info'}" data-url="${escHtml(a.original_url || '')}">+ Pub</button>`
+            : `<button class="btn-triage btn-tracker" data-pub="${a.id}" data-source="${escHtml(a.source_name || '')}" data-date="${a.published_at || ''}" data-title="${escHtml(a.title || '')}" data-type="${a.impact_type || 'info'}" data-url="${escHtml(a.original_url || '')}">+ Pub</button>`
           }
         </div>
       </div>
@@ -1077,8 +1075,6 @@ const base = import.meta.env.BASE_URL;
   }
 
   /* Tracker button & drawer */
-  .action-sep { color: #E4E4E2; margin: 0 6px; font-size: 12px; }
-
   .btn-tracker {
     /* Ghost style with coral accent */
     color: var(--ew-coral);

@@ -355,9 +355,9 @@ h3 { font-size: 13px; font-weight: 500; }
   white-space: nowrap;
 }
 .badge-accent {
-  background: var(--ew-accent-light);
-  color: var(--ew-accent-text);
-  border: 0.5px solid var(--ew-accent-border);
+  background: var(--ew-coral-medium);
+  color: var(--ew-coral-text);
+  border: 0.5px solid var(--ew-coral-border);
 }
 .badge-success { background: #F0FBF4; color: #1A6B3A; border-color: #9ADBB4; }
 .badge-warning { background: #FFF8F0; color: #9A4F1A; border-color: #F5C89A; }
@@ -558,37 +558,35 @@ label {
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 .filter-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
-  border-radius: var(--ew-radius);
+  padding: 3px 0;
+  border-radius: 0;
   cursor: pointer;
   font-size: 13px;
   color: var(--ew-text-secondary);
-  transition: all 0.1s;
+  transition: color 0.1s;
   border: none;
   background: none;
   width: 100%;
   text-align: left;
   font-family: inherit;
 }
-.filter-item:hover { background: var(--ew-surface); }
+.filter-item:hover { color: var(--ew-text); }
 .filter-item.active {
-  background: var(--ew-kaki);
   color: var(--ew-kaki-text);
-  border: 0.5px solid var(--ew-kaki-border);
   font-weight: 500;
-  border-radius: var(--ew-radius);
 }
 .filter-item.active .filter-count { color: var(--ew-kaki-text); opacity: 0.85; }
 .filter-count {
   margin-left: auto;
   font-size: 11px;
   color: var(--ew-text-muted);
+  font-family: var(--ew-font-mono);
 }
 
 /* Filter-btn — underline style for horizontal filters */
