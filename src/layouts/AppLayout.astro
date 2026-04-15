@@ -18,8 +18,12 @@ const { title, activePage = '' } = Astro.props;
   <title>{title}</title>
 </head>
 <body>
-  <Nav activePage={activePage} />
-  <slot />
+  <div class="app-shell">
+    <Nav activePage={activePage} />
+    <main class="app-content">
+      <slot />
+    </main>
+  </div>
   <div class="toast-container"></div>
 
   <script>

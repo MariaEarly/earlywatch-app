@@ -11,7 +11,7 @@ const base = import.meta.env.BASE_URL;
     <div class="stats-row" id="stats-row"></div>
 
     <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#5C6347"></div> Critique</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#C0304A"></div> Critique</div>
       <div class="legend-item"><div class="legend-dot" style="background:rgba(92,99,71,0.6)"></div> Eleve</div>
       <div class="legend-item"><div class="legend-dot" style="background:rgba(92,99,71,0.3)"></div> Moyen</div>
       <div class="legend-item"><div class="legend-dot" style="background:var(--beige3)"></div> Passe</div>
@@ -41,12 +41,12 @@ const base = import.meta.env.BASE_URL;
   .legend-dot{width:10px;height:10px;border-radius:50%;}
 
   .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
-  .fbtn{padding:6px 14px;border-radius:4px;border:1px solid var(--border-medium);background:var(--beige);font-size:13px;color:var(--noir);cursor:pointer;font-family:inherit;transition:all .15s;}
-  .fbtn:hover{background:var(--beige2);}
-  .fbtn.active{background:var(--kaki);border-color:var(--kaki);color:var(--bg-primary);}
+  .fbtn{padding:6px 14px;border-radius:8px;border:0.5px solid #E4E4E2;background:#FFFFFF;font-size:13px;color:#111110;cursor:pointer;font-family:inherit;transition:all .15s;}
+  .fbtn:hover{background:#F0F0EE;}
+  .fbtn.active{background:#F43F5E;border-color:#F43F5E;color:#FFFFFF;}
 
   .timeline{position:relative;padding-left:28px;}
-  .timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border-light);}
+  .timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:#E4E4E2;}
 
   .loading{text-align:center;padding:60px;color:var(--text-secondary);font-size:14px;}
 
@@ -56,7 +56,7 @@ const base = import.meta.env.BASE_URL;
 </style>
 
 <style is:global>
-  .rm-stat{flex:1;background:var(--bg-primary);border:1px solid var(--border-light);border-radius:0;padding:16px 18px;box-shadow:none;}
+  .rm-stat{flex:1;background:#FFFFFF;border:0.5px solid #E4E4E2;border-radius:8px;padding:16px 18px;box-shadow:none;}
   .rm-stat-val{font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:300;line-height:1;margin-bottom:4px;}
   .rm-stat-lbl{font-size:12px;color:var(--text-secondary);}
   .rm-stat.red .rm-stat-val{color:var(--noir);}
@@ -66,30 +66,30 @@ const base = import.meta.env.BASE_URL;
   .tl-year{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;letter-spacing:1px;color:var(--text-secondary);text-transform:uppercase;margin:28px 0 14px -28px;}
 
   .tl-item{position:relative;margin-bottom:12px;}
-  .tl-dot{position:absolute;left:-24px;top:18px;width:12px;height:12px;border-radius:50%;border:2px solid var(--bg-primary);z-index:1;}
-  .tl-dot.critical{background:#5C6347;}
-  .tl-dot.high{background:rgba(92,99,71,0.7);}
-  .tl-dot.medium{background:rgba(92,99,71,0.4);}
-  .tl-dot.low{background:rgba(92,99,71,0.3);}
-  .tl-dot.passed{background:var(--beige3);}
+  .tl-dot{position:absolute;left:-24px;top:18px;width:12px;height:12px;border-radius:50%;border:2px solid #FFFFFF;z-index:1;}
+  .tl-dot.critical{background:#C0304A;}
+  .tl-dot.high{background:#9A4F1A;}
+  .tl-dot.medium{background:#7A7A20;}
+  .tl-dot.low{background:#737370;}
+  .tl-dot.passed{background:#DDDDD9;}
 
-  .rm-card{background:var(--bg-primary);border:1px solid var(--border-light);border-radius:0;padding:18px 20px;transition:all .15s;cursor:pointer;box-shadow:none;}
-  .rm-card:hover{border-color:var(--kaki);}
+  .rm-card{background:#FFFFFF;border:0.5px solid #E4E4E2;border-radius:8px;padding:18px 20px;transition:all .15s;cursor:pointer;box-shadow:none;}
+  .rm-card:hover{border-color:#F43F5E;}
   .rm-card.passed{opacity:.55;}
-  .rm-card.imminent{border-left:4px solid #5C6347;}
-  .rm-card.soon{border-left:4px solid rgba(92,99,71,0.5);}
+  .rm-card.imminent{border-left:4px solid #C0304A;}
+  .rm-card.soon{border-left:4px solid #9A4F1A;}
 
   .rm-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
   .rm-card-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-  .rm-card-ref{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5C6347;background:rgba(92,99,71,0.1);padding:3px 7px;border-radius:0;}
+  .rm-card-ref{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#F43F5E;background:#FFF5F7;padding:3px 7px;border-radius:8px;}
   .rm-card-reg{font-size:12px;font-weight:500;color:var(--noir);}
   .rm-card-type{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-secondary);}
 
   .rm-card-date{text-align:right;flex-shrink:0;}
   .date-main{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--noir);}
   .date-delta{font-size:11px;margin-top:2px;}
-  .date-delta.imminent{color:#8B2F1F;}
-  .date-delta.soon{color:#5C6347;}
+  .date-delta.imminent{color:#C0304A;}
+  .date-delta.soon{color:#9A4F1A;}
   .date-delta.upcoming{color:var(--text-secondary);}
   .date-delta.passed{color:var(--text-secondary);}
 
@@ -98,8 +98,8 @@ const base = import.meta.env.BASE_URL;
   .rm-card.open .rm-card-desc{display:block;}
 
   .rm-card-bottom{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-  .proc-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 7px;border-radius:0;background:rgba(92,99,71,0.1);color:#5C6347;border:1px solid rgba(92,99,71,0.2);}
-  .fresh-badge{font-size:11px;color:#5C6347;margin-left:auto;}
+  .proc-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 7px;border-radius:8px;background:#FFF5F7;color:#F43F5E;border:0.5px solid #E4E4E2;}
+  .fresh-badge{font-size:11px;color:#F43F5E;margin-left:auto;}
 </style>
 
 <script>

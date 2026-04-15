@@ -4,60 +4,44 @@ interface Props {
 }
 const { activePage = '' } = Astro.props;
 const base = import.meta.env.BASE_URL;
-
-const primary = [
-  { href: 'dashboard', label: 'Inbox' },
-  { href: 'procedure', label: 'Proc\u00e9dures' },
-  { href: 'controle', label: 'Contr\u00f4le', hasBadge: true },
-  { href: 'bibliotheque', label: 'Biblioth\u00e8que' },
-];
-
-const secondary = [
-  { href: 'conformite', label: 'Conformit\u00e9' },
-  { href: 'gap-analysis', label: 'Gap Analysis' },
-  { href: 'archives', label: 'Archives' },
-  { href: 'mes-procedures', label: 'Mes Proc\u00e9dures' },
-  { href: 'situations', label: 'Fiches R\u00e9flexes' },
-  { href: 'roadmap', label: 'Roadmap' },
-  { href: 'pays-risque', label: 'Pays \u00e0 risque' },
-  { href: 'settings', label: 'Param\u00e8tres' },
-];
 ---
 
-<div class="header-wrap">
-  <header class="header">
-    <div class="flex items-center gap-24">
-      <a href={`${base}dashboard`} class="logo">Early <span>Watch</span></a>
-      <nav class="nav-primary">
-        {primary.map(link => (
-          <a
-            href={`${base}${link.href}`}
-            class:list={[{ active: activePage === link.href }]}
-          >
-            {link.label}
-            {link.hasBadge && (
-              <span id="nav-badge-ctrl" class="nav-badge" style="display:none"></span>
-            )}
-          </a>
-        ))}
-      </nav>
-    </div>
-    <div class="flex items-center gap-12">
-      <span id="nav-tenant" class="badge badge-accent" style="display:none"></span>
-      <a id="nav-avatar" href={`${base}account`} class="avatar" style="text-decoration:none">?</a>
-    </div>
-  </header>
-  <nav class="header-sub">
-    {secondary.map(link => (
-      <a
-        href={`${base}${link.href}`}
-        class:list={[{ active: activePage === link.href }]}
-      >
-        {link.label}
-      </a>
-    ))}
-  </nav>
-</div>
+<aside class="sidebar-nav">
+  <a href={`${base}dashboard`} class="sidebar-logo">Early <span>Watch</span></a>
+
+  <div class="sidebar-section">Veille</div>
+  <a href={`${base}dashboard`} class:list={['nav-item', { active: activePage === 'dashboard' }]}>Inbox</a>
+  <a href={`${base}archives`} class:list={['nav-item', { active: activePage === 'archives' }]}>Archives</a>
+  <a href={`${base}enforcement`} class:list={['nav-item', { active: activePage === 'enforcement' }]}>Sanctions</a>
+
+  <div class="sidebar-section">Conformite</div>
+  <a href={`${base}conformite`} class:list={['nav-item', { active: activePage === 'conformite' }]}>Tableau de bord</a>
+  <a href={`${base}controle`} class:list={['nav-item', { active: activePage === 'controle' }]}>
+    Controle
+    <span id="nav-badge-ctrl" class="badge-count" style="display:none"></span>
+  </a>
+  <a href={`${base}gap-analysis`} class:list={['nav-item', { active: activePage === 'gap-analysis' }]}>Gap Analysis</a>
+
+  <div class="sidebar-section">Procedures</div>
+  <a href={`${base}procedure`} class:list={['nav-item', { active: activePage === 'procedure' }]}>Generateur</a>
+  <a href={`${base}mes-procedures`} class:list={['nav-item', { active: activePage === 'mes-procedures' }]}>Mes Procedures</a>
+  <a href={`${base}bibliotheque`} class:list={['nav-item', { active: activePage === 'bibliotheque' }]}>Bibliotheque</a>
+
+  <div class="sidebar-section">Referenciel</div>
+  <a href={`${base}situations`} class:list={['nav-item', { active: activePage === 'situations' }]}>Fiches Reflexes</a>
+  <a href={`${base}roadmap`} class:list={['nav-item', { active: activePage === 'roadmap' }]}>Roadmap</a>
+  <a href={`${base}pays-risque`} class:list={['nav-item', { active: activePage === 'pays-risque' }]}>Pays a risque</a>
+
+  <div class="sidebar-footer">
+    <a href={`${base}settings`} class:list={['nav-item', { active: activePage === 'settings' }]} style="padding-left:0">
+      Parametres
+    </a>
+    <a id="nav-avatar" href={`${base}account`} class="nav-item" style="padding-left:0;margin-top:4px">
+      <span class="avatar" style="width:24px;height:24px;font-size:9px;margin-right:8px">?</span>
+      <span id="nav-user-name" style="font-size:12px;color:var(--ew-text-muted)">Mon compte</span>
+    </a>
+  </div>
+</aside>
 
 <script>
   import { getUser, loadReminderBadge } from '../scripts/api';
@@ -67,22 +51,18 @@ const secondary = [
     if (!user) return;
 
     const initials = (user.first_name?.[0] || '') + (user.last_name?.[0] || '');
-    const avatar = document.getElementById('nav-avatar');
-    if (avatar) {
-      avatar.textContent = initials || '?';
-      avatar.title = `${user.email || ''} — Mon compte`;
-    }
+    const avatarSpan = document.querySelector('#nav-avatar .avatar');
+    if (avatarSpan) avatarSpan.textContent = initials || '?';
 
-    const tenant = document.getElementById('nav-tenant');
-    if (tenant && user.tenant_id) {
-      tenant.textContent = 'DEMO';
-      tenant.style.display = 'inline-flex';
+    const nameSpan = document.getElementById('nav-user-name');
+    if (nameSpan) {
+      const name = [user.first_name, user.last_name].filter(Boolean).join(' ');
+      nameSpan.textContent = name || 'Mon compte';
     }
 
     loadReminderBadge();
   }
 
-  // Run on initial load and on Astro page transitions
   initNav();
   document.addEventListener('astro:after-swap', initNav);
 </script>
