@@ -102,7 +102,7 @@ export function formatTime(d) {
 // ---- Badge helpers ----
 export function statusBadge(status) {
   const map = {
-    nouveau: ['Nouveau', 'badge-accent'],
+    nouveau: ['Nouveau', 'badge-kaki'],
     important: ['Important', 'badge-warning'],
     quotidien: ['Quotidien', 'badge-accent'],
     hebdo: ['Hebdo', 'badge-neutral'],

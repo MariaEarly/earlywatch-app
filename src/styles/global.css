@@ -295,11 +295,11 @@ h3 { font-size: 13px; font-weight: 500; }
 .btn-warning { background: transparent; color: var(--color-warning); border: 0.5px solid #F5C89A; }
 .btn-warning:hover:not(:disabled) { background: #FFF8F0; }
 
-/* Triage buttons — ghost style */
+/* Triage buttons — subtle bordered style */
 .btn-triage {
-  background: transparent;
-  color: var(--ew-text-secondary);
-  border: none;
+  background: #FFFFFF;
+  color: #737370;
+  border: 0.5px solid #E4E4E2;
   border-radius: var(--ew-radius);
   font-size: 12px;
   padding: 6px 12px;
@@ -308,7 +308,7 @@ h3 { font-size: 13px; font-weight: 500; }
   transition: all 0.15s;
 }
 .btn-triage:hover:not(:disabled) {
-  background: var(--ew-surface);
+  background: #F4F4F3;
   color: var(--ew-text);
 }
 .article-actions .btn-triage:nth-child(1).btn-triage-active,
