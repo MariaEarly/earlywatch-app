@@ -564,21 +564,22 @@ label {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 3px 0;
-  border-radius: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 13px;
   color: var(--ew-text-secondary);
-  transition: color 0.1s;
+  transition: all 0.1s;
   border: none;
   background: none;
   width: 100%;
   text-align: left;
   font-family: inherit;
 }
-.filter-item:hover { color: var(--ew-text); }
+.filter-item:hover { color: var(--ew-text); background: var(--ew-surface); }
 .filter-item.active {
-  color: var(--ew-kaki-text);
+  background: #EFF4E6;
+  color: #4A5C2A;
   font-weight: 500;
 }
 .filter-item.active .filter-count { color: var(--ew-kaki-text); opacity: 0.85; }
