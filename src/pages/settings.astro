@@ -154,6 +154,30 @@ const base = import.meta.env.BASE_URL;
   .wiz-btn-next { background: #5C6347; color: #fff; border-color: #5C6347; }
   .wiz-btn-save { background: #5C6347; color: #fff; border-color: #5C6347; }
   .wiz-btn:hover { opacity: 0.9; }
+
+  /* Services fournis */
+  .svc-group-title {
+    font-size: 11px; font-weight: 600; color: #5C6347; text-transform: uppercase;
+    letter-spacing: 0.06em; margin: 12px 0 8px; padding-bottom: 4px;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .svc-check {
+    display: flex; align-items: center; gap: 8px; padding: 6px 0;
+    font-size: 13px; color: var(--noir); cursor: pointer;
+  }
+  .svc-check input[type="checkbox"] {
+    width: 16px; height: 16px; accent-color: #5C6347; cursor: pointer;
+  }
+  .svc-check.disabled { opacity: 0.7; cursor: default; }
+  .svc-check.disabled input { cursor: default; }
+  .svc-legal-ref {
+    font-size: 11px; font-style: italic; color: var(--color-text-tertiary);
+    margin-top: 8px;
+  }
+  .svc-separator {
+    margin: 14px 0 6px; padding-top: 10px;
+    border-top: 1px dashed var(--color-border);
+  }
 </style>
 
 <script>
@@ -172,6 +196,96 @@ const base = import.meta.env.BASE_URL;
     { value: 'IFP', label: 'Intermediaire en financement participatif' },
     { value: 'OTHER', label: 'Autre' },
   ];
+
+  // ═══ Services fournis — listes CMF par type d'entité ═══
+  const PSP_SERVICES: any[] = [
+    { code: 'psp_versement_retrait', label: 'Versement / retrait d\'especes sur compte de paiement' },
+    { code: 'psp_prelevement', label: 'Prelevement' },
+    { code: 'psp_paiement_carte', label: 'Paiement par carte' },
+    { code: 'psp_virement', label: 'Virement' },
+    { code: 'psp_emission_instrument', label: 'Emission d\'instrument de paiement' },
+    { code: 'psp_acquisition', label: 'Acquisition d\'operations de paiement' },
+    { code: 'psp_transmission_fonds', label: 'Transmission de fonds' },
+    { code: 'psp_initiation', label: 'Initiation de paiement (DSP2)' },
+    { code: 'psp_information_comptes', label: 'Information sur les comptes (DSP2)' },
+  ];
+  const CASP_OBLIGATOIRE: any[] = [
+    { code: 'casp_conservation', label: 'Conservation pour compte de tiers d\'actifs numeriques' },
+    { code: 'casp_achat_vente', label: 'Achat / vente d\'actifs numeriques contre monnaie legale' },
+    { code: 'casp_echange', label: 'Echange d\'actifs numeriques contre d\'autres actifs numeriques' },
+    { code: 'casp_plateforme', label: 'Exploitation d\'une plateforme de negociation' },
+  ];
+  const CASP_AGREMENT: any[] = [
+    { code: 'casp_rto', label: 'Reception et transmission d\'ordres pour compte de tiers' },
+    { code: 'casp_gestion_portefeuille', label: 'Gestion de portefeuille d\'actifs numeriques pour compte de tiers' },
+    { code: 'casp_conseil', label: 'Conseil aux souscripteurs d\'actifs numeriques' },
+    { code: 'casp_prise_ferme', label: 'Prise ferme / placement garanti / placement non garanti' },
+  ];
+
+  const REG_PRESELECTION: any = {
+    PSP: ['LCB-FT', 'DSP2', 'DORA'],
+    EME: ['LCB-FT', 'DSP2', 'DORA'],
+    Banque: ['LCB-FT', 'DORA', 'AMLR'],
+    CASP: ['LCB-FT', 'MiCA', 'AMLR'],
+  };
+
+  function renderServicesSection(entityType: string, currentServices: string[]): string {
+    if (!entityType) return '';
+    let html = '<label style="display:block;font-size:12px;font-weight:500;color:var(--noir);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.1em">Services fournis</label>';
+
+    if (entityType === 'Banque') {
+      // Two toggles only
+      const creditChecked = currentServices.includes('banque_credit') || !currentServices.length;
+      const corrChecked = currentServices.includes('banque_correspondance');
+      html += `
+        <div class="toggle-row" style="margin:4px 0">
+          <div><div class="toggle-label">Activite de credit</div></div>
+          <label class="toggle"><input type="checkbox" class="svc-banque-toggle" data-svc="banque_credit" ${creditChecked ? 'checked' : ''}><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row" style="margin:4px 0">
+          <div><div class="toggle-label">Correspondance bancaire</div></div>
+          <label class="toggle"><input type="checkbox" class="svc-banque-toggle" data-svc="banque_correspondance" ${corrChecked ? 'checked' : ''}><span class="toggle-slider"></span></label>
+        </div>
+        <div class="svc-legal-ref">Les operations de banque (reception de fonds, credit, paiement) sont presumees pour tout etablissement de credit agree — Article L.311-1 CMF</div>
+      `;
+      return html;
+    }
+
+    if (entityType === 'PSP') {
+      html += PSP_SERVICES.map(s =>
+        `<label class="svc-check"><input type="checkbox" class="svc-cb" data-svc="${s.code}" ${currentServices.includes(s.code) ? 'checked' : ''}> ${s.label}</label>`
+      ).join('');
+      html += '<div class="svc-legal-ref">Article L.314-1 II CMF</div>';
+      return html;
+    }
+
+    if (entityType === 'EME') {
+      // Fixed non-décochable
+      html += `<label class="svc-check disabled"><input type="checkbox" class="svc-cb" data-svc="eme_emission_gestion" checked disabled> Emission et gestion de monnaie electronique</label>`;
+      html += '<hr style="margin:8px 0;border:none;border-top:1px solid var(--color-border)">';
+      html += PSP_SERVICES.map(s =>
+        `<label class="svc-check"><input type="checkbox" class="svc-cb" data-svc="${s.code}" ${currentServices.includes(s.code) ? 'checked' : ''}> ${s.label}</label>`
+      ).join('');
+      html += '<div class="svc-legal-ref">Articles L.315-1 et L.526-1 CMF</div>';
+      return html;
+    }
+
+    if (entityType === 'CASP') {
+      html += '<div class="svc-group-title">Services necessitant un enregistrement obligatoire (1° a 4°)</div>';
+      html += CASP_OBLIGATOIRE.map(s =>
+        `<label class="svc-check"><input type="checkbox" class="svc-cb" data-svc="${s.code}" ${currentServices.includes(s.code) ? 'checked' : ''}> ${s.label}</label>`
+      ).join('');
+      html += '<div class="svc-separator"></div>';
+      html += '<div class="svc-group-title">Services necessitant un agrement optionnel (5°)</div>';
+      html += CASP_AGREMENT.map(s =>
+        `<label class="svc-check"><input type="checkbox" class="svc-cb" data-svc="${s.code}" ${currentServices.includes(s.code) ? 'checked' : ''}> ${s.label}</label>`
+      ).join('');
+      html += '<div class="svc-legal-ref">Article L.54-10-2 CMF</div>';
+      return html;
+    }
+
+    return '';
+  }
 
   const ALL_REGULATIONS: string[] = ['LCB-FT', 'DORA', 'DSP2', 'MiCA', 'AI Act', 'AMLR', 'PSD3', 'RGPD'];
   const SEVERITIES: string[] = ['critical', 'high', 'medium', 'low'];
@@ -267,10 +381,6 @@ const base = import.meta.env.BASE_URL;
           </div>
           <div class="st-form-row">
             <div class="st-form-group">
-              <label>Sous-type</label>
-              <input type="text" id="f-entity-subtype" value="${s.entity_subtype || ''}">
-            </div>
-            <div class="st-form-group">
               <label>N ACPR / AMF</label>
               <input type="text" id="f-acpr" value="${s.acpr_number || ''}" placeholder="Ex: 12345">
             </div>
@@ -312,6 +422,10 @@ const base = import.meta.env.BASE_URL;
                 <label class="wiz-radio ${resolvedEntityType === 'CASP' ? 'selected' : ''}"><input type="radio" name="wiz-entity" value="CASP" ${resolvedEntityType === 'CASP' ? 'checked' : ''}> CASP</label>
                 <label class="wiz-radio ${resolvedEntityType === 'EME' ? 'selected' : ''}"><input type="radio" name="wiz-entity" value="EME" ${resolvedEntityType === 'EME' ? 'checked' : ''}> EME</label>
               </div>
+            </div>
+            <!-- Services fournis (conditionnel selon entity_type) -->
+            <div id="services-section" style="margin-top:16px;${resolvedEntityType ? '' : 'display:none'}">
+              <div id="services-content"></div>
             </div>
           </div>
 
@@ -583,6 +697,27 @@ const base = import.meta.env.BASE_URL;
     document.getElementById('save-bar')!.classList.add('visible');
   }
 
+  function collectServices(entityType: string): string[] {
+    if (entityType === 'Banque') {
+      // Banque: collect toggle values as service codes
+      const svcs: string[] = [];
+      document.querySelectorAll('.svc-banque-toggle').forEach((el: any) => {
+        if (el.checked) svcs.push(el.dataset.svc);
+      });
+      return svcs;
+    }
+    // PSP, EME, CASP: collect checked checkboxes
+    const svcs: string[] = [];
+    document.querySelectorAll('.svc-cb').forEach((el: any) => {
+      if (el.checked) svcs.push(el.dataset.svc);
+    });
+    // EME: always include eme_emission_gestion (disabled checkbox)
+    if (entityType === 'EME' && !svcs.includes('eme_emission_gestion')) {
+      svcs.unshift('eme_emission_gestion');
+    }
+    return svcs;
+  }
+
   async function saveAll(): Promise<void> {
     try {
       const regs: string[] = Array.from(document.querySelectorAll('#chips-reg .st-chip.active')).map((c: any) => c.dataset.reg);
@@ -602,7 +737,6 @@ const base = import.meta.env.BASE_URL;
         body: {
           name: (document.getElementById('f-name') as HTMLInputElement).value,
           entity_type: wizEntity || (document.getElementById('f-entity-type') as HTMLSelectElement).value,
-          entity_subtype: (document.getElementById('f-entity-subtype') as HTMLInputElement).value,
           acpr_number: (document.getElementById('f-acpr') as HTMLInputElement).value,
           regulations: regs,
           alert_email_enabled: (document.getElementById('f-alert-email') as HTMLInputElement).checked,
@@ -616,6 +750,7 @@ const base = import.meta.env.BASE_URL;
           profil: {
             nom_etablissement: (document.getElementById('f-profil-nom') as HTMLInputElement)?.value || '',
             entity_type: wizEntity,
+            services: collectServices(wizEntity),
           },
           conformite: {
             responsable_lcbft_nom: respNom,
@@ -760,6 +895,12 @@ const base = import.meta.env.BASE_URL;
     });
   }
 
+  function bindServicesEvents(): void {
+    document.querySelectorAll('.svc-cb, .svc-banque-toggle').forEach((el: any) => {
+      el.addEventListener('change', markChanged);
+    });
+  }
+
   function onEntityTypeChange(entityType: string): void {
     // Blockchain analytics: visible only for CASP
     const bc: HTMLElement | null = document.getElementById('blockchain-section');
@@ -770,6 +911,28 @@ const base = import.meta.env.BASE_URL;
     // Correspondance bancaire: Banque only
     const cb: HTMLElement | null = document.getElementById('toggle-correspondance');
     if (cb) cb.style.display = entityType === 'Banque' ? '' : 'none';
+
+    // Render services section
+    const svcEl: HTMLElement | null = document.getElementById('services-content');
+    const svcSection: HTMLElement | null = document.getElementById('services-section');
+    if (svcEl) {
+      svcEl.innerHTML = renderServicesSection(entityType, []);
+      if (svcSection) svcSection.style.display = entityType ? '' : 'none';
+      bindServicesEvents();
+    }
+
+    // Preselect regulations if currently empty
+    const regChips: NodeListOf<Element> = document.querySelectorAll('#chips-reg .st-chip');
+    const activeRegs: Element[] = Array.from(regChips).filter((c: any) => c.classList.contains('active'));
+    if (activeRegs.length === 0 && REG_PRESELECTION[entityType]) {
+      const presel: string[] = REG_PRESELECTION[entityType];
+      regChips.forEach((chip: any) => {
+        if (presel.includes(chip.dataset.reg)) {
+          chip.classList.add('active');
+        }
+      });
+      markChanged();
+    }
   }
 
   // Initialize after render
@@ -778,6 +941,18 @@ const base = import.meta.env.BASE_URL;
     _origRender(data);
     initWizard();
     showWizStep(1);
+    // Render services for current entity type
+    const s: any = data.settings || {};
+    const profil_v2_init: any = s.profil || {};
+    const currentET: string = profil_v2_init.entity_type || s.entity_type || '';
+    const currentSvc: string[] = profil_v2_init.services || [];
+    const svcEl: HTMLElement | null = document.getElementById('services-content');
+    const svcSection: HTMLElement | null = document.getElementById('services-section');
+    if (svcEl && currentET) {
+      svcEl.innerHTML = renderServicesSection(currentET, currentSvc);
+      if (svcSection) svcSection.style.display = '';
+      bindServicesEvents();
+    }
   };
 
   loadSettings();
