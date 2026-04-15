@@ -83,7 +83,7 @@ const base = import.meta.env.BASE_URL;
       </div>
       <div style="padding:14px 24px;border-top:0.5px solid #E4E4E2;display:flex;gap:10px;justify-content:flex-end">
         <button id="cloturer-cancel" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:7px 18px;border:0.5px solid #E4E4E2;background:transparent;color:#111110;border-radius:8px;cursor:pointer">Annuler</button>
-        <button id="cloturer-confirm" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:7px 18px;border:none;background:#F43F5E;color:white;border-radius:8px;cursor:pointer">Clôturer quand même</button>
+        <button id="cloturer-confirm" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:7px 18px;border:none;background:#111110;color:white;border-radius:8px;cursor:pointer">Clôturer quand même</button>
       </div>
     </div>
   </div>
@@ -431,7 +431,7 @@ const base = import.meta.env.BASE_URL;
         const articleId = el.dataset.fixDate;
         const parent = el.parentElement;
         if (!parent) return;
-        parent.innerHTML = `<input type="date" class="date-fix-input" data-date-article="${articleId}" style="font-size:11px;padding:1px 4px;border:0.5px solid #E4E4E2;border-radius:8px;font-family:'IBM Plex Sans',sans-serif;background:#FFFFFF"><button class="date-fix-ok" data-date-ok="${articleId}" style="font-size:10px;margin-left:3px;padding:1px 6px;border:1px solid #F43F5E;border-radius:8px;background:#F43F5E;color:#fff;cursor:pointer">OK</button>`;
+        parent.innerHTML = `<input type="date" class="date-fix-input" data-date-article="${articleId}" style="font-size:11px;padding:1px 4px;border:0.5px solid #E4E4E2;border-radius:8px;font-family:'IBM Plex Sans',sans-serif;background:#FFFFFF"><button class="date-fix-ok" data-date-ok="${articleId}" style="font-size:10px;margin-left:3px;padding:1px 6px;border:1px solid #111110;border-radius:8px;background:#111110;color:#fff;cursor:pointer">OK</button>`;
         parent.querySelector('.date-fix-ok')!.addEventListener('click', async (ev: any) => {
           ev.stopPropagation();
           const input = parent.querySelector('.date-fix-input') as HTMLInputElement;
@@ -781,7 +781,7 @@ const base = import.meta.env.BASE_URL;
       el.addEventListener('dragover', (e: DragEvent) => {
         e.preventDefault();
         e.dataTransfer!.dropEffect = 'move';
-        el.style.border = '1px dashed #F43F5E';
+        el.style.border = '1px dashed #111110';
       });
       el.addEventListener('dragleave', () => {
         el.style.border = '0.5px solid #E4E4E2';
@@ -831,7 +831,7 @@ const base = import.meta.env.BASE_URL;
       await navigator.clipboard.writeText(text);
       const original = btn.textContent;
       btn.textContent = '\u2713 Copi\u00e9 !';
-      btn.style.color = '#F43F5E';
+      btn.style.color = '#111110';
       btn.style.fontWeight = '500';
       setTimeout(() => {
         btn.textContent = original;
@@ -1056,11 +1056,11 @@ const base = import.meta.env.BASE_URL;
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: #FEF2F2;
-    color: #F43F5E;
+    background: var(--ew-danger-bg);
+    color: var(--ew-danger-text);
     font-size: 11px;
     padding: 2px 10px;
-    border-radius: 4px;
+    border-radius: var(--ew-radius-sm);
     flex-wrap: wrap;
   }
   .triage-reset {
@@ -1076,32 +1076,28 @@ const base = import.meta.env.BASE_URL;
 
   /* Tracker button & drawer */
   .btn-tracker {
-    /* Ghost style with coral accent */
-    color: var(--ew-coral);
-    border: none;
-    background: transparent;
+    color: var(--ew-text-secondary);
   }
-  .btn-tracker:hover { background: var(--ew-coral-medium); color: var(--ew-coral-text); }
+  .btn-tracker:hover { background: var(--ew-surface); color: var(--ew-text); }
   .btn-tracker-pending::after {
     content: '';
     display: inline-block;
     width: 6px;
     height: 6px;
-    background-color: #F43F5E;
+    background-color: var(--ew-kaki);
     border-radius: 50%;
     margin-left: 6px;
     vertical-align: middle;
   }
-  .btn-tracker-pending:hover::after { background-color: white; }
 
   .badge-tracker-added {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
     padding: 2px 8px;
-    background: var(--ew-kaki);
-    color: var(--ew-kaki-text);
+    background: var(--ew-kaki-bg);
+    color: var(--ew-kaki);
     border: 0.5px solid var(--ew-kaki-border);
-    border-radius: 8px;
+    border-radius: var(--ew-radius-sm);
   }
 
   #tracker-overlay {
@@ -1139,7 +1135,7 @@ const base = import.meta.env.BASE_URL;
     background: white;
     color: #111110;
   }
-  .tracker-input:focus { outline: none; border-color: #F43F5E; }
+  .tracker-input:focus { outline: none; border-color: var(--ew-kaki); }
 
   /* Clôturer confirmation modal */
   #cloturer-overlay {

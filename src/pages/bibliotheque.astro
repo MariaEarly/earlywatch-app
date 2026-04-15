@@ -75,14 +75,14 @@ const base = import.meta.env.BASE_URL;
     cursor: pointer; font-family: inherit; transition: all 0.15s;
   }
   .filter-btn:hover { background: #F0F0EE; }
-  .filter-btn.active { background: #F43F5E; border-color: #F43F5E; color: #FFFFFF; }
+  .filter-btn.active { background: var(--ew-text); border-color: var(--ew-text); color: #FFFFFF; }
 
   .search-input {
     padding: 8px 14px; border: 0.5px solid #E4E4E2;
     border-radius: 8px; font-size: 14px; font-family: inherit;
     width: 260px; color: #111110; background: #FFFFFF;
   }
-  .search-input:focus { outline: none; border-color: #F43F5E; }
+  .search-input:focus { outline: none; border-color: var(--ew-kaki); }
   .search-input::placeholder { color: var(--color-text-tertiary); }
 
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
@@ -95,19 +95,19 @@ const base = import.meta.env.BASE_URL;
     padding: 20px; display: flex; flex-direction: column; gap: 14px;
     transition: border-color 0.15s; box-shadow: none;
   }
-  .bib-card:hover { border-color: #F43F5E; }
+  .bib-card:hover { border-color: var(--ew-border-strong); }
 
   .bib-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
   .bib-card-ref {
-    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #F43F5E;
-    background: #FFF5F7; padding: 3px 8px; border-radius: 8px; border: 0.5px solid #E4E4E2; white-space: nowrap;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ew-text-secondary);
+    background: var(--ew-surface); padding: 3px 8px; border-radius: 8px; border: 0.5px solid #E4E4E2; white-space: nowrap;
   }
 
   .bib-freshness-badge {
     display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500;
     padding: 4px 10px; border-radius: 8px; white-space: nowrap; cursor: pointer; border: 1px solid transparent;
   }
-  .bib-freshness-badge.hot { background: #FFF0F3; color: #C0304A; border-color: #C0304A; }
+  .bib-freshness-badge.hot { background: var(--ew-danger-bg); color: var(--ew-danger-text); border-color: var(--ew-danger-text); }
   .bib-freshness-badge.warm { background: #FFF8F0; color: #9A4F1A; border-color: #9A4F1A; }
   .bib-freshness-badge.ok { background: #F0FBF4; color: #1A6B3A; border-color: #1A6B3A; }
   .bib-freshness-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
@@ -125,20 +125,20 @@ const base = import.meta.env.BASE_URL;
   .bib-linked-articles-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 10px; }
   .bib-article-item { padding: 8px 10px; border-radius: 8px; background: #F4F4F3; margin-bottom: 6px; display: flex; flex-direction: column; gap: 3px; }
   .bib-article-item-title { font-size: 13px; color: var(--noir); font-weight: 500; text-decoration: none; line-height: 1.3; }
-  .bib-article-item-title:hover { color: #F43F5E; }
+  .bib-article-item-title:hover { color: var(--ew-text); }
   .bib-article-item-meta { font-size: 11px; color: var(--color-text-tertiary); display: flex; gap: 8px; flex-wrap: wrap; }
-  .bib-article-theme-tag { font-size: 10px; padding: 1px 5px; border-radius: 8px; background: #FFF5F7; color: #F43F5E; border: 0.5px solid #E4E4E2; }
+  .bib-article-theme-tag { font-size: 10px; padding: 1px 5px; border-radius: 8px; background: var(--ew-surface); color: var(--ew-text-secondary); border: 0.5px solid #E4E4E2; }
   .bib-no-articles { font-size: 13px; color: var(--color-text-tertiary); font-style: italic; }
 
   .bib-card-actions { display: flex; gap: 10px; align-items: center; margin-top: auto; }
   .bib-btn-download {
-    flex: 1; padding: 9px 16px; background: #F43F5E; color: #FFFFFF;
-    border: 1px solid #F43F5E; border-radius: 8px; font-size: 13px; font-weight: 500;
+    flex: 1; padding: 9px 16px; background: var(--ew-text); color: #FFFFFF;
+    border: 1px solid var(--ew-text); border-radius: 8px; font-size: 13px; font-weight: 500;
     cursor: pointer; text-decoration: none; text-align: center; font-family: inherit;
     display: flex; align-items: center; justify-content: center; gap: 6px;
     transition: background 0.15s; box-shadow: none;
   }
-  .bib-btn-download:hover { background: #C0304A; }
+  .bib-btn-download:hover { background: #333331; }
   .bib-btn-articles-toggle {
     padding: 9px 14px; background: #FFFFFF; color: #111110;
     border: 0.5px solid #E4E4E2; border-radius: 8px; font-size: 13px;
@@ -147,7 +147,7 @@ const base = import.meta.env.BASE_URL;
     box-shadow: none;
   }
   .bib-btn-articles-toggle:hover { background: #F0F0EE; }
-  .bib-btn-articles-toggle.active { background: #F43F5E; color: #FFFFFF; }
+  .bib-btn-articles-toggle.active { background: var(--ew-text); color: #FFFFFF; }
 </style>
 
 <script>

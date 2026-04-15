@@ -32,7 +32,7 @@ const base = import.meta.env.BASE_URL;
   }
   :global(.save-bar.visible) { display: block; }
   .btn-save {
-    padding: 10px 28px; background: #F43F5E; color: white;
+    padding: 10px 28px; background: var(--ew-text); color: white;
     border: none; border-radius: 8px; font-size: 14px;
     font-weight: 500; cursor: pointer; font-family: inherit;
     box-shadow: none; transition: all 0.15s;
@@ -64,7 +64,7 @@ const base = import.meta.env.BASE_URL;
     border-radius: 8px; font-size: 13px; font-family: inherit; background: white; color: var(--noir);
   }
   .st-form-group input:focus, .st-form-group select:focus {
-    outline: none; border-color: #F43F5E; box-shadow: none;
+    outline: none; border-color: var(--ew-text); box-shadow: none;
   }
 
   .toggle-row {
@@ -85,7 +85,7 @@ const base = import.meta.env.BASE_URL;
     left: 2px; bottom: 2px; background: white; border-radius: 50%;
     transition: 0.2s;
   }
-  .toggle input:checked + .toggle-slider { background: #F43F5E; }
+  .toggle input:checked + .toggle-slider { background: var(--ew-text); }
   .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
 
   .st-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
@@ -94,9 +94,9 @@ const base = import.meta.env.BASE_URL;
     font-size: 12px; cursor: pointer; font-family: inherit;
     background: var(--beige); color: var(--noir); transition: all 0.15s;
   }
-  .st-chip.active { background: #F43F5E; color: white; }
+  .st-chip.active { background: var(--ew-text); color: white; }
   .st-chip:hover { background: #F4F4F3; }
-  .st-chip.active:hover { background: #F43F5E; opacity: 0.9; }
+  .st-chip.active:hover { background: var(--ew-text); opacity: 0.9; }
 
   .users-table { width: 100%; font-size: 13px; }
   .users-table th {
@@ -123,11 +123,11 @@ const base = import.meta.env.BASE_URL;
     display: flex; align-items: center; justify-content: center; cursor: pointer;
     transition: all 0.2s; font-family: inherit;
   }
-  .wiz-dot.active { background: #F43F5E; color: #fff; border-color: #F43F5E; }
-  .wiz-dot.done { background: #FFF5F7; color: #C0304A; border-color: #FBBCC7; }
+  .wiz-dot.active { background: var(--ew-text); color: #fff; border-color: var(--ew-text); }
+  .wiz-dot.done { background: var(--ew-surface); color: var(--ew-text); border-color: var(--ew-border); }
   .wiz-line { flex: 1; height: 2px; background: var(--border-medium); }
   .wiz-step-label {
-    font-size: 12px; font-weight: 500; color: #F43F5E; margin-bottom: 16px;
+    font-size: 12px; font-weight: 500; color: var(--ew-text); margin-bottom: 16px;
     text-transform: uppercase; letter-spacing: 0.06em;
   }
   .wiz-step { min-height: 120px; }
@@ -140,8 +140,8 @@ const base = import.meta.env.BASE_URL;
     color: var(--noir); font-family: inherit;
   }
   .wiz-radio input { display: none; }
-  .wiz-radio.selected { background: #F43F5E; color: #fff; border-color: #F43F5E; }
-  .wiz-radio:hover { border-color: #F43F5E; }
+  .wiz-radio.selected { background: var(--ew-text); color: #fff; border-color: var(--ew-text); }
+  .wiz-radio:hover { border-color: var(--ew-text); }
 
   /* Wizard navigation */
   .wiz-nav { display: flex; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border); }
@@ -151,8 +151,8 @@ const base = import.meta.env.BASE_URL;
     transition: all 0.15s;
   }
   .wiz-btn-prev { background: var(--beige); color: var(--noir); }
-  .wiz-btn-next { background: #F43F5E; color: #fff; border-color: #F43F5E; }
-  .wiz-btn-save { background: #F43F5E; color: #fff; border-color: #F43F5E; }
+  .wiz-btn-next { background: var(--ew-text); color: #fff; border-color: var(--ew-text); }
+  .wiz-btn-save { background: var(--ew-text); color: #fff; border-color: var(--ew-text); }
   .wiz-btn:hover { opacity: 0.9; }
 
   /* Services fournis */
@@ -166,7 +166,7 @@ const base = import.meta.env.BASE_URL;
     font-size: 13px; color: var(--noir); cursor: pointer;
   }
   .svc-check input[type="checkbox"] {
-    width: 16px; height: 16px; accent-color: #F43F5E; cursor: pointer;
+    width: 16px; height: 16px; accent-color: var(--ew-text); cursor: pointer;
   }
   .svc-check.disabled { opacity: 0.7; cursor: default; }
   .svc-check.disabled input { cursor: default; }

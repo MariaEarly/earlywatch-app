@@ -91,7 +91,7 @@ const base = import.meta.env.BASE_URL;
     cursor: pointer; font-family: inherit; transition: all 0.15s;
   }
   .filter-btn:hover { background: #F0F0EE; }
-  .filter-btn.active { background: #F43F5E; border-color: #F43F5E; color: #FFFFFF; }
+  .filter-btn.active { background: var(--ew-text); border-color: var(--ew-text); color: #FFFFFF; }
 
   .legend {
     display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
@@ -102,7 +102,7 @@ const base = import.meta.env.BASE_URL;
   .dot-black { background: #1A1A17; }
   .dot-grey { background: #737370; }
   .dot-eu { background: #2E5090; }
-  .dot-hot { background: #C0304A; }
+  .dot-hot { background: var(--ew-danger-text); }
   .dot-warm { background: #9A4F1A; }
 
   .detail-panel {
@@ -156,17 +156,17 @@ const base = import.meta.env.BASE_URL;
   .edd-badge {
     display: inline-flex; align-items: center; gap: 3px;
     padding: 2px 8px; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400;
-    background: #FFF0F3; color: #C0304A; border: 1px solid #C0304A;
+    background: var(--ew-danger-bg); color: var(--ew-danger-text); border: 1px solid var(--ew-danger-text);
   }
 
   .cr-freshness-badge {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 2px 10px; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400; cursor: pointer;
   }
-  .cr-freshness-hot { background: #FFF0F3; color: #C0304A; border: 1px solid #C0304A; }
+  .cr-freshness-hot { background: var(--ew-danger-bg); color: var(--ew-danger-text); border: 1px solid var(--ew-danger-text); }
   .cr-freshness-warm { background: #FFF8F0; color: #9A4F1A; border: 1px solid #9A4F1A; }
   .cr-freshness-dot { width: 6px; height: 6px; border-radius: 50%; }
-  .cr-freshness-hot .cr-freshness-dot { background: #C0304A; }
+  .cr-freshness-hot .cr-freshness-dot { background: var(--ew-danger-text); }
   .cr-freshness-warm .cr-freshness-dot { background: #9A4F1A; }
 
   .acpr-badge {
@@ -181,7 +181,7 @@ const base = import.meta.env.BASE_URL;
     padding: 10px 14px; background: #F4F4F3; border: 0.5px solid #E4E4E2;
     border-radius: 8px; font-size: 13px;
   }
-  .cr-detail-article a { color: #F43F5E; font-weight: 500; text-decoration: none; }
+  .cr-detail-article a { color: var(--ew-text-secondary); font-weight: 500; text-decoration: none; }
   .cr-detail-article a:hover { text-decoration: underline; }
   .cr-detail-meta { font-size: 11px; color: var(--color-text-tertiary); margin-top: 3px; }
 </style>

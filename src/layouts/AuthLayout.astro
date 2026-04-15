@@ -27,7 +27,7 @@ const { title } = Astro.props;
       font-size: 13px; font-weight: 400; color: #111110;
       margin-bottom: 36px; text-align: center;
     }
-    .auth-brand span { font-weight: 500; color: #F43F5E; }
+    .auth-brand span { font-weight: 500; color: var(--ew-text); }
     .auth-subtitle {
       font-size: 13px; color: #737370; text-align: center;
       margin-bottom: 32px; line-height: 1.6;
@@ -44,7 +44,7 @@ const { title } = Astro.props;
       outline: none; margin-bottom: 24px; transition: border-color .15s;
       border-radius: 0;
     }
-    .auth-card input:focus { border-color: #F43F5E; }
+    .auth-card input:focus { border-color: var(--ew-text); }
     .auth-card input.error { border-color: #DC2626; margin-bottom: 6px; }
     /* Chrome autofill fix */
     .auth-card input:-webkit-autofill,
@@ -65,13 +65,13 @@ const { title } = Astro.props;
     .pwd-toggle:hover { color: #111110; }
     .auth-btn {
       width: 100%; padding: 13px;
-      background: #F43F5E; color: #fff;
+      background: var(--ew-text); color: #fff;
       border: none; border-radius: 8px;
       font-size: 14px; font-weight: 500;
       font-family: inherit; cursor: pointer;
       transition: background .15s; margin-top: 8px;
     }
-    .auth-btn:hover { background: #E0364F; }
+    .auth-btn:hover { background: #333331; }
     .auth-btn:disabled { opacity: .5; cursor: not-allowed; }
     .auth-error {
       font-size: 12px; color: #DC2626;
@@ -82,13 +82,13 @@ const { title } = Astro.props;
       font-size: 13px; text-align: center; margin-top: 16px;
       line-height: 1.6; display: none;
     }
-    .auth-msg.success { display: block; color: #1A6B3A; }
+    .auth-msg.success { display: block; color: var(--ew-success-text); }
     .auth-msg.error { display: block; color: #DC2626; }
     .auth-footer {
       margin-top: 24px; text-align: center;
       font-size: 12px; color: #737370;
     }
-    .auth-footer a { color: #F43F5E; text-decoration: none; }
+    .auth-footer a { color: var(--ew-text); text-decoration: none; }
     .auth-spinner {
       display: inline-block; width: 14px; height: 14px;
       border: 2px solid rgba(255,255,255,0.3);

@@ -40,12 +40,12 @@ const base = import.meta.env.BASE_URL;
   .proc-right { flex: 1; overflow-y: auto; background: #FFFFFF; }
 
   .prof-banner {
-    padding: 10px 16px; background: #FFF5F7; border-bottom: 0.5px solid #E4E4E2;
+    padding: 10px 16px; background: var(--ew-surface); border-bottom: 0.5px solid #E4E4E2;
     font-size: 12px; color: #737370; line-height: 1.4; border-radius: 8px;
   }
   .prof-link {
     display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600;
-    color: #F43F5E; text-decoration: underline;
+    color: var(--ew-text); text-decoration: underline;
   }
 
   .left-header { padding: 16px 20px 0; }
@@ -77,11 +77,11 @@ const base = import.meta.env.BASE_URL;
     padding: 10px 12px; border: 0.5px solid #E4E4E2; border-radius: 8px;
     cursor: pointer; transition: all 0.12s; background: #FFFFFF; margin-bottom: 6px;
   }
-  .proc-item:hover { border-color: #F43F5E; background: #FFF5F7; }
-  .proc-item.active { background: #FFF5F7; border-color: #F43F5E; }
-  .proc-item.active .pi-ref, .proc-item.active .pi-title { color: #C0304A; }
-  .proc-item.active .pi-badge { background: rgba(244,63,94,0.1); color: #C0304A; border-color: rgba(244,63,94,0.3); }
-  .proc-item.generated { border-left: 3px solid #F43F5E; }
+  .proc-item:hover { border-color: var(--ew-text); background: var(--ew-surface); }
+  .proc-item.active { background: var(--ew-surface); border-color: var(--ew-text); }
+  .proc-item.active .pi-ref, .proc-item.active .pi-title { color: var(--ew-text); }
+  .proc-item.active .pi-badge { background: var(--ew-surface); color: var(--ew-text); border-color: var(--ew-border); }
+  .proc-item.generated { border-left: 3px solid var(--ew-kaki); }
 
   .pi-left { flex: 1; min-width: 0; }
   .pi-ref {
@@ -98,7 +98,7 @@ const base = import.meta.env.BASE_URL;
     border: 0.5px solid #E4E4E2; background: #F4F4F3; color: #A8A8A4;
     font-family: 'IBM Plex Mono', monospace;
   }
-  .pi-badge-psp { background: #FFF5F7; color: #F43F5E; border-color: #F43F5E; }
+  .pi-badge-psp { background: var(--ew-surface); color: var(--ew-text); border-color: var(--ew-text); }
   .pi-badge-banque { background: #E8EDF0; color: #3A5C6B; border-color: #3A5C6B; }
   .pi-badge-casp { background: #F0EDE8; color: #6B5C3A; border-color: #6B5C3A; }
   .pi-badge-tous { background: #F4F4F3; color: #737370; border-color: #A8A8A4; }
@@ -119,7 +119,7 @@ const base = import.meta.env.BASE_URL;
     font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 8px;
     letter-spacing: 0.04em;
   }
-  .badge-perso { background: #FFF5F7; color: #F43F5E; }
+  .badge-perso { background: var(--ew-kaki); color: var(--ew-kaki-text); }
   .badge-generic { background: #F4F4F3; color: #A8A8A4; }
 
   .result-actions { display: flex; gap: 8px; margin-top: 16px; }
@@ -129,12 +129,12 @@ const base = import.meta.env.BASE_URL;
     transition: opacity 0.15s;
   }
   .btn-docx { background: #18160F; color: #fff; }
-  .btn-validate { background: #F43F5E; color: #fff; }
+  .btn-validate { background: var(--ew-text); color: #fff; }
   .btn-docx:hover, .btn-validate:hover { opacity: 0.9; }
   .btn-docx:disabled, .btn-validate:disabled { background: #A8A8A4; cursor: not-allowed; }
 
   .warning-box {
-    display: flex; gap: 10px; padding: 12px; background: #FFF5F7;
+    display: flex; gap: 10px; padding: 12px; background: var(--ew-surface);
     border: 0.5px solid #E4E4E2; border-radius: 8px; font-size: 12px;
     color: #737370; margin-top: 20px;
   }
@@ -390,7 +390,7 @@ const base = import.meta.env.BASE_URL;
           <div style="display:flex; gap:4px; flex-wrap:wrap">
             ${srcsCited.map((s: any) => `
               <a href="${s.lien_legifrance || '#'}" target="_blank" rel="noopener"
-                 style="font-size:10px; padding:2px 8px; background:#FFF5F7; border-radius:4px; color:#F43F5E; text-decoration:none; border:0.5px solid #F43F5E; font-family:'IBM Plex Mono',monospace">
+                 style="font-size:10px; padding:2px 8px; background:var(--ew-surface); border-radius:4px; color:var(--ew-text); text-decoration:none; border:0.5px solid var(--ew-text); font-family:'IBM Plex Mono',monospace">
                 Art. ${escHtml(s.article_number || '')}
               </a>
             `).join('')}

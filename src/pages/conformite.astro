@@ -190,9 +190,9 @@ const base = import.meta.env.BASE_URL;
               <div class="proc-bar-fill proc-fill-avalider" style="width:${pctA}%"></div>
             </div>
             <div class="proc-legend">
-              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-kaki-text)"></span> ${valide} validees</div>
+              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-success-text)"></span> ${valide} validees</div>
               <div class="proc-legend-item"><span class="proc-legend-dot" style="background:#9A4F1A"></span> ${encours} en cours</div>
-              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-coral-text)"></span> ${avalider} a valider</div>
+              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-danger-text)"></span> ${avalider} a valider</div>
             </div>
           </div>
           ${procs.filter((p: any) => p.status !== 'valide').slice(0, 4).map((p: any) => `
@@ -330,10 +330,10 @@ const base = import.meta.env.BASE_URL;
   .score-label { font-size: 10px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
   .score-red { border-color: #8B2F1F; }
   .score-red .score-pct { color: #8B2F1F; }
-  .score-orange { border-color: #F43F5E; }
-  .score-orange .score-pct { color: #F43F5E; }
-  .score-green { border-color: #F43F5E; }
-  .score-green .score-pct { color: #F43F5E; }
+  .score-orange { border-color: var(--ew-danger-text); }
+  .score-orange .score-pct { color: var(--ew-danger-text); }
+  .score-green { border-color: var(--ew-success-text); }
+  .score-green .score-pct { color: var(--ew-success-text); }
 
   .stats-bar {
     display: grid; grid-template-columns: repeat(4, 1fr); border: 0.5px solid #E4E4E2; gap: 0;
@@ -366,7 +366,7 @@ const base = import.meta.env.BASE_URL;
     align-items: center; border-bottom: 1px solid var(--color-border-tertiary);
   }
   .module-title { font-size: 14px; font-weight: 500; color: var(--noir); }
-  .module-link { font-size: 12px; color: #F43F5E; text-decoration: none; font-weight: 500; }
+  .module-link { font-size: 12px; color: var(--ew-text); text-decoration: none; font-weight: 500; }
   .module-link:hover { text-decoration: underline; }
   .module-body { padding: 14px 18px; flex: 1; }
 
@@ -376,7 +376,7 @@ const base = import.meta.env.BASE_URL;
   }
   .rem-item:last-child { border-bottom: none; }
   .rem-sev { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
-  :global(.sev-critical) { background: var(--ew-coral-text); }
+  :global(.sev-critical) { background: var(--ew-danger-text); }
   :global(.sev-high) { background: #9A4F1A; }
   :global(.sev-medium) { background: #7A7A20; }
   :global(.sev-low) { background: #737370; }
@@ -389,9 +389,9 @@ const base = import.meta.env.BASE_URL;
     border: 1px solid var(--color-border-tertiary); overflow: hidden; display: flex;
   }
   :global(.proc-bar-fill) { height: 100%; transition: width 0.4s; }
-  :global(.proc-fill-valide) { background: #F43F5E; }
-  :global(.proc-fill-encours) { background: rgba(244,63,94,0.5); }
-  :global(.proc-fill-avalider) { background: rgba(244,63,94,0.2); }
+  :global(.proc-fill-valide) { background: var(--ew-success-text); }
+  :global(.proc-fill-encours) { background: var(--ew-warning-text); }
+  :global(.proc-fill-avalider) { background: var(--ew-surface); }
   :global(.proc-legend) { display: flex; gap: 12px; margin-top: 6px; font-size: 11px; color: var(--color-text-tertiary); }
   :global(.proc-legend-item) { display: flex; align-items: center; gap: 4px; }
   :global(.proc-legend-dot) { width: 8px; height: 8px; border-radius: 50%; }
@@ -402,21 +402,21 @@ const base = import.meta.env.BASE_URL;
   }
   :global(.dl-item:last-child) { border-bottom: none; }
   :global(.dl-reg) { font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: 400; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.06em; }
-  :global(.dl-reg-dora) { background: transparent; color: #F43F5E; border: 0.5px solid #F43F5E; }
-  :global(.dl-reg-amlr) { background: transparent; color: #F43F5E; border: 0.5px solid #F43F5E; }
-  :global(.dl-reg-ai) { background: transparent; color: #F43F5E; border: 0.5px solid #F43F5E; }
-  :global(.dl-reg-other) { background: transparent; color: #F43F5E; border: 0.5px solid #F43F5E; }
+  :global(.dl-reg-dora) { background: transparent; color: var(--ew-text); border: 0.5px solid var(--ew-text); }
+  :global(.dl-reg-amlr) { background: transparent; color: var(--ew-text); border: 0.5px solid var(--ew-text); }
+  :global(.dl-reg-ai) { background: transparent; color: var(--ew-text); border: 0.5px solid var(--ew-text); }
+  :global(.dl-reg-other) { background: transparent; color: var(--ew-text); border: 0.5px solid var(--ew-text); }
   :global(.dl-title) { flex: 1; margin: 0 10px; color: var(--noir); }
   :global(.dl-date) { font-size: 12px; font-weight: 500; white-space: nowrap; }
   :global(.dl-passed) { color: var(--color-text-tertiary); }
   :global(.dl-imminent) { color: #8B2F1F; }
-  :global(.dl-soon) { color: #F43F5E; }
+  :global(.dl-soon) { color: var(--ew-danger-text); }
   :global(.dl-upcoming) { color: var(--color-text-tertiary); }
 
   :global(.sanc-item) { padding: 8px 0; border-bottom: 1px solid var(--color-border-tertiary); font-size: 13px; }
   :global(.sanc-item:last-child) { border-bottom: none; }
   :global(.sanc-title) { color: var(--noir); font-weight: 500; }
-  :global(.sanc-title a) { color: #F43F5E; text-decoration: none; }
+  :global(.sanc-title a) { color: var(--ew-text); text-decoration: none; }
   :global(.sanc-title a:hover) { text-decoration: underline; }
   :global(.sanc-meta) { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
   :global(.sanc-tag) {

@@ -102,15 +102,15 @@ export function formatTime(d) {
 // ---- Badge helpers ----
 export function statusBadge(status) {
   const map = {
-    nouveau: ['Nouveau', 'badge-kaki'],
+    nouveau: ['Nouveau', 'badge-neutral'],
     important: ['Important', 'badge-warning'],
-    quotidien: ['Quotidien', 'badge-accent'],
+    quotidien: ['Quotidien', 'badge-neutral'],
     hebdo: ['Hebdo', 'badge-neutral'],
     relu: ['Relu', 'badge-neutral'],
     archive: ['Archive', 'badge-neutral'],
     ignorer: ['Ignor\u00e9', 'badge-neutral'],
     pending_validation: ['Validation', 'badge-warning'],
-    validated: ['Valid\u00e9', 'badge-accent'],
+    validated: ['Valid\u00e9', 'badge-success'],
     rejected: ['Rejet\u00e9', 'badge-danger'],
   };
   const [label, cls] = map[status] || [status, 'badge-neutral'];
