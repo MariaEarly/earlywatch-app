@@ -136,14 +136,14 @@ h3 { font-size: 13px; font-weight: 500; }
 }
 .app-content {
   flex: 1;
-  margin-left: 196px;
+  margin-left: 240px;
   overflow-y: auto;
   min-height: 100vh;
 }
 
 /* ---- Sidebar ---- */
 .sidebar-nav {
-  width: 196px;
+  width: 240px;
   background: var(--ew-sidebar-bg);
   border-right: 0.5px solid var(--ew-sidebar-border);
   position: fixed;
@@ -529,7 +529,7 @@ label {
 .sidebar {
   width: 220px;
   min-width: 220px;
-  padding: 20px 20px 24px 16px;
+  padding: 24px 16px;
   background: white;
   border-right: 0.5px solid var(--ew-border);
   height: 100vh;
@@ -558,7 +558,7 @@ label {
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 10px;
 }
 .filter-item {
   display: flex;
@@ -578,12 +578,13 @@ label {
 }
 .filter-item:hover { background: var(--ew-surface); }
 .filter-item.active {
-  background: var(--ew-coral-medium);
-  color: var(--ew-coral-text);
+  background: var(--ew-kaki);
+  color: var(--ew-kaki-text);
+  border: 0.5px solid var(--ew-kaki-border);
   font-weight: 500;
   border-radius: var(--ew-radius);
 }
-.filter-item.active .filter-count { color: var(--ew-coral-text); opacity: 0.85; }
+.filter-item.active .filter-count { color: var(--ew-kaki-text); opacity: 0.85; }
 .filter-count {
   margin-left: auto;
   font-size: 11px;
@@ -646,7 +647,7 @@ label {
 
 /* ---- Article card (list-card / separator style) ---- */
 .article-card {
-  padding: 14px 16px;
+  padding: 28px 16px;
   border: none;
   border-bottom: 0.5px solid var(--ew-border);
   border-radius: 0;
