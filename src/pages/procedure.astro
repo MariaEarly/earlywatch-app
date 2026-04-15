@@ -3,615 +3,162 @@ import AppLayout from '../layouts/AppLayout.astro';
 const base = import.meta.env.BASE_URL;
 ---
 
-<AppLayout title="Early Watch — Procédures" activePage="procedure">
+<AppLayout title="Early Watch — Procedures" activePage="procedure">
   <div class="proc-layout">
     <div class="proc-left">
-
-      <!-- Two entry paths -->
-      <div class="toggle-container">
-        <button id="tab-scratch" class="toggle-btn active">Je pars de zero</button>
-        <button id="tab-gap" class="toggle-btn">J'ai deja une procedure</button>
+      <div id="prof-banner" class="prof-banner" style="display:none">
+        <span>Votre profil organisation n'est pas encore renseigne. Les procedures generees seront generiques.</span>
+        <a href=`${base}settings/` class="prof-link">Completer le profil &rarr;</a>
       </div>
-
-      <!-- PATH 1: From scratch -->
-      <div id="form-scratch">
-
-        <!-- Step 1 — Profile -->
-        <div class="step" id="step-1">
-          <div class="step-header">
-            <div class="step-num">1</div>
-            <div class="step-title">Profil reglementaire</div>
-          </div>
-          <div class="profil-btns" id="profile-toggle">
-            <button class="profil-btn" data-profile="PSP">PSP</button>
-            <button class="profil-btn" data-profile="Banque">Banque</button>
-            <button class="profil-btn" data-profile="CASP">CASP / PSAN</button>
-          </div>
-        </div>
-
-        <!-- Step 1.5 — Questionnaire contextuel -->
-        <div class="step" id="step-questionnaire" style="display:none">
-          <div class="step-header">
-            <div class="step-num" style="font-size:9px">1.5</div>
-            <div class="step-title">Votre contexte</div>
-          </div>
-
-          <div class="q-block">
-            <div class="q-label">Types de clients</div>
-            <div class="q-options" id="q-clients">
-              <label class="q-option"><input type="radio" name="q-clients" value="particuliers"><span>Particuliers uniquement</span></label>
-              <label class="q-option"><input type="radio" name="q-clients" value="entreprises"><span>Entreprises uniquement</span></label>
-              <label class="q-option"><input type="radio" name="q-clients" value="mixte"><span>Mixte B2B + B2C</span></label>
-            </div>
-          </div>
-
-          <div class="q-block">
-            <div class="q-label">Activites specifiques</div>
-            <div class="q-options" id="q-activites">
-              <label class="q-option"><input type="checkbox" value="transferts_fonds"><span>Transferts de fonds</span></label>
-              <label class="q-option"><input type="checkbox" value="risque_eleve"><span>Clients a risque eleve</span></label>
-              <label class="q-option"><input type="checkbox" value="pep"><span>Personnes politiquement exposees (PPE)</span></label>
-              <label class="q-option" id="q-cbk-option" style="display:none"><input type="checkbox" value="correspondance_bancaire"><span>Correspondance bancaire</span></label>
-            </div>
-          </div>
-
-          <div class="q-block">
-            <div class="q-label">Perimetre geographique</div>
-            <div class="q-options" id="q-geo">
-              <label class="q-option"><input type="radio" name="q-geo" value="france"><span>France uniquement</span></label>
-              <label class="q-option"><input type="radio" name="q-geo" value="ue"><span>Union europeenne</span></label>
-              <label class="q-option"><input type="radio" name="q-geo" value="international"><span>International (hors UE)</span></label>
-            </div>
-          </div>
-
-          <button class="continue-btn" id="btn-continue">Continuer</button>
-        </div>
-
-        <!-- Step 2 — Thematiques (dynamic) -->
-        <div class="step" id="step-2" style="display:none">
-          <div class="step-header">
-            <div class="step-num">2</div>
-            <div class="step-title">Thematiques</div>
-          </div>
-          <div id="thematiques-list"></div>
-        </div>
-
-        <!-- Step 3 — Recap + Generate -->
-        <div class="step" id="step-3" style="display:none">
-          <div class="step-header">
-            <div class="step-num">3</div>
-            <div class="step-title">Procedures a generer</div>
-          </div>
-          <div class="selected-recap" id="selected-recap">
-            <div class="recap-empty">Selectionnez au moins une thematique</div>
-          </div>
-          <button class="generate-btn" id="generateBtn" disabled>
-            Generer ces procedures
-          </button>
-        </div>
-
-        <div id="generate-error" class="proc-error" style="display:none"></div>
+      <div class="left-header">
+        <div class="left-title">Procedures</div>
+        <div class="left-subtitle" id="left-subtitle">Chargement...</div>
       </div>
-
-      <!-- PATH 2: Gap analysis -->
-      <div id="form-gap" style="display:none">
-
-        <div class="step">
-          <div class="step-header">
-            <div class="step-num">1</div>
-            <div class="step-title">Profil reglementaire</div>
-          </div>
-          <div class="profil-btns" id="gap-profile-toggle">
-            <button class="profil-btn" data-profile="PSP">PSP</button>
-            <button class="profil-btn" data-profile="Banque">Banque</button>
-            <button class="profil-btn" data-profile="CASP">CASP / PSAN</button>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-header">
-            <div class="step-num">2</div>
-            <div class="step-title">Procedure existante</div>
-          </div>
-        </div>
-        <div id="drop-zone" class="proc-dropzone">
-          <input id="gapFile" type="file" accept=".pdf,.docx,.doc,.txt" style="display:none">
-          <div id="drop-label">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B0ADA7" stroke-width="1.5" style="margin-bottom:8px">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="12" y1="18" x2="12" y2="12"/>
-              <polyline points="9 15 12 12 15 15"/>
-            </svg>
-            <p class="proc-drop-main">Glissez un fichier ici ou <strong>cliquez</strong></p>
-            <p class="proc-drop-sub">PDF, DOCX ou TXT &middot; Max 10 Mo</p>
-          </div>
-        </div>
-
-        <button class="generate-btn" id="gapBtn" disabled style="margin-top:16px">
-          Lancer le gap analysis
+      <div id="proc-obligatoires" class="proc-section"></div>
+      <div id="proc-autres" class="proc-section">
+        <button class="section-toggle" id="toggle-autres" style="display:none">
+          <span class="toggle-arrow">&#9654;</span> Autres procedures disponibles
         </button>
-
-        <div id="gap-error" class="proc-error" style="display:none"></div>
-      </div>
-
-      <!-- Procedure list -->
-      <div class="generated-section">
-        <div class="generated-label">Procedures generees</div>
-        <div id="procedure-list">
-          <div class="loading-overlay" style="padding:20px"><div class="spinner"></div></div>
-        </div>
+        <div id="autres-list" style="display:none"></div>
       </div>
     </div>
 
     <main class="proc-right" id="result-area">
       <div class="proc-empty">
-        <p class="proc-empty-text">Sélectionnez un mode pour commencer</p>
+        <p class="proc-empty-text">Selectionnez une procedure pour lancer la generation.</p>
       </div>
     </main>
   </div>
 </AppLayout>
 
 <style>
-  /* Layout — static elements, safe to scope */
-  .proc-layout {
-    display: flex;
-    height: calc(100vh - 85px);
-  }
+  .proc-layout { display: flex; height: calc(100vh - 85px); }
   .proc-left {
-    width: 420px;
-    min-width: 420px;
-    border-right: 1px solid #E4E0D6;
-    overflow-y: auto;
-    padding: 0;
-    background: #EDEAE3;
+    width: 420px; min-width: 420px; border-right: 1px solid #E4E0D6;
+    overflow-y: auto; padding: 0; background: #EDEAE3;
   }
-  .proc-right {
-    flex: 1;
-    overflow-y: auto;
-    background: #EDEAE3;
+  .proc-right { flex: 1; overflow-y: auto; background: #EDEAE3; }
+
+  .prof-banner {
+    padding: 10px 16px; background: #FEF9E7; border-bottom: 1px solid #F5D68A;
+    font-size: 12px; color: #6A6760; line-height: 1.4;
+  }
+  .prof-link {
+    display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600;
+    color: #5C6347; text-decoration: underline;
   }
 
-  /* Toggle tabs */
-  .toggle-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border-bottom: 0.5px solid #E4E0D6;
-  }
-  .toggle-btn {
-    padding: 12px 16px;
-    font-size: 11.5px;
-    text-align: center;
-    background: #F8F6F1;
-    color: #6A6760;
-    border: none;
-    cursor: pointer;
-    font-family: 'IBM Plex Sans', sans-serif;
-    letter-spacing: 0.01em;
-    transition: all 0.12s;
-  }
-  .toggle-btn.active {
-    background: #FFFFFF;
-    color: #18160F;
-    font-weight: 600;
-  }
-  .toggle-btn:first-child {
-    border-right: 0.5px solid #E4E0D6;
-  }
+  .left-header { padding: 16px 20px 0; }
+  .left-title { font-size: 15px; font-weight: 500; color: #18160F; }
+  .left-subtitle { font-size: 12px; color: #B0ADA7; margin-top: 2px; }
 
-  /* Steps */
-  .step {
-    padding: 0 20px;
-    margin-top: 20px;
-  }
-  .step:first-child {
-    margin-top: 16px;
-  }
-  .step-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-  .step-num {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: #1C3A2F;
-    color: #FFFFFF;
-    font-size: 11px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .step-title {
-    font-size: 13px;
-    font-weight: 500;
-    color: #18160F;
-  }
+  .proc-section { padding: 0 16px; }
 
-  /* Profile buttons */
-  .profil-btns {
-    display: flex;
-    gap: 8px;
+  .section-toggle {
+    display: flex; align-items: center; gap: 6px;
+    width: 100%; padding: 10px 4px; background: none; border: none; border-top: 1px solid #E4E0D6;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: #B0ADA6; cursor: pointer; font-family: 'IBM Plex Sans', sans-serif; margin-top: 8px;
   }
-  .profil-btn {
-    flex: 1;
-    padding: 8px 4px;
-    font-size: 11px;
-    font-weight: 500;
-    border-radius: 4px;
-    border: 1px solid #E4E0D6;
-    background: #FFFFFF;
-    color: #6A6760;
-    cursor: pointer;
-    text-align: center;
-    font-family: 'IBM Plex Sans', sans-serif;
-    transition: all 0.15s;
-  }
-  .profil-btn.active {
-    background: #1C3A2F;
-    color: #FFFFFF;
-    border-color: #1C3A2F;
-  }
-  .profil-btn:hover:not(.active) {
-    border-color: #1C3A2F;
-    color: #1C3A2F;
-  }
+  .section-toggle:hover { color: #6A6760; }
+  .toggle-arrow { font-size: 8px; transition: transform 0.2s; }
+  .section-toggle.open .toggle-arrow { transform: rotate(90deg); }
 
-  /* Questionnaire */
-  .q-block {
-    margin-bottom: 16px;
+  .proc-empty {
+    display: flex; align-items: center; justify-content: center; height: 100%;
   }
-  .q-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #6A6760;
-    margin-bottom: 8px;
-  }
-  .q-options {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .q-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 10px;
-    border: 1px solid #E4E0D6;
-    border-radius: 4px;
-    background: #FFFFFF;
-    cursor: pointer;
-    transition: all 0.12s;
-    font-size: 11.5px;
-    color: #18160F;
-  }
-  .q-option:hover {
-    border-color: #1C3A2F;
-    background: #ECF1EE;
-  }
-  .q-option:has(input:checked) {
-    border-color: #1C3A2F;
-    background: #ECF1EE;
-  }
-  .q-option input[type="radio"],
-  .q-option input[type="checkbox"] {
-    accent-color: #1C3A2F;
-    margin: 0;
-    width: 14px;
-    height: 14px;
-    flex-shrink: 0;
-  }
-  .continue-btn {
-    width: 100%;
-    padding: 9px;
-    font-size: 11.5px;
-    font-weight: 600;
-    background: #FFFFFF;
-    color: #1C3A2F;
-    border: 1px solid #1C3A2F;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: 'IBM Plex Sans', sans-serif;
-    letter-spacing: 0.02em;
-    transition: all 0.15s;
-    margin-top: 8px;
-  }
-  .continue-btn:hover {
-    background: #1C3A2F;
-    color: #FFFFFF;
-  }
-
-  /* Static elements: selected recap container, generate button, dropzone, error */
-  .selected-recap {
-    background: #F8F6F1;
-    border-radius: 4px;
-    padding: 10px 12px;
-    margin-bottom: 12px;
-    min-height: 40px;
-  }
-  .generate-btn {
-    width: 100%;
-    padding: 10px;
-    font-size: 12px;
-    font-weight: 600;
-    background: #1C3A2F;
-    color: #FFFFFF;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: 'IBM Plex Sans', sans-serif;
-    letter-spacing: 0.02em;
-    transition: opacity 0.15s;
-  }
-  .generate-btn:hover {
-    opacity: 0.9;
-  }
-  .generate-btn:disabled {
-    background: #B0ADA6;
-    cursor: not-allowed;
-  }
-  .proc-dropzone {
-    border: 1px dashed #E4E0D6;
-    border-radius: 4px;
-    padding: 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: background 0.15s;
-    margin: 0 20px;
-  }
-  .proc-dropzone:hover,
-  .proc-dropzone.dragover {
-    background: #ECF1EE;
-  }
-  .proc-drop-main {
-    font-size: 13px;
-    color: #3D3B38;
-  }
-  .proc-drop-sub {
-    font-size: 11px;
-    color: #B0ADA7;
-    margin-top: 4px;
-  }
-  .proc-error {
-    margin: 12px 20px 0;
-    padding: 10px 12px;
-    background: #FDF2F2;
-    border: 1px solid #E5C5C5;
-    border-radius: 4px;
-    font-size: 12px;
-    color: #8B3A3A;
-  }
+  .proc-empty-text { font-size: 14px; color: #B0ADA7; }
 </style>
 
-<!-- Global styles for JS-generated DOM elements (innerHTML) -->
 <style is:global>
-  /* Section labels */
-  .section-label {
-    font-size: 9px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #B0ADA6;
-    font-weight: 700;
-    margin: 10px 0 6px;
+  /* Procedure items in left column */
+  .proc-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; border: 1px solid #E4E0D6; border-radius: 4px;
+    cursor: pointer; transition: all 0.12s; background: #FFFFFF; margin-bottom: 6px;
+  }
+  .proc-item:hover { border-color: #1C3A2F; background: #ECF1EE; }
+  .proc-item.active { background: #5C6347; border-color: #5C6347; }
+  .proc-item.active .pi-ref, .proc-item.active .pi-title { color: #FFFFFF; }
+  .proc-item.active .pi-badge { background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.3); }
+  .proc-item.generated { border-left: 3px solid #5C6347; }
+
+  .pi-left { flex: 1; min-width: 0; }
+  .pi-ref {
+    font-size: 10px; font-weight: 600; color: #6A6760;
+    font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em;
+  }
+  .pi-title {
+    font-size: 12px; color: #18160F; font-weight: 500; margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pi-badge {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 3px; flex-shrink: 0; margin-left: 8px;
+    border: 0.5px solid #E4E0D6; background: #F8F6F1; color: #B0ADA6;
+  }
+  .pi-badge-psp { background: #EEF0E8; color: #5C6347; border-color: #5C6347; }
+  .pi-badge-banque { background: #E8EDF0; color: #3A5C6B; border-color: #3A5C6B; }
+  .pi-badge-casp { background: #F0EDE8; color: #6B5C3A; border-color: #6B5C3A; }
+  .pi-badge-tous { background: #F5F3EE; color: #6A6760; border-color: #B0ADA6; }
+
+  .section-label-oblig {
+    font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #B0ADA6; font-weight: 700; margin: 14px 0 8px; padding: 0 4px;
   }
 
-  /* Template items (clickable list) */
-  .tpl-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 9px 12px;
-    border: 1px solid #E4E0D6;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.12s;
-    background: #FFFFFF;
-    margin-bottom: 6px;
+  /* Result area */
+  .result-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 20px;
   }
-  .tpl-item:hover {
-    border-color: #1C3A2F;
-    background: #ECF1EE;
-  }
-  .tpl-item.checked {
-    border-color: #1C3A2F;
-    background: #ECF1EE;
-  }
-  .tpl-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
-    min-width: 0;
-  }
-  .tpl-check {
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
-    border: 1.5px solid #E4E0D6;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.12s;
-  }
-  .tpl-item.checked .tpl-check {
-    background: #1C3A2F;
-    border-color: #1C3A2F;
-  }
-  .tpl-check::after {
-    content: '';
-    display: none;
-    width: 9px;
-    height: 6px;
-    border-left: 2px solid #fff;
-    border-bottom: 2px solid #fff;
-    transform: rotate(-45deg) translateY(-1px);
-  }
-  .tpl-item.checked .tpl-check::after {
-    display: block;
-  }
-  .tpl-name {
-    font-size: 11.5px;
-    color: #18160F;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* Badges */
-  .badge-tpl {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 2px 7px;
-    border-radius: 3px;
-    flex-shrink: 0;
-  }
-  .badge-obligatoire {
-    background: #FEF2F2;
-    color: #B91C1C;
-  }
-  .badge-optionnel {
-    background: #F8F6F1;
-    color: #B0ADA6;
-    border: 0.5px solid #E4E0D6;
-  }
-  .badge-promu {
-    background: #FFFBEB;
-    color: #D97706;
-    border: 0.5px solid #F5D68A;
-  }
-
-  /* Recap items (JS-generated) */
-  .recap-item {
-    font-size: 11px;
-    color: #6A6760;
-    padding: 3px 0;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-  }
-  .recap-item::before {
-    content: '';
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: #1C3A2F;
-    flex-shrink: 0;
-  }
-  .recap-empty {
-    font-size: 11px;
-    color: #B0ADA6;
-    font-style: italic;
-  }
-
-  /* Generated procedures list */
-  .generated-section {
-    padding: 14px 20px;
-    margin-top: 16px;
-    border-top: 0.5px solid #E4E0D6;
-  }
-  .generated-label {
-    font-size: 9px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #B0ADA6;
-    font-weight: 700;
-    margin-bottom: 10px;
-  }
-  .gen-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 9px 0;
-    border-bottom: 0.5px solid #E4E0D6;
-    cursor: pointer;
-  }
-  .gen-item:last-child {
-    border: none;
-  }
-  .gen-name {
-    font-size: 11.5px;
-    font-weight: 600;
-    color: #18160F;
-  }
-  .gen-meta {
-    font-size: 10px;
-    color: #B0ADA6;
-    margin-top: 2px;
-  }
-  .validation-badge {
-    font-size: 9px;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 3px;
+  .result-title { font-size: 18px; font-weight: 600; color: #18160F; }
+  .result-meta { font-size: 12px; color: #6B6860; margin-top: 4px; }
+  .result-badge {
+    font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 3px;
     letter-spacing: 0.04em;
-    border: 1px solid #D97706;
-    color: #D97706;
-    background: #FFFBEB;
-    flex-shrink: 0;
   }
-  .validation-badge.validated {
-    border-color: #1C3A2F;
-    color: #1C3A2F;
-    background: #ECF1EE;
-  }
-  .validation-badge.rejected {
-    border-color: #B91C1C;
-    color: #B91C1C;
-    background: #FEF2F2;
-  }
+  .badge-perso { background: #EEF0E8; color: #5C6347; }
+  .badge-generic { background: #F8F6F1; color: #B0ADA6; }
 
-  /* Empty state */
-  .proc-empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
+  .result-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .btn-docx, .btn-validate {
+    flex: 1; padding: 9px 12px; font-size: 12px; font-weight: 600; border: none;
+    border-radius: 4px; cursor: pointer; font-family: 'IBM Plex Sans', sans-serif;
+    transition: opacity 0.15s;
   }
-  .proc-empty-text {
-    font-size: 14px;
-    color: #B0ADA7;
+  .btn-docx { background: #1C3A2F; color: #fff; }
+  .btn-validate { background: #5C6347; color: #fff; }
+  .btn-docx:hover, .btn-validate:hover { opacity: 0.9; }
+  .btn-docx:disabled, .btn-validate:disabled { background: #B0ADA6; cursor: not-allowed; }
+
+  .warning-box {
+    display: flex; gap: 10px; padding: 12px; background: #FEF9E7;
+    border: 1px solid #F5D68A; border-radius: 4px; font-size: 12px;
+    color: #6A6760; margin-top: 20px;
   }
 </style>
 
 <script>
   import { api, toast, statusBadge, renderMarkdown, initExpandables, formatDate, API } from '../scripts/api';
 
-  // -------------------------------------------------------------------------
-  //  State
-  // -------------------------------------------------------------------------
-  let mode = 'scratch';
-  let selectedProfile = '';
-  let gapProfile = '';
-  let selectedFile: File | null = null;
-  let mappingData: any = null;
-  let checkedCodes: Set<string> = new Set();
-  let procedures: any[] = [];
+  // ═══ CONSTANTS ═══
 
   const PROC_LABELS: Record<string, string> = {
-    'EB-POL-001': 'Politique générale LCB-FT',
+    'EB-POL-001': 'Politique generale LCB-FT',
     'EB-RISK-001': 'Classification des risques',
-    'EB-KYC-001': 'Entrée en relation — Personne physique',
-    'EB-KYC-002': 'Entrée en relation — Personne morale',
+    'EB-KYC-001': 'Entree en relation — Personne physique',
+    'EB-KYC-002': 'Entree en relation — Personne morale',
     'EB-SCR-001': 'Criblage sanctions et PPE',
     'EB-MON-001': 'Monitoring transactionnel',
-    'EB-TRC-001': 'Déclaration de soupçon Tracfin',
-    'EB-CASP-001': 'LCB-FT spécifique CASP/PSAN',
-    'EB-CTRL-001': 'Contrôle permanent LCB-FT',
+    'EB-TRC-001': 'Declaration de soupcon Tracfin',
+    'EB-CASP-001': 'LCB-FT specifique CASP/PSAN',
+    'EB-CTRL-001': 'Controle permanent LCB-FT',
     'EB-AGT-001': 'Agents et distributeurs',
-    'EB-UBO-001': 'Bénéficiaires effectifs',
-    'EB-EDD-001': 'Vigilance renforcée',
-    'EB-PEP-001': 'Personnes politiquement exposées',
-    'EB-SCR-002': 'Criblage sanctions avancé',
+    'EB-UBO-001': 'Beneficiaires effectifs',
+    'EB-EDD-001': 'Vigilance renforcee',
+    'EB-PEP-001': 'Personnes politiquement exposees',
+    'EB-SCR-002': 'Criblage sanctions avance',
     'EB-GEL-001': 'Gel des avoirs',
     'EB-ARCH-001': 'Archivage',
     'EB-TRV-001': 'Transfert de fonds',
@@ -619,391 +166,235 @@ const base = import.meta.env.BASE_URL;
     'EB-FORM-001': 'Formation LCB-FT',
   };
 
+  const OBLIGATOIRES: Record<string, string[]> = {
+    'PSP':    ['EB-POL-001','EB-RISK-001','EB-KYC-001','EB-KYC-002','EB-SCR-001','EB-MON-001','EB-TRC-001','EB-CTRL-001','EB-AGT-001','EB-FORM-001'],
+    'Banque': ['EB-POL-001','EB-RISK-001','EB-KYC-001','EB-KYC-002','EB-SCR-001','EB-MON-001','EB-TRC-001','EB-CTRL-001','EB-FORM-001','EB-UBO-001','EB-EDD-001','EB-PEP-001','EB-CBK-001','EB-ARCH-001'],
+    'CASP':   ['EB-POL-001','EB-RISK-001','EB-KYC-001','EB-KYC-002','EB-SCR-001','EB-MON-001','EB-TRC-001','EB-CASP-001','EB-CTRL-001','EB-FORM-001','EB-TRV-001','EB-GEL-001'],
+    'EME':    ['EB-POL-001','EB-RISK-001','EB-KYC-001','EB-KYC-002','EB-SCR-001','EB-MON-001','EB-TRC-001','EB-CTRL-001','EB-AGT-001','EB-FORM-001'],
+  };
+
+  const ALWAYS_AVAILABLE: string[] = ['EB-EDD-001','EB-SCR-002','EB-GEL-001','EB-ARCH-001','EB-PEP-001'];
+
+  const ALL_CODES: string[] = Object.keys(PROC_LABELS);
+
+  const PROFILE_BADGE: Record<string, string> = {
+    'PSP': 'pi-badge-psp', 'Banque': 'pi-badge-banque',
+    'CASP': 'pi-badge-casp', 'EME': 'pi-badge-psp', 'Tous': 'pi-badge-tous',
+  };
+
+  // ═══ STATE ═══
+
+  let settings: any = {};
+  let entityType: string = '';
+  let selectedRef: string = '';
+  let generatedProcs: Map<string, any> = new Map(); // ref → procedure data
+
   function escHtml(s: string): string {
     if (!s) return '';
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  // -------------------------------------------------------------------------
-  //  Tab switching
-  // -------------------------------------------------------------------------
-  function switchMode(m: string) {
-    mode = m;
-    document.getElementById('form-scratch')!.style.display = m === 'scratch' ? 'block' : 'none';
-    document.getElementById('form-gap')!.style.display = m === 'gap' ? 'block' : 'none';
-    document.querySelectorAll('.toggle-btn').forEach(t => t.classList.remove('active'));
-    document.getElementById(m === 'scratch' ? 'tab-scratch' : 'tab-gap')!.classList.add('active');
-  }
+  // ═══ INIT ═══
 
-  document.getElementById('tab-scratch')!.addEventListener('click', () => switchMode('scratch'));
-  document.getElementById('tab-gap')!.addEventListener('click', () => switchMode('gap'));
-
-  // -------------------------------------------------------------------------
-  //  Questionnaire state
-  // -------------------------------------------------------------------------
-  let promotedCodes: Set<string> = new Set();
-
-  // -------------------------------------------------------------------------
-  //  Profile toggle (scratch) — shows questionnaire instead of mapping
-  // -------------------------------------------------------------------------
-  document.querySelectorAll('#profile-toggle .profil-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#profile-toggle .profil-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      selectedProfile = (btn as HTMLElement).dataset.profile || '';
-
-      // Show questionnaire, hide steps 2+3
-      document.getElementById('step-questionnaire')!.style.display = 'block';
-      document.getElementById('step-2')!.style.display = 'none';
-      document.getElementById('step-3')!.style.display = 'none';
-
-      // Show "Correspondance bancaire" only for Banque
-      const cbkOption = document.getElementById('q-cbk-option')!;
-      cbkOption.style.display = selectedProfile === 'Banque' ? 'flex' : 'none';
-
-      // Reset questionnaire
-      document.querySelectorAll('#step-questionnaire input').forEach((inp: any) => {
-        inp.checked = false;
-      });
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  //  "Continuer" — process questionnaire answers, load mapping, promote codes
-  // -------------------------------------------------------------------------
-  document.getElementById('btn-continue')!.addEventListener('click', async () => {
-    // Collect answers
-    const clientType = (document.querySelector('input[name="q-clients"]:checked') as HTMLInputElement)?.value || '';
-    const activites: string[] = [];
-    document.querySelectorAll('#q-activites input[type="checkbox"]:checked').forEach((cb: any) => {
-      activites.push(cb.value);
-    });
-
-    // Build promotion set: codes that should be forced to "obligatoire"
-    promotedCodes = new Set();
-
-    // B2B or Mixte → EB-UBO-001 obligatoire
-    if (clientType === 'entreprises' || clientType === 'mixte') {
-      promotedCodes.add('EB-UBO-001');
-    }
-    // PPE in Mixte → EB-PEP-001 obligatoire
-    if (clientType === 'mixte') {
-      promotedCodes.add('EB-PEP-001');
-    }
-    // Activites
-    if (activites.includes('transferts_fonds')) {
-      promotedCodes.add('EB-TRV-001');
-    }
-    if (activites.includes('risque_eleve')) {
-      promotedCodes.add('EB-EDD-001');
-    }
-    if (activites.includes('pep')) {
-      promotedCodes.add('EB-PEP-001');
-    }
-    if (activites.includes('correspondance_bancaire')) {
-      promotedCodes.add('EB-CBK-001');
-    }
-
-    // Hide questionnaire
-    document.getElementById('step-questionnaire')!.style.display = 'none';
-
-    // Load mapping and render with promotions
-    await loadMapping(selectedProfile);
-  });
-
-  // -------------------------------------------------------------------------
-  //  Profile toggle (gap)
-  // -------------------------------------------------------------------------
-  document.querySelectorAll('#gap-profile-toggle .profil-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#gap-profile-toggle .profil-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      gapProfile = (btn as HTMLElement).dataset.profile || '';
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  //  Step 2 — Load mapping from API
-  // -------------------------------------------------------------------------
-  async function loadMapping(profil: string) {
-    console.log('[PROC] loadMapping called with profil:', profil);
+  async function init() {
     try {
-      mappingData = await api(`/api/v1/procedures/mapping?profil=${profil}`);
-      console.log('[PROC] mappingData received:', mappingData);
-      renderThematiques();
+      const data = await api('/api/v1/settings');
+      settings = data.settings || {};
+      entityType = settings?.profil?.entity_type || settings?.entity_type || '';
+
+      // Check profile completeness
+      const nom = settings?.profil?.nom_etablissement || '';
+      if (!nom || !entityType) {
+        document.getElementById('prof-banner')!.style.display = 'block';
+      }
+
+      // Load existing procedures
+      try {
+        const procs = await api('/api/v1/procedures');
+        const list = Array.isArray(procs) ? procs : (procs.items || []);
+        for (const p of list) {
+          // Map by profile to be loadable
+          generatedProcs.set(p.id, p);
+        }
+      } catch (_) {}
+
+      renderProcedureList();
     } catch (e: any) {
-      console.error('[PROC] Mapping error:', e);
-      document.getElementById('step-2')!.style.display = 'none';
-      document.getElementById('step-3')!.style.display = 'none';
+      document.getElementById('left-subtitle')!.textContent = 'Erreur de chargement';
     }
   }
 
-  function renderThematiques() {
-    if (!mappingData) return;
-    const step2 = document.getElementById('step-2')!;
-    const list = document.getElementById('thematiques-list')!;
-    step2.style.display = 'block';
+  // ═══ DETERMINE APPLICABLE PROCEDURES ═══
 
-    // Split items: obligatoires (base + promoted) vs contextuels (remaining)
-    const baseObligCodes = new Set(mappingData.obligatoires.map((o: any) => o.code));
-    const allObligatoires: any[] = [...mappingData.obligatoires];
-    const remainingContextuels: any[] = [];
+  function getApplicableProcedures(): { obligatoires: string[], autres: string[] } {
+    const perim = settings?.perimetre || {};
+    const et = entityType || 'PSP';
 
-    for (const item of mappingData.contextuels) {
-      if (promotedCodes.has(item.code)) {
-        allObligatoires.push(item);
-      } else {
-        remainingContextuels.push(item);
-      }
+    // Start with base obligatoires
+    const baseSet = new Set(OBLIGATOIRES[et] || OBLIGATOIRES['PSP']);
+
+    // Secondary filters
+    const clients: string[] = perim.types_clients || [];
+    const hasEntreprises = clients.includes('Entreprises') || clients.includes('Institutionnels');
+
+    if (hasEntreprises) {
+      baseSet.add('EB-UBO-001');
+      baseSet.add('EB-PEP-001');
+    }
+    if (perim.transferts_fonds && (et === 'PSP' || et === 'EME')) {
+      baseSet.add('EB-TRV-001');
+    }
+    if (perim.correspondance_bancaire && (et === 'Banque' || et === 'EC')) {
+      baseSet.add('EB-CBK-001');
+    }
+    if (perim.agents_distributeurs) {
+      baseSet.add('EB-AGT-001');
     }
 
-    // Pre-check all obligatoires (base + promoted)
-    checkedCodes = new Set(allObligatoires.map((o: any) => o.code));
+    const obligatoires = [...baseSet];
 
-    let html = '';
-
-    // Obligatoires section
-    if (allObligatoires.length) {
-      html += '<div class="section-label">Obligatoires</div>';
-      html += allObligatoires.map((item: any) => {
-        const isPromoted = promotedCodes.has(item.code) && !baseObligCodes.has(item.code);
-        const badgeType = isPromoted ? 'promu' : 'obligatoire';
-        return renderTplItem(item, badgeType, true);
-      }).join('');
+    // "Autres" = all codes not in obligatoires, including always-available
+    const obligSet = new Set(obligatoires);
+    const autres: string[] = [];
+    for (const code of ALL_CODES) {
+      if (!obligSet.has(code)) autres.push(code);
+    }
+    // Ensure always-available are in "autres" if not already in obligatoires
+    for (const code of ALWAYS_AVAILABLE) {
+      if (!obligSet.has(code) && !autres.includes(code)) autres.push(code);
     }
 
-    // Contextuels section
-    if (remainingContextuels.length) {
-      html += '<div class="section-label">Selon contexte</div>';
-      html += remainingContextuels.map((item: any) => renderTplItem(item, 'optionnel', false)).join('');
+    return { obligatoires, autres };
+  }
+
+  // ═══ RENDER LEFT COLUMN ═══
+
+  function renderProcedureList() {
+    const { obligatoires, autres } = getApplicableProcedures();
+    const et = entityType || 'PSP';
+
+    document.getElementById('left-subtitle')!.textContent =
+      `${obligatoires.length} procedures pour profil ${et}`;
+
+    // Obligatoires
+    const obligEl = document.getElementById('proc-obligatoires')!;
+    obligEl.innerHTML = `<div class="section-label-oblig">Votre corpus obligatoire (${obligatoires.length})</div>` +
+      obligatoires.map(code => renderProcItem(code, et)).join('');
+
+    // Autres
+    const autresEl = document.getElementById('autres-list')!;
+    const toggleBtn = document.getElementById('toggle-autres')!;
+    if (autres.length) {
+      toggleBtn.style.display = 'flex';
+      autresEl.innerHTML = autres.map(code => renderProcItem(code, 'Tous')).join('');
     }
 
-    list.innerHTML = html;
-
-    // Click handler on items
-    list.querySelectorAll('.tpl-item').forEach((item: any) => {
-      item.addEventListener('click', () => {
-        item.classList.toggle('checked');
-        const code = item.dataset.code;
-        if (item.classList.contains('checked')) {
-          checkedCodes.add(code);
-        } else {
-          checkedCodes.delete(code);
-        }
-        updateSelectedList();
-      });
+    // Bind clicks
+    document.querySelectorAll('.proc-item').forEach((el: any) => {
+      el.addEventListener('click', () => onProcClick(el.dataset.ref));
     });
 
-    // Show step 3
-    document.getElementById('step-3')!.style.display = 'block';
-    updateSelectedList();
+    // Toggle "autres"
+    toggleBtn.addEventListener('click', () => {
+      const list = document.getElementById('autres-list')!;
+      const isOpen = list.style.display !== 'none';
+      list.style.display = isOpen ? 'none' : 'block';
+      toggleBtn.classList.toggle('open', !isOpen);
+    });
   }
 
-  function renderTplItem(item: any, type: string, isChecked: boolean): string {
-    const badge = type === 'obligatoire'
-      ? '<span class="badge-tpl badge-obligatoire">Obligatoire</span>'
-      : type === 'promu'
-      ? '<span class="badge-tpl badge-promu">Promu</span>'
-      : '<span class="badge-tpl badge-optionnel">Optionnel</span>';
-    const label = PROC_LABELS[item.code] || item.label || item.code;
+  function renderProcItem(code: string, badgeProfile: string): string {
+    const label = PROC_LABELS[code] || code;
+    const badgeCls = PROFILE_BADGE[badgeProfile] || 'pi-badge-tous';
     return `
-      <div class="tpl-item ${isChecked ? 'checked' : ''}" data-code="${item.code}" data-ref="${item.code}">
-        <div class="tpl-left">
-          <div class="tpl-check"></div>
-          <span class="tpl-name">${escHtml(label)}</span>
+      <div class="proc-item" data-ref="${code}">
+        <div class="pi-left">
+          <div class="pi-ref">${code}</div>
+          <div class="pi-title">${escHtml(label)}</div>
         </div>
-        ${badge}
+        <span class="pi-badge ${badgeCls}">${badgeProfile}</span>
       </div>`;
   }
 
-  function updateSelectedList() {
-    const checked = document.querySelectorAll('.tpl-item.checked');
-    const recap = document.getElementById('selected-recap')!;
-    const btn = document.getElementById('generateBtn') as HTMLButtonElement;
+  // ═══ PROCEDURE CLICK → GENERATE ═══
 
-    if (checked.length === 0) {
-      recap.innerHTML = '<div class="recap-empty">Selectionnez au moins une thematique</div>';
-      btn.disabled = true;
-      return;
-    }
+  async function onProcClick(ref: string) {
+    // Update selection UI
+    document.querySelectorAll('.proc-item').forEach((el: any) => {
+      el.classList.toggle('active', el.dataset.ref === ref);
+    });
+    selectedRef = ref;
 
-    btn.disabled = false;
-    recap.innerHTML = Array.from(checked).map((item: any) => {
-      const ref = item.dataset.ref;
-      const name = item.querySelector('.tpl-name')!.textContent;
-      return `<div class="recap-item">${ref} &mdash; ${escHtml(name)}</div>`;
-    }).join('');
-  }
-
-  // -------------------------------------------------------------------------
-  //  Generate
-  // -------------------------------------------------------------------------
-  document.getElementById('generateBtn')!.addEventListener('click', async () => {
-    const btn = document.getElementById('generateBtn') as HTMLButtonElement;
-    const errEl = document.getElementById('generate-error')!;
-    errEl.style.display = 'none';
-
-    if (!selectedProfile) {
-      errEl.textContent = 'Sélectionnez un profil réglementaire';
-      errEl.style.display = 'block';
-      return;
-    }
-    if (checkedCodes.size === 0) {
-      errEl.textContent = 'Cochez au moins une thématique';
-      errEl.style.display = 'block';
-      return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:1px;display:inline-block;vertical-align:middle;margin-right:8px"></div>Generation en cours\u2026';
-    showLoading('Extraction des obligations depuis Legifrance\u2026');
-
-    const thematiques = [...checkedCodes].map(code => PROC_LABELS[code] || code);
-    const profileMap: Record<string,string> = { 'PSP': 'psp', 'Banque': 'banque', 'CASP': 'casp' };
-
-    try {
-      const body = {
-        text_id: 'cmf',
-        tenant_profile: profileMap[selectedProfile] || 'banque',
-        client_context: `Profil: ${selectedProfile}\nThématiques sélectionnées: ${thematiques.join(', ')}`,
-      };
-      const result = await api('/api/v1/procedures/generate', { method: 'POST', body });
-      renderResult(result);
-      toast('Procédure générée avec succès');
-      loadProcedures();
-    } catch (e: any) {
-      errEl.textContent = e.message;
-      errEl.style.display = 'block';
-      document.getElementById('result-area')!.innerHTML = `
-        <div class="proc-empty">
-          <p class="proc-empty-text" style="color:#8B3A3A">${escHtml(e.message)}</p>
-        </div>`;
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Generer ces procedures';
-    }
-  });
-
-  // -------------------------------------------------------------------------
-  //  File handling (gap analysis)
-  // -------------------------------------------------------------------------
-  function setFile(f: File) {
-    const allowed = ['.pdf', '.docx', '.doc', '.txt'];
-    const ext = '.' + f.name.split('.').pop()!.toLowerCase();
-    if (!allowed.includes(ext)) { toast('Format non supporté. Utilisez PDF, DOCX ou TXT.', 'error'); return; }
-    if (f.size > 10 * 1024 * 1024) { toast('Fichier trop volumineux (max 10 Mo).', 'error'); return; }
-    selectedFile = f;
-    document.getElementById('drop-label')!.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5C6347" stroke-width="2" style="margin-bottom:4px"><polyline points="20 6 9 17 4 12"/></svg>
-      <p class="proc-drop-main" style="font-weight:500">${escHtml(f.name)}</p>
-      <p class="proc-drop-sub">${(f.size / 1024).toFixed(0)} Ko &middot; Cliquez pour changer</p>`;
-    (document.getElementById('gapBtn') as HTMLButtonElement).disabled = false;
-  }
-
-  const dropZone = document.getElementById('drop-zone')!;
-  dropZone.addEventListener('click', () => document.getElementById('gapFile')!.click());
-  dropZone.addEventListener('dragover', (e: DragEvent) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-  dropZone.addEventListener('drop', (e: DragEvent) => { e.preventDefault(); dropZone.classList.remove('dragover'); if (e.dataTransfer?.files?.[0]) setFile(e.dataTransfer.files[0]); });
-  document.getElementById('gapFile')!.addEventListener('change', (e: any) => { if (e.target.files?.[0]) setFile(e.target.files[0]); });
-
-  // -------------------------------------------------------------------------
-  //  Gap analysis
-  // -------------------------------------------------------------------------
-  document.getElementById('gapBtn')!.addEventListener('click', async () => {
-    const btn = document.getElementById('gapBtn') as HTMLButtonElement;
-    const errEl = document.getElementById('gap-error')!;
-    errEl.style.display = 'none';
-
-    if (!selectedFile) { errEl.textContent = 'Aucun fichier sélectionné'; errEl.style.display = 'block'; return; }
-    if (!gapProfile) { errEl.textContent = 'Sélectionnez un profil'; errEl.style.display = 'block'; return; }
-
-    btn.disabled = true;
-    btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:1px;display:inline-block;vertical-align:middle;margin-right:8px"></div>Analyse en cours\u2026';
-    showLoading('Upload du document et analyse des écarts\u2026');
-
-    const profileMap: Record<string,string> = { 'PSP': 'psp', 'Banque': 'banque', 'CASP': 'casp' };
-
-    try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('text_id', 'cmf');
-      formData.append('profile', profileMap[gapProfile] || 'banque');
-
-      const token = sessionStorage.getItem('ew_token');
-      const r = await fetch(`${API}/api/v1/gap-analysis/procedure`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData,
-      });
-      if (!r.ok) {
-        const errData = await r.json().catch(() => ({}));
-        throw new Error(errData.detail || `Erreur ${r.status}`);
-      }
-      const result = await r.json();
-      renderGapResult(result);
-      toast('Gap analysis terminé');
-    } catch (e: any) {
-      errEl.textContent = e.message;
-      errEl.style.display = 'block';
-      document.getElementById('result-area')!.innerHTML = `
-        <div class="proc-empty">
-          <p class="proc-empty-text" style="color:#8B3A3A">${escHtml(e.message)}</p>
-        </div>`;
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Lancer le gap analysis';
-    }
-  });
-
-  // -------------------------------------------------------------------------
-  //  Rendering helpers
-  // -------------------------------------------------------------------------
-  function showLoading(msg: string) {
-    document.getElementById('result-area')!.innerHTML = `
+    // Show loading
+    const area = document.getElementById('result-area')!;
+    area.innerHTML = `
       <div style="display:flex; align-items:center; justify-content:center; height:100%; flex-direction:column; gap:12px">
         <div class="spinner"></div>
-        <p style="font-size:13px; color:#3D3B38">${msg}</p>
-        <p style="font-size:11px; color:#B0ADA7">Cela peut prendre 30 à 60 secondes</p>
+        <p style="font-size:13px; color:#3D3B38">Generation de ${ref} en cours...</p>
+        <p style="font-size:11px; color:#B0ADA7">Cela peut prendre 30 a 60 secondes</p>
       </div>`;
+
+    const profileMap: Record<string,string> = { 'PSP': 'psp', 'Banque': 'banque', 'CASP': 'casp', 'EME': 'psp', 'EC': 'banque' };
+    const et = entityType || 'PSP';
+    const profile = profileMap[et] || 'psp';
+    const label = PROC_LABELS[ref] || ref;
+
+    try {
+      const result = await api('/api/v1/procedures/generate', {
+        method: 'POST',
+        body: {
+          text_id: 'cmf',
+          tenant_profile: profile,
+          client_context: `Procedure demandee : ${ref} — ${label}`,
+        },
+      });
+      generatedProcs.set(result.id, result);
+      renderResult(result, ref);
+      toast('Procedure generee');
+    } catch (e: any) {
+      area.innerHTML = `
+        <div class="proc-empty">
+          <p class="proc-empty-text" style="color:#8B3A3A">${escHtml(e.message || 'Erreur de generation')}</p>
+        </div>`;
+      toast(e.message || 'Erreur', 'error');
+    }
   }
 
-  function renderResult(proc: any) {
+  // ═══ RENDER RESULT ═══
+
+  function renderResult(proc: any, ref: string) {
     const content = proc.content || '';
     const sections = parseSections(content);
     const srcsCited = proc.sources_cited || [];
+    const isPerso = !!settings?.profil?.nom_etablissement;
+    const badgeTxt = isPerso ? 'Personnalisee avec votre profil' : 'Generique';
+    const badgeCls = isPerso ? 'badge-perso' : 'badge-generic';
 
     document.getElementById('result-area')!.innerHTML = `
       <div style="padding:24px; max-width:800px; margin:0 auto">
-        <div class="flex items-center justify-between" style="margin-bottom:20px">
+        <div class="result-header">
           <div>
-            <div class="flex items-center gap-8">
-              <h1 style="font-size:18px">Procédure générée</h1>
-              ${statusBadge(proc.status)}
+            <div class="result-title">${escHtml(ref)} — ${escHtml(PROC_LABELS[ref] || '')}</div>
+            <div class="result-meta">
+              ${proc.obligation_count || '?'} obligations &middot; ${proc.model_name || 'Claude'}
+              &middot; ${formatDate(proc.created_at)}
             </div>
-            <p style="font-size:12px; color:#6B6860; margin-top:4px">
-              ${proc.profile} &middot; ${proc.obligation_count} obligations &middot; ${proc.model_name || ''}
-            </p>
           </div>
-          ${proc.status === 'pending_validation' ? `
-            <div class="flex gap-8">
-              <button class="btn btn-success btn-sm" data-validate-proc="${proc.id}" data-decision="validated">Valider</button>
-              <button class="btn btn-danger btn-sm" data-validate-proc="${proc.id}" data-decision="rejected">Rejeter</button>
-            </div>` : ''}
+          <span class="result-badge ${badgeCls}">${badgeTxt}</span>
         </div>
 
+        ${srcsCited.length ? `
         <div style="margin-bottom:16px">
-          <h3 style="font-size:11px; color:#6B6860; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px">Articles cités</h3>
-          <div class="flex gap-4" style="flex-wrap:wrap">
+          <div style="font-size:11px; color:#6B6860; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; font-weight:600">Articles cites</div>
+          <div style="display:flex; gap:4px; flex-wrap:wrap">
             ${srcsCited.map((s: any) => `
               <a href="${s.lien_legifrance || '#'}" target="_blank" rel="noopener"
-                 class="badge badge-accent" style="text-decoration:none; cursor:pointer; font-size:11px"
-                 title="${s.legiarti_id || ''}">
-                Art. ${escHtml(s.article_number)}
+                 style="font-size:10px; padding:2px 8px; background:#EEF0E8; border-radius:3px; color:#5C6347; text-decoration:none; border:0.5px solid #5C6347">
+                Art. ${escHtml(s.article_number || '')}
               </a>
             `).join('')}
           </div>
-        </div>
+        </div>` : ''}
 
         ${sections.map((sec: any, i: number) => `
           <div class="expandable ${i < 4 ? 'open' : ''}">
@@ -1017,138 +408,88 @@ const base = import.meta.env.BASE_URL;
           </div>
         `).join('')}
 
-        <div class="warning-box" style="margin-top:20px">
+        <div class="warning-box">
           <span>&#9888;</span>
           <div>
             <strong>Avertissement Compliance Officer</strong><br>
-            Ce document est un PROJET généré automatiquement par IA à partir de sources Legifrance.
-            Il DOIT être validé par le Compliance Officer avant toute mise en application.
+            Ce document est un PROJET genere automatiquement par IA a partir de sources Legifrance.
+            Il DOIT etre valide par le Compliance Officer avant toute mise en application.
           </div>
         </div>
-        <p style="font-size:11px; color:#B0ADA7; margin-top:12px">${escHtml(proc.provenance || '')}</p>
 
-        <div style="display:flex; gap:8px; margin-top:16px">
-          <button class="btn-generate" style="flex:1; font-size:12px; padding:8px 12px" data-export-docx="${proc.id}">
-            Télécharger DOCX
-          </button>
-          <button class="btn-generate" style="flex:1; font-size:12px; padding:8px 12px; background:#3D3B38" onclick="toast('Sauvegardé dans Mes Procédures')">
-            Sauvegarder dans Mes Procédures
-          </button>
+        <div class="result-actions">
+          <button class="btn-docx" id="btn-export-docx" data-proc-id="${proc.id}">Telecharger .docx</button>
+          ${proc.status === 'pending_validation' ? `
+            <button class="btn-validate" id="btn-mark-valid" data-proc-id="${proc.id}">Marquer comme validee</button>
+          ` : `
+            <button class="btn-validate" disabled>${proc.status === 'validated' ? 'Validee' : proc.status}</button>
+          `}
         </div>
       </div>`;
+
     initExpandables();
+    bindResultActions(proc, ref);
+  }
 
-    document.querySelectorAll('[data-validate-proc]').forEach((btn: any) => {
-      btn.addEventListener('click', () => validateProc(btn.dataset.validateProc, btn.dataset.decision));
-    });
-
-    // DOCX export handler
-    document.querySelectorAll('[data-export-docx]').forEach((btn: any) => {
-      btn.addEventListener('click', async () => {
-        const procId = btn.dataset.exportDocx;
+  function bindResultActions(proc: any, ref: string) {
+    // DOCX export
+    const docxBtn = document.getElementById('btn-export-docx');
+    if (docxBtn) {
+      docxBtn.addEventListener('click', async () => {
+        const btn = docxBtn as HTMLButtonElement;
         btn.disabled = true;
-        btn.textContent = 'Export en cours…';
+        btn.textContent = 'Export en cours...';
         try {
           const token = sessionStorage.getItem('ew_token');
-          const res = await fetch(`${API}/api/v1/procedures/${procId}/export-docx`, {
+          const res = await fetch(`${API}/api/v1/procedures/${proc.id}/export-docx`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err.detail || `Erreur ${res.status}`);
-          }
+          if (!res.ok) throw new Error(`Erreur ${res.status}`);
           const blob = await res.blob();
           const disposition = res.headers.get('Content-Disposition') || '';
-          const filenameMatch = disposition.match(/filename="?([^"]+)"?/);
-          const filename = filenameMatch ? filenameMatch[1] : 'procedure.docx';
+          const m = disposition.match(/filename="?([^"]+)"?/);
+          const filename = m ? m[1] : `${ref}.docx`;
           const a = document.createElement('a');
           a.href = URL.createObjectURL(blob);
           a.download = filename;
           a.click();
           URL.revokeObjectURL(a.href);
-          toast('Export DOCX téléchargé');
+          toast('DOCX telecharge');
         } catch (e: any) {
-          toast(e.message || 'Erreur export DOCX', 'error');
+          toast(e.message || 'Erreur export', 'error');
         } finally {
           btn.disabled = false;
-          btn.textContent = 'Télécharger DOCX';
+          btn.textContent = 'Telecharger .docx';
         }
       });
-    });
+    }
+
+    // Validate
+    const validBtn = document.getElementById('btn-mark-valid');
+    if (validBtn) {
+      validBtn.addEventListener('click', async () => {
+        try {
+          const result = await api(`/api/v1/procedures/${proc.id}/validate`, {
+            method: 'POST',
+            body: { decision: 'validated' },
+          });
+          renderResult(result, ref);
+          toast('Procedure validee');
+        } catch (e: any) {
+          toast(e.message || 'Erreur', 'error');
+        }
+      });
+    }
   }
 
-  function renderGapResult(report: any) {
-    const gaps = report.gaps || [];
-    const covered = gaps.filter((g: any) => g.status === 'covered').length;
-    const partial = gaps.filter((g: any) => g.status === 'partial').length;
-    const absent = gaps.filter((g: any) => g.status === 'absent').length;
-
-    document.getElementById('result-area')!.innerHTML = `
-      <div style="padding:24px; max-width:800px; margin:0 auto">
-        <div style="margin-bottom:20px">
-          <div class="flex items-center gap-8">
-            <h1 style="font-size:18px">Gap Analysis</h1>
-            ${statusBadge(report.status || 'pending_validation')}
-          </div>
-          <p style="font-size:12px; color:#6B6860; margin-top:4px">
-            ${escHtml(report.text_id || 'CMF')} &middot; ${escHtml(report.profile || gapProfile)} &middot; ${gaps.length} obligations analysées
-          </p>
-        </div>
-
-        <div style="display:flex; gap:12px; margin-bottom:24px">
-          <div style="flex:1; text-align:center; padding:12px; background:#EEF0E8; border-radius:4px">
-            <div style="font-size:20px; font-weight:600; color:#5C6347">${covered}</div>
-            <div style="font-size:11px; color:#6B6860">Couvertes</div>
-          </div>
-          <div style="flex:1; text-align:center; padding:12px; background:#F5F0E0; border-radius:4px">
-            <div style="font-size:20px; font-weight:600; color:#8B7A3A">${partial}</div>
-            <div style="font-size:11px; color:#6B6860">Partielles</div>
-          </div>
-          <div style="flex:1; text-align:center; padding:12px; background:#FDF2F2; border-radius:4px">
-            <div style="font-size:20px; font-weight:600; color:#8B3A3A">${absent}</div>
-            <div style="font-size:11px; color:#6B6860">Absentes</div>
-          </div>
-        </div>
-
-        ${gaps.map((g: any, i: number) => {
-          const statusColor = g.status === 'covered' ? '#5C6347' : g.status === 'partial' ? '#8B7A3A' : '#8B3A3A';
-          const statusLabel = g.status === 'covered' ? 'Couverte' : g.status === 'partial' ? 'Partielle' : 'Absente';
-          return `
-            <div class="expandable ${g.status !== 'covered' ? 'open' : ''}">
-              <button class="expandable-header">
-                <span style="display:flex; align-items:center; gap:8px">
-                  <span style="width:8px; height:8px; border-radius:50%; background:${statusColor}; flex-shrink:0"></span>
-                  ${escHtml(g.obligation || g.article || 'Obligation ' + (i + 1))}
-                  <span style="font-size:10px; color:${statusColor}; font-weight:500">${statusLabel}</span>
-                </span>
-                <span class="arrow">&#9654;</span>
-              </button>
-              <div class="expandable-body">
-                <div class="md-content">${renderMarkdown(g.analysis || g.comment || '')}</div>
-                ${g.recommendation ? `<div style="margin-top:8px; padding:8px 12px; background:#EEF0E8; border-radius:4px; font-size:12px"><strong>Recommandation :</strong> ${escHtml(g.recommendation)}</div>` : ''}
-              </div>
-            </div>`;
-        }).join('')}
-
-        <div class="warning-box" style="margin-top:20px">
-          <span>&#9888;</span>
-          <div>
-            <strong>Avertissement</strong><br>
-            Cette analyse est générée automatiquement. Elle doit être revue par le Compliance Officer.
-          </div>
-        </div>
-      </div>`;
-    initExpandables();
-  }
+  // ═══ HELPERS ═══
 
   function parseSections(md: string) {
     const lines = md.split('\n');
     const sections: any[] = [];
     let current: any = null;
     for (const line of lines) {
-      // Match bold numbered headings: **1 — Title** or **2 — Title**
       const mBold = line.match(/^\*\*(\d+)\s*[-—]\s*(.+?)\*\*/);
-      // Fallback: match Markdown ## headings (legacy format)
       const m2 = line.match(/^## \d*\.?\s*(.+)/);
       const m1 = line.match(/^# (.+)/);
       if (mBold) {
@@ -1169,71 +510,6 @@ const base = import.meta.env.BASE_URL;
     return sections;
   }
 
-  async function validateProc(id: string, decision: string) {
-    const comment = decision === 'rejected' ? prompt('Raison du rejet (optionnel):') : null;
-    try {
-      const body: any = { decision };
-      if (comment) body.comment = comment;
-      const result = await api(`/api/v1/procedures/${id}/validate`, { method: 'POST', body });
-      renderResult(result);
-      toast(decision === 'validated' ? 'Procédure validée' : 'Procédure rejetée');
-      loadProcedures();
-    } catch (e: any) {
-      toast(e.message, 'error');
-    }
-  }
-
-  // -------------------------------------------------------------------------
-  //  Procedure list
-  // -------------------------------------------------------------------------
-  async function loadProcedures() {
-    try {
-      procedures = await api('/api/v1/procedures');
-      renderProcedureList();
-    } catch (e: any) {
-      document.getElementById('procedure-list')!.innerHTML =
-        `<p style="font-size:12px; color:#B0ADA7">${e.message}</p>`;
-    }
-  }
-
-  function renderProcedureList() {
-    const list = document.getElementById('procedure-list')!;
-    if (!procedures.length) {
-      list.innerHTML = '<p style="font-size:11px; color:#B0ADA6">Aucune procedure generee</p>';
-      return;
-    }
-    list.innerHTML = procedures.map((p: any) => {
-      const profileLabel = ({ psp: 'PSP', banque: 'Banque', casp: 'CASP' } as Record<string,string>)[p.profile?.toLowerCase()] || p.profile;
-      const title = `Procedure LCB-FT — ${profileLabel}`;
-      const statusClass = p.status === 'validated' ? 'validated' : p.status === 'rejected' ? 'rejected' : '';
-      const statusLabel = p.status === 'validated' ? 'Valide' : p.status === 'rejected' ? 'Rejete' : 'A valider';
-      return `
-        <div class="gen-item" data-load-proc="${p.id}">
-          <div>
-            <div class="gen-name">${escHtml(title)}</div>
-            <div class="gen-meta">${p.obligation_count} obligations &middot; ${formatDate(p.created_at)}</div>
-          </div>
-          <span class="validation-badge ${statusClass}">${statusLabel}</span>
-        </div>`;
-    }).join('');
-    list.querySelectorAll('[data-load-proc]').forEach((el: any) => {
-      el.addEventListener('click', () => loadProcedure(el.dataset.loadProc));
-    });
-  }
-
-  async function loadProcedure(id: string) {
-    showLoading('Chargement de la procédure\u2026');
-    try {
-      const result = await api(`/api/v1/procedures/${id}`);
-      renderResult(result);
-    } catch (e: any) {
-      toast(e.message, 'error');
-    }
-  }
-
-  // -------------------------------------------------------------------------
-  //  Init
-  // -------------------------------------------------------------------------
-  switchMode('scratch');
-  loadProcedures();
+  // ═══ START ═══
+  init();
 </script>
