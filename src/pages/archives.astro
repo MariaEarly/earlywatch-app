@@ -359,7 +359,7 @@ const base = import.meta.env.BASE_URL;
     display: inline-flex;
     align-items: center;
     margin-left: 6px;
-    color: #B0ADA7;
+    color: var(--ew-ink3);
     opacity: 0;
     transition: opacity 0.15s;
     vertical-align: middle;
@@ -368,14 +368,14 @@ const base = import.meta.env.BASE_URL;
   .article-card:hover .title-ext-icon {
     opacity: 1;
   }
-  .action-sep { color: #B0ADA7; margin: 0 4px; font-size: 12px; }
+  .action-sep { color: var(--ew-ink3); margin: 0 4px; font-size: 12px; }
   .badge-tracker-added {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
     padding: 2px 8px;
-    background: var(--ew-kaki-bg);
-    color: var(--ew-kaki);
-    border: 0.5px solid var(--ew-kaki-border);
+    background: rgba(26,26,22,0.07);
+    color: var(--ew-ink);
+    border: 0.5px solid var(--ew-border2);
     border-radius: var(--ew-radius-sm);
   }
 </style>

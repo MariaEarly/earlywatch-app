@@ -18,29 +18,29 @@ const { title } = Astro.props;
     html, body { height: 100%; }
     body {
       font-family: 'IBM Plex Sans', sans-serif;
-      background: #FFFFFF; color: #111110;
+      background: var(--ew-bg); color: var(--ew-ink);
       display: flex; align-items: center; justify-content: center;
       min-height: 100vh; padding: 24px;
     }
     .auth-card { width: 100%; max-width: 340px; }
     .auth-brand {
-      font-size: 13px; font-weight: 400; color: #111110;
+      font-size: 13px; font-weight: 400; color: var(--ew-ink);
       margin-bottom: 36px; text-align: center;
     }
     .auth-brand span { font-weight: 500; color: var(--ew-text); }
     .auth-subtitle {
-      font-size: 13px; color: #737370; text-align: center;
+      font-size: 13px; color: var(--ew-ink3); text-align: center;
       margin-bottom: 32px; line-height: 1.6;
     }
     .auth-card label {
       display: block; font-size: 13px; font-weight: 400;
-      color: #737370; margin-bottom: 6px;
+      color: var(--ew-ink3); margin-bottom: 6px;
     }
     .auth-card input {
       width: 100%; padding: 11px 0;
-      border: none; border-bottom: 0.5px solid #E4E4E2;
+      border: none; border-bottom: 0.5px solid var(--ew-border2);
       background: transparent;
-      font-size: 15px; font-family: inherit; color: #111110;
+      font-size: 15px; font-family: inherit; color: var(--ew-ink);
       outline: none; margin-bottom: 24px; transition: border-color .15s;
       border-radius: 0;
     }
@@ -50,8 +50,8 @@ const { title } = Astro.props;
     .auth-card input:-webkit-autofill,
     .auth-card input:-webkit-autofill:hover,
     .auth-card input:-webkit-autofill:focus {
-      -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset !important;
-      -webkit-text-fill-color: #111110 !important;
+      -webkit-box-shadow: 0 0 0 1000px var(--ew-bg) inset !important;
+      -webkit-text-fill-color: var(--ew-ink) !important;
       transition: background-color 5000s ease-in-out 0s;
     }
     /* Password toggle */
@@ -60,9 +60,9 @@ const { title } = Astro.props;
     .pwd-toggle {
       position: absolute; right: 0; top: 50%; transform: translateY(-70%);
       background: none; border: none; cursor: pointer; padding: 4px;
-      color: #737370; font-size: 18px; line-height: 1;
+      color: var(--ew-ink3); font-size: 18px; line-height: 1;
     }
-    .pwd-toggle:hover { color: #111110; }
+    .pwd-toggle:hover { color: var(--ew-ink); }
     .auth-btn {
       width: 100%; padding: 13px;
       background: var(--ew-text); color: #fff;
@@ -82,17 +82,17 @@ const { title } = Astro.props;
       font-size: 13px; text-align: center; margin-top: 16px;
       line-height: 1.6; display: none;
     }
-    .auth-msg.success { display: block; color: var(--ew-success-text); }
+    .auth-msg.success { display: block; color: var(--ew-ink2); }
     .auth-msg.error { display: block; color: #DC2626; }
     .auth-footer {
       margin-top: 24px; text-align: center;
-      font-size: 12px; color: #737370;
+      font-size: 12px; color: var(--ew-ink3);
     }
     .auth-footer a { color: var(--ew-text); text-decoration: none; }
     .auth-spinner {
       display: inline-block; width: 14px; height: 14px;
       border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: white; border-radius: 50%;
+      border-top-color: var(--ew-bg); border-radius: 50%;
       animation: auth-spin .8s linear infinite; margin-right: 6px; vertical-align: middle;
     }
     @keyframes auth-spin { to { transform: rotate(360deg); } }

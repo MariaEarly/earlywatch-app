@@ -14,16 +14,16 @@ const base = import.meta.env.BASE_URL;
 
   <!-- Aper\u00e7u Hebdo overlay -->
   <div id="apercu-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,25,24,0.4);z-index:200;display:none;align-items:center;justify-content:center">
-    <div id="apercu-panel" style="background:#FFFFFF;border:0.5px solid #E4E4E2;border-radius:8px;width:680px;max-width:92vw;max-height:85vh;display:flex;flex-direction:column">
-      <div style="padding:18px 22px 14px;border-bottom:0.5px solid #E4E4E2;display:flex;justify-content:space-between;align-items:center">
+    <div id="apercu-panel" style="background:var(--ew-bg);border:0.5px solid var(--ew-border2);border-radius:8px;width:680px;max-width:92vw;max-height:85vh;display:flex;flex-direction:column">
+      <div style="padding:18px 22px 14px;border-bottom:0.5px solid var(--ew-border2);display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div id="apercu-title" style="font-size:14px;font-weight:500;color:#1A1918">Aper\u00e7u Hebdo</div>
-          <div style="font-size:12px;color:#6B6860;margin-top:2px">Glissez pour r\u00e9ordonner les articles</div>
+          <div id="apercu-title" style="font-size:14px;font-weight:500;color:var(--ew-ink)">Aper\u00e7u Hebdo</div>
+          <div style="font-size:12px;color:var(--ew-ink2);margin-top:2px">Glissez pour r\u00e9ordonner les articles</div>
         </div>
-        <button id="apercu-close" style="background:none;border:none;font-size:18px;color:#6B6860;cursor:pointer;padding:4px">&times;</button>
+        <button id="apercu-close" style="background:none;border:none;font-size:18px;color:var(--ew-ink2);cursor:pointer;padding:4px">&times;</button>
       </div>
       <div id="apercu-list" style="flex:1;overflow-y:auto;padding:14px 22px"></div>
-      <div style="padding:14px 22px;border-top:0.5px solid #E4E4E2;display:flex;gap:10px;justify-content:flex-end">
+      <div style="padding:14px 22px;border-top:0.5px solid var(--ew-border2);display:flex;gap:10px;justify-content:flex-end">
         <button id="apercu-cancel" class="btn btn-sm btn-secondary" style="border-radius:4px">Annuler</button>
         <button id="apercu-export" class="btn btn-sm btn-primary" style="border-radius:4px">Exporter dans cet ordre</button>
       </div>
@@ -33,7 +33,7 @@ const base = import.meta.env.BASE_URL;
   <!-- Pub drawer (slide-in panel from right — Autres Publications) -->
   <div id="pub-overlay" style="display:none">
     <div id="pub-drawer">
-      <header style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:0.5px solid #E4E4E2">
+      <header style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:0.5px solid var(--ew-border2)">
         <h3 style="margin:0;font-size:16px">Ajouter aux Autres Publications</h3>
         <button id="pub-close" class="btn btn-ghost" style="font-size:18px">&times;</button>
       </header>
@@ -66,7 +66,7 @@ const base = import.meta.env.BASE_URL;
           <input type="url" id="pub-lien" class="tracker-input" />
         </label>
       </div>
-      <footer style="padding:16px;border-top:0.5px solid #E4E4E2;display:flex;gap:8px;justify-content:flex-end">
+      <footer style="padding:16px;border-top:0.5px solid var(--ew-border2);display:flex;gap:8px;justify-content:flex-end">
         <button id="pub-cancel" class="btn btn-secondary">Annuler</button>
         <button id="pub-confirm" class="btn btn-primary">Confirmer</button>
       </footer>
@@ -77,13 +77,13 @@ const base = import.meta.env.BASE_URL;
   <div id="cloturer-overlay" style="display:none">
     <div id="cloturer-modal">
       <div style="padding:20px 24px 16px">
-        <div style="font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:15px;color:#1A1918;margin-bottom:10px">&#9888; Articles non ajoutés au tracker</div>
-        <p id="cloturer-msg" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:#1A1918;margin:0 0 6px;line-height:1.5"></p>
-        <p style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:#6B6860;margin:0;line-height:1.4">Vous pourrez les retrouver dans les Archives.</p>
+        <div style="font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:15px;color:var(--ew-ink);margin-bottom:10px">&#9888; Articles non ajoutés au tracker</div>
+        <p id="cloturer-msg" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:var(--ew-ink);margin:0 0 6px;line-height:1.5"></p>
+        <p style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:var(--ew-ink2);margin:0;line-height:1.4">Vous pourrez les retrouver dans les Archives.</p>
       </div>
-      <div style="padding:14px 24px;border-top:0.5px solid #E4E4E2;display:flex;gap:10px;justify-content:flex-end">
-        <button id="cloturer-cancel" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:7px 18px;border:0.5px solid #E4E4E2;background:transparent;color:#111110;border-radius:8px;cursor:pointer">Annuler</button>
-        <button id="cloturer-confirm" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:7px 18px;border:none;background:#111110;color:white;border-radius:8px;cursor:pointer">Clôturer quand même</button>
+      <div style="padding:14px 24px;border-top:0.5px solid var(--ew-border2);display:flex;gap:10px;justify-content:flex-end">
+        <button id="cloturer-cancel" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:7px 18px;border:0.5px solid var(--ew-border2);background:transparent;color:var(--ew-ink);border-radius:8px;cursor:pointer">Annuler</button>
+        <button id="cloturer-confirm" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:7px 18px;border:none;background:var(--ew-ink);color:var(--ew-bg);border-radius:8px;cursor:pointer">Clôturer quand même</button>
       </div>
     </div>
   </div>
@@ -91,7 +91,7 @@ const base = import.meta.env.BASE_URL;
   <!-- Tracker drawer (slide-in panel from right) -->
   <div id="tracker-overlay" style="display:none">
     <div id="tracker-drawer">
-      <header style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:0.5px solid #E4E4E2">
+      <header style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:0.5px solid var(--ew-border2)">
         <h3 style="margin:0;font-size:16px">Ajouter au Tracker</h3>
         <button id="tracker-close" class="btn btn-ghost" style="font-size:18px">&times;</button>
       </header>
@@ -129,7 +129,7 @@ const base = import.meta.env.BASE_URL;
           <input type="text" id="tracker-statut" class="tracker-input" value="Publi\u00e9" />
         </label>
       </div>
-      <footer style="padding:16px;border-top:0.5px solid #E4E4E2;display:flex;gap:8px;justify-content:flex-end">
+      <footer style="padding:16px;border-top:0.5px solid var(--ew-border2);display:flex;gap:8px;justify-content:flex-end">
         <button id="tracker-cancel" class="btn btn-secondary">Annuler</button>
         <button id="tracker-confirm" class="btn btn-primary">Confirmer</button>
       </footer>
@@ -337,7 +337,7 @@ const base = import.meta.env.BASE_URL;
     });
 
     const sortSelectHtml = `<div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-      <select id="sort-select" style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 10px;border:0.5px solid #E4E4E2;border-radius:8px;background:#FFFFFF;color:#111110;cursor:pointer;outline:none">
+      <select id="sort-select" style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 10px;border:0.5px solid var(--ew-border2);border-radius:8px;background:var(--ew-bg);color:var(--ew-ink);cursor:pointer;outline:none">
         <option value="recent"${sortMode === 'recent' ? ' selected' : ''}>Plus r\u00e9cent</option>
         <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien</option>
         <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine</option>
@@ -360,7 +360,7 @@ const base = import.meta.env.BASE_URL;
         <div class="article-meta">
           <span>${a.source_name || 'Source inconnue'}</span>
           <span>&middot;</span>
-          <span>${a.published_at ? formatDate(a.published_at) : `<span class="date-unknown-badge" style="background:#E8A23E;color:#fff;font-size:10px;padding:1px 6px;border-radius:3px;font-style:normal">Date inconnue</span><a href="#" class="fix-date-link" data-fix-date="${a.id}" onclick="event.stopPropagation();event.preventDefault()" style="font-size:10px;color:#9B9790;margin-left:4px;text-decoration:underline">Corriger</a>`}</span>
+          <span>${a.published_at ? formatDate(a.published_at) : `<span class="date-unknown-badge" style="background:var(--ew-orange);color:#fff;font-size:10px;padding:1px 6px;border-radius:3px;font-style:normal">Date inconnue</span><a href="#" class="fix-date-link" data-fix-date="${a.id}" onclick="event.stopPropagation();event.preventDefault()" style="font-size:10px;color:var(--ew-ink3);margin-left:4px;text-decoration:underline">Corriger</a>`}</span>
           ${a.detected_action_type ? actionBadge(a.detected_action_type) : ''}
           <span style="margin-left:auto">${statusBadge(a.status)}</span>
         </div>
@@ -431,7 +431,7 @@ const base = import.meta.env.BASE_URL;
         const articleId = el.dataset.fixDate;
         const parent = el.parentElement;
         if (!parent) return;
-        parent.innerHTML = `<input type="date" class="date-fix-input" data-date-article="${articleId}" style="font-size:11px;padding:1px 4px;border:0.5px solid #E4E4E2;border-radius:8px;font-family:'IBM Plex Sans',sans-serif;background:#FFFFFF"><button class="date-fix-ok" data-date-ok="${articleId}" style="font-size:10px;margin-left:3px;padding:1px 6px;border:1px solid #111110;border-radius:8px;background:#111110;color:#fff;cursor:pointer">OK</button>`;
+        parent.innerHTML = `<input type="date" class="date-fix-input" data-date-article="${articleId}" style="font-size:11px;padding:1px 4px;border:0.5px solid var(--ew-border2);border-radius:8px;font-family:'IBM Plex Sans',sans-serif;background:var(--ew-bg)"><button class="date-fix-ok" data-date-ok="${articleId}" style="font-size:10px;margin-left:3px;padding:1px 6px;border:1px solid var(--ew-ink);border-radius:8px;background:var(--ew-ink);color:#fff;cursor:pointer">OK</button>`;
         parent.querySelector('.date-fix-ok')!.addEventListener('click', async (ev: any) => {
           ev.stopPropagation();
           const input = parent.querySelector('.date-fix-input') as HTMLInputElement;
@@ -541,8 +541,8 @@ const base = import.meta.env.BASE_URL;
     const trackerBlock: string = trackerPendingCount > 0 ? `
       <div class="sidebar-section">
         <h3>Tracker</h3>
-        <div style="font-size:11px;color:#6B6860">
-          <span style="color:#E8A23E;font-weight:600">${trackerPendingCount}</span> article${trackerPendingCount > 1 ? 's' : ''} éligible${trackerPendingCount > 1 ? 's' : ''} non ajouté${trackerPendingCount > 1 ? 's' : ''}
+        <div style="font-size:11px;color:var(--ew-ink2)">
+          <span style="color:var(--ew-orange);font-weight:600">${trackerPendingCount}</span> article${trackerPendingCount > 1 ? 's' : ''} éligible${trackerPendingCount > 1 ? 's' : ''} non ajouté${trackerPendingCount > 1 ? 's' : ''}
         </div>
       </div>` : '';
 
@@ -550,10 +550,10 @@ const base = import.meta.env.BASE_URL;
     const flashArticles = articles.filter((a: any) => a.lifecycle_status === 'triaged' && a.status === 'quotidien' && !a.published_to_newsletter);
     const flashBlock: string = (newsletterEnabled() && flashArticles.length > 0) ? `
       <div class="sidebar-section">
-        <h3 style="display:flex;align-items:center;gap:6px"><span style="color:#E8A23E;font-size:10px">&#9679;</span> Flash</h3>
+        <h3 style="display:flex;align-items:center;gap:6px"><span style="color:var(--ew-orange);font-size:10px">&#9679;</span> Flash</h3>
         <div style="display:flex;flex-direction:column;gap:4px">
           ${flashArticles.map((a: any) => `
-            <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:0.5px solid #E4E4E2">
+            <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:0.5px solid var(--ew-border2)">
               <span style="flex:1;font-size:11px;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(a.title)}">${escHtml(a.title.slice(0, 50))}${a.title.length > 50 ? '...' : ''}</span>
               <button class="btn btn-sm btn-secondary" data-flash-publish="${a.id}" style="padding:1px 6px;font-size:9px;white-space:nowrap">Publier</button>
             </div>`).join('')}
@@ -563,10 +563,10 @@ const base = import.meta.env.BASE_URL;
     const newsletterBlock: string = (newsletterEnabled() && nc) ? `
       <div class="sidebar-section">
         <h3>Digest</h3>
-        <div style="padding:6px 0;border-bottom:0.5px solid #E4E4E2">
+        <div style="padding:6px 0;border-bottom:0.5px solid var(--ew-border2)">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <span style="font-size:12px;font-weight:500;color:var(--text-primary)">Quotidien</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B6860;white-space:nowrap">${nc.quotidien_published}/${nc.quotidien_total} publi\u00e9</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ew-ink2);white-space:nowrap">${nc.quotidien_published}/${nc.quotidien_total} publi\u00e9</span>
           </div>
           <div style="display:flex;gap:6px">
             <button class="btn btn-sm btn-secondary" data-copy-md="quotidien" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1">Copier</button>
@@ -576,19 +576,19 @@ const base = import.meta.env.BASE_URL;
         <div style="padding:6px 0">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <span style="font-size:12px;font-weight:500;color:var(--text-primary)">Hebdo</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B6860;white-space:nowrap">${nc.hebdo_published}/${nc.hebdo_total} publi\u00e9</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ew-ink2);white-space:nowrap">${nc.hebdo_published}/${nc.hebdo_total} publi\u00e9</span>
           </div>
           <div style="display:flex;gap:6px">
             <button class="btn btn-sm btn-secondary" data-copy-md="hebdo" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1">Copier</button>
             <button class="btn btn-sm btn-secondary" id="btn-apercu-hebdo" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1${hDisabled}" ${hebdoCount === 0 ? 'disabled' : ''}>Aper\u00e7u</button>
           </div>
         </div>
-        <div style="padding:8px 0 0;border-top:0.5px solid #E4E4E2;margin-top:6px">
+        <div style="padding:8px 0 0;border-top:0.5px solid var(--ew-border2);margin-top:6px">
           <button class="btn btn-sm btn-primary" id="btn-publish-all" style="width:100%;font-size:11px;padding:6px 0"
             ${(nc.quotidien_total + nc.hebdo_total) === 0 ? 'disabled style="width:100%;font-size:11px;padding:6px 0;opacity:0.4;cursor:not-allowed"' : ''}>
             Clôturer la session
           </button>
-          <div style="font-size:10px;color:#9B9790;text-align:center;margin-top:4px">Marque tous les triagés comme publiés</div>
+          <div style="font-size:10px;color:var(--ew-ink3);text-align:center;margin-top:4px">Marque tous les triagés comme publiés</div>
         </div>
       </div>` : '';
 
@@ -751,16 +751,16 @@ const base = import.meta.env.BASE_URL;
   function renderApercuList(): void {
     const list = document.getElementById('apercu-list')!;
     if (!apercuOrder.length) {
-      list.innerHTML = '<div style="padding:30px;text-align:center;color:#6B6860;font-size:13px">Aucun article hebdo</div>';
+      list.innerHTML = '<div style="padding:30px;text-align:center;color:var(--ew-ink2);font-size:13px">Aucun article hebdo</div>';
       return;
     }
     list.innerHTML = apercuOrder.map((a: any, i: number) => `
-      <div class="apercu-item" draggable="true" data-apercu-idx="${i}" style="display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:6px;background:#F4F4F3;border:0.5px solid #E4E4E2;border-radius:8px;cursor:grab;transition:opacity .15s,border .15s">
-        <span style="color:#B0ADA7;font-size:16px;cursor:grab;user-select:none;flex-shrink:0">\u2807</span>
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B6860;flex-shrink:0;width:20px;text-align:center">${i + 1}</span>
+      <div class="apercu-item" draggable="true" data-apercu-idx="${i}" style="display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:6px;background:var(--ew-bg);border:0.5px solid var(--ew-border2);border-radius:8px;cursor:grab;transition:opacity .15s,border .15s">
+        <span style="color:var(--ew-ink3);font-size:16px;cursor:grab;user-select:none;flex-shrink:0">\u2807</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ew-ink2);flex-shrink:0;width:20px;text-align:center">${i + 1}</span>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:500;color:#1A1918;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.title || 'Sans titre')}</div>
-          <div style="font-size:11px;color:#6B6860;margin-top:2px">${a.source_name || ''} \u00b7 ${a.published_at ? formatDate(a.published_at) : 'Date inconnue'}</div>
+          <div style="font-size:13px;font-weight:500;color:var(--ew-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.title || 'Sans titre')}</div>
+          <div style="font-size:11px;color:var(--ew-ink2);margin-top:2px">${a.source_name || ''} \u00b7 ${a.published_at ? formatDate(a.published_at) : 'Date inconnue'}</div>
         </div>
       </div>
     `).join('');
@@ -775,16 +775,16 @@ const base = import.meta.env.BASE_URL;
       el.addEventListener('dragend', () => {
         el.style.opacity = '1';
         list.querySelectorAll('.apercu-item').forEach((x: any) => {
-          x.style.border = '0.5px solid #E4E4E2';
+          x.style.border = '0.5px solid var(--ew-border2)';
         });
       });
       el.addEventListener('dragover', (e: DragEvent) => {
         e.preventDefault();
         e.dataTransfer!.dropEffect = 'move';
-        el.style.border = '1px dashed #111110';
+        el.style.border = '1px dashed var(--ew-ink)';
       });
       el.addEventListener('dragleave', () => {
-        el.style.border = '0.5px solid #E4E4E2';
+        el.style.border = '0.5px solid var(--ew-border2)';
       });
       el.addEventListener('drop', (e: DragEvent) => {
         e.preventDefault();
@@ -831,7 +831,7 @@ const base = import.meta.env.BASE_URL;
       await navigator.clipboard.writeText(text);
       const original = btn.textContent;
       btn.textContent = '\u2713 Copi\u00e9 !';
-      btn.style.color = '#111110';
+      btn.style.color = 'var(--ew-ink)';
       btn.style.fontWeight = '500';
       setTimeout(() => {
         btn.textContent = original;
@@ -1036,7 +1036,7 @@ const base = import.meta.env.BASE_URL;
     display: inline-flex;
     align-items: center;
     margin-left: 6px;
-    color: #B0ADA7;
+    color: var(--ew-ink3);
     opacity: 0;
     transition: opacity 0.15s;
     vertical-align: middle;
@@ -1056,22 +1056,22 @@ const base = import.meta.env.BASE_URL;
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: var(--ew-danger-bg);
-    color: var(--ew-danger-text);
+    background: var(--ew-orange-bg);
+    color: var(--ew-orange-text);
     font-size: 11px;
     padding: 2px 10px;
     border-radius: var(--ew-radius-sm);
     flex-wrap: wrap;
   }
   .triage-reset {
-    color: #B0ADA7;
+    color: var(--ew-ink3);
     font-size: 10px;
     margin-left: 2px;
     cursor: pointer;
     transition: color 0.1s;
   }
   .triage-reset:hover {
-    color: #1A1918;
+    color: var(--ew-ink);
   }
 
   /* Tracker button & drawer */
@@ -1084,7 +1084,7 @@ const base = import.meta.env.BASE_URL;
     display: inline-block;
     width: 6px;
     height: 6px;
-    background-color: var(--ew-kaki);
+    background-color: var(--ew-orange);
     border-radius: 50%;
     margin-left: 6px;
     vertical-align: middle;
@@ -1094,9 +1094,9 @@ const base = import.meta.env.BASE_URL;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
     padding: 2px 8px;
-    background: var(--ew-kaki-bg);
-    color: var(--ew-kaki);
-    border: 0.5px solid var(--ew-kaki-border);
+    background: rgba(26,26,22,0.07);
+    color: var(--ew-ink);
+    border: 0.5px solid var(--ew-border2);
     border-radius: var(--ew-radius-sm);
   }
 
@@ -1113,7 +1113,7 @@ const base = import.meta.env.BASE_URL;
     width: 420px;
     max-width: 90vw;
     height: 100vh;
-    background: #FFFFFF;
+    background: var(--ew-bg);
     display: flex;
     flex-direction: column;
     animation: slideInRight 0.2s ease-out;
@@ -1125,17 +1125,17 @@ const base = import.meta.env.BASE_URL;
   }
 
   .tracker-field { display: flex; flex-direction: column; gap: 4px; }
-  .tracker-field span { font-size: 11px; font-weight: 600; color: #6B6860; text-transform: uppercase; letter-spacing: 0.5px; }
+  .tracker-field span { font-size: 11px; font-weight: 600; color: var(--ew-ink2); text-transform: uppercase; letter-spacing: 0.5px; }
   .tracker-input {
     padding: 8px 10px;
-    border: 0.5px solid #E4E4E2;
+    border: 0.5px solid var(--ew-border2);
     border-radius: 8px;
     font-family: 'IBM Plex Sans', sans-serif;
     font-size: 13px;
-    background: white;
-    color: #111110;
+    background: var(--ew-bg);
+    color: var(--ew-ink);
   }
-  .tracker-input:focus { outline: none; border-color: var(--ew-kaki); }
+  .tracker-input:focus { outline: none; border-color: var(--ew-ink); }
 
   /* Clôturer confirmation modal */
   #cloturer-overlay {
@@ -1149,8 +1149,8 @@ const base = import.meta.env.BASE_URL;
   }
 
   #cloturer-modal {
-    background: #FFFFFF;
-    border: 0.5px solid #E4E4E2;
+    background: var(--ew-bg);
+    border: 0.5px solid var(--ew-border2);
     border-radius: 8px;
     width: 440px;
     max-width: 90vw;
@@ -1170,7 +1170,7 @@ const base = import.meta.env.BASE_URL;
     width: 420px;
     max-width: 90vw;
     height: 100vh;
-    background: #FFFFFF;
+    background: var(--ew-bg);
     display: flex;
     flex-direction: column;
     animation: slideInRight 0.2s ease-out;
