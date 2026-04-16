@@ -101,7 +101,7 @@ const base = import.meta.env.BASE_URL;
     box-shadow: none; transition: border-color 0.15s;
   }
   .mp-card:hover { border-color: var(--ew-text); }
-  .mp-card.alert-border { border-color: var(--ew-orange-border); }
+  .mp-card.alert-border { border-color: var(--ew-accent-border); }
 
   .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
   .card-ref {
@@ -114,15 +114,15 @@ const base = import.meta.env.BASE_URL;
     display: inline-flex; align-items: center; gap: 5px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.06em;
     padding: 4px 10px; border-radius: 8px; border: 1px solid; white-space: nowrap;
   }
-  .status-badge.a_valider { background: var(--ew-orange-bg); color: var(--ew-orange-text); border-color: var(--ew-orange-border); }
+  .status-badge.a_valider { background: var(--ew-accent-bg); color: var(--ew-accent-text); border-color: var(--ew-accent-border); }
   .status-badge.en_cours { background: var(--ew-bg); color: var(--ew-ink2); border-color: var(--ew-ink2); }
   .status-badge.valide { background: rgba(26,26,22,0.05); color: var(--ew-ink2); border-color: var(--ew-border2); }
   .status-badge.obsolete { background: var(--ew-surface); color: var(--ew-text-secondary); border-color: var(--ew-border); }
   .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
   .alert-ribbon {
-    font-size: 11px; font-weight: 500; color: var(--ew-orange-text); background: var(--ew-orange-bg);
-    padding: 6px 10px; border-radius: 8px; border: 1px solid var(--ew-orange-border);
+    font-size: 11px; font-weight: 500; color: var(--ew-accent-text); background: var(--ew-accent-bg);
+    padding: 6px 10px; border-radius: 8px; border: 1px solid var(--ew-accent-border);
     display: flex; align-items: center; gap: 6px;
   }
 
@@ -131,7 +131,7 @@ const base = import.meta.env.BASE_URL;
     padding: 4px 10px; border-radius: 8px; white-space: nowrap; cursor: pointer;
     border: 1px solid transparent;
   }
-  .freshness-badge.hot { background: var(--ew-orange-bg); color: var(--ew-orange-text); border-color: var(--ew-orange-border); }
+  .freshness-badge.hot { background: var(--ew-accent-bg); color: var(--ew-accent-text); border-color: var(--ew-accent-border); }
   .freshness-badge.warm { background: var(--ew-bg); color: var(--ew-ink2); border-color: var(--ew-ink2); }
   .freshness-badge.ok { background: rgba(26,26,22,0.05); color: var(--ew-ink2); border-color: var(--ew-border2); }
   .freshness-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }

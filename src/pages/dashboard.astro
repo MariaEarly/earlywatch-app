@@ -5,8 +5,7 @@ const base = import.meta.env.BASE_URL;
 
 <AppLayout title="Early Watch — Dashboard" activePage="dashboard">
   <div class="flex">
-    <aside class="sidebar" id="sidebar-left"></aside>
-    <main class="content-main" id="article-list" style="padding:12px">
+    <main class="content-main" id="article-list" style="padding:0">
       <div class="loading-overlay"><div class="spinner"></div> Chargement des articles...</div>
     </main>
     <aside class="sidebar sidebar-right" id="sidebar-right"></aside>
@@ -169,6 +168,16 @@ const base = import.meta.env.BASE_URL;
     return PROC_LABELS[code] || code;
   }
 
+  const IMPACT_LABELS: Record<string, string> = {
+    sanction: 'Sanction',
+    nouvelle_regle: 'Nouvelle r\u00e8gle',
+    mise_a_jour: 'Mise \u00e0 jour',
+    appel_vigilance: 'Appel vigilance',
+  };
+  function impactLabel(type: string): string {
+    return IMPACT_LABELS[type] || type;
+  }
+
   const LINK_ICON = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><path d="M10 6.5V10a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1h3.5M7.5 1H11v3.5M11 1L5 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   let articles: any[] = [];
@@ -199,102 +208,76 @@ const base = import.meta.env.BASE_URL;
       return;
     }
 
-    renderSidebar();
+    renderToolbar();
     renderArticles();
     renderRightPanel();
   }
 
-  function renderSidebar(): void {
-    // Only count visible articles (inbox + triaged)
+  function renderToolbar(): void {
     const visible: any[] = articles.filter((a: any) =>
       a.lifecycle_status === 'inbox' || a.lifecycle_status === 'triaged'
     );
     const counts: any = { all: visible.length, nouveau: 0, quotidien: 0, hebdo: 0, ignorer: 0 };
     visible.forEach((a: any) => { if (counts[a.status] !== undefined) counts[a.status]++; });
 
-    const scoreCounts: any = { all: visible.length, high: 0, med: 0, low: 0 };
+    const scoreCounts: any = { all: visible.length, high: 0, med: 0 };
     visible.forEach((a: any) => {
       if ((a.score || 0) >= 50) scoreCounts.high++;
       else if ((a.score || 0) >= 25) scoreCounts.med++;
-      else scoreCounts.low++;
     });
 
-    const srcCounts: any = {};
-    visible.forEach((a: any) => {
-      const s: string = a.source_name || 'Autre';
-      srcCounts[s] = (srcCounts[s] || 0) + 1;
-    });
-
-    document.getElementById('sidebar-left')!.innerHTML = `
-      <div class="sidebar-section">
-        <h3>Statut</h3>
-        <div class="filter-group">
-          ${filterBtn('all', 'Tous', counts.all)}
-          ${filterBtn('nouveau', 'Nouveaux', counts.nouveau)}
-          ${filterBtn('quotidien', 'Quotidien', counts.quotidien)}
-          ${filterBtn('hebdo', 'Hebdo', counts.hebdo)}
-          ${filterBtn('ignorer', 'Ignor\u00e9s', counts.ignorer)}
-        </div>
-      </div>
-      <div class="sidebar-section">
-        <h3>Score</h3>
-        <div class="filter-group">
-          ${scoreFilterBtn('all', 'Tous', scoreCounts.all)}
-          ${scoreFilterBtn('high', 'Prioritaire (50+)', scoreCounts.high)}
-          ${scoreFilterBtn('med', 'Moyen (25-49)', scoreCounts.med)}
-          ${scoreFilterBtn('low', 'Faible (<25)', scoreCounts.low)}
-        </div>
-      </div>
-      <div class="sidebar-section">
-        <h3>Source</h3>
-        <div class="filter-group" style="max-height:240px;overflow-y:auto">
-          ${sourceFilterBtn('all', 'Toutes', articles.length)}
-          ${Object.entries(srcCounts).sort((a: any, b: any) => b[1] - a[1]).map(([name, count]: any) =>
-            sourceFilterBtn(name, name, count)
-          ).join('')}
-        </div>
+    const toolbarHtml = `
+      <div class="toolbar-filters">
+        ${pill('all', 'Tous', counts.all, activeFilter)}
+        ${pill('nouveau', 'Nouveaux', counts.nouveau, activeFilter)}
+        ${pill('quotidien', 'Quotidien', counts.quotidien, activeFilter)}
+        ${pill('hebdo', 'Hebdo', counts.hebdo, activeFilter)}
+        ${pill('ignorer', 'Ignor\u00e9s', counts.ignorer, activeFilter)}
+        <div class="toolbar-sep"></div>
+        ${scorePill('all', 'Tous scores', scoreCounts.all, scoreFilter)}
+        ${scorePill('high', 'Prioritaire', scoreCounts.high, scoreFilter)}
+        ${scorePill('med', 'Moyen', scoreCounts.med, scoreFilter)}
+        <span class="toolbar-sort">
+          <select id="sort-select" style="font-family:var(--ew-font);font-size:12px;padding:3px 8px;border:0.5px solid var(--ew-border2);border-radius:var(--ew-radius-pill);background:var(--ew-bg);color:var(--ew-ink2);cursor:pointer;outline:none">
+            <option value="recent"${sortMode === 'recent' ? ' selected' : ''}>Plus r\u00e9cent</option>
+            <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien</option>
+            <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine</option>
+            <option value="7days"${sortMode === '7days' ? ' selected' : ''}>7 derniers jours</option>
+          </select>
+        </span>
       </div>`;
 
-    document.querySelectorAll('[data-filter]').forEach((el: any) => {
+    // Insert toolbar at top of article-list, before articles
+    const container = document.getElementById('article-list')!;
+    const existingToolbar = container.querySelector('.toolbar-filters');
+    if (existingToolbar) existingToolbar.remove();
+    container.insertAdjacentHTML('afterbegin', toolbarHtml);
+
+    // Bind filter events
+    container.querySelectorAll('[data-filter]').forEach((el: any) => {
       el.addEventListener('click', () => {
         activeFilter = el.dataset.filter;
-        renderSidebar();
+        renderToolbar();
         renderArticles();
       });
     });
-    document.querySelectorAll('[data-score-filter]').forEach((el: any) => {
+    container.querySelectorAll('[data-score-filter]').forEach((el: any) => {
       el.addEventListener('click', () => {
         scoreFilter = el.dataset.scoreFilter;
-        renderSidebar();
+        renderToolbar();
         renderArticles();
       });
     });
-    document.querySelectorAll('[data-source-filter]').forEach((el: any) => {
-      el.addEventListener('click', () => {
-        sourceFilter = el.dataset.sourceFilter;
-        renderSidebar();
-        renderArticles();
-      });
-    });
+    bindSortSelect();
   }
 
-  function filterBtn(key: string, label: string, count: number): string {
-    const active: string = activeFilter === key ? 'active' : '';
-    return `<button class="filter-item ${active}" data-filter="${key}">
-      <span>${label}</span><span class="filter-count">${count}</span>
-    </button>`;
+  function pill(key: string, label: string, count: number, current: string): string {
+    const active = current === key ? ' active' : '';
+    return `<button class="pill${active}" data-filter="${key}">${label} <span>${count}</span></button>`;
   }
-  function scoreFilterBtn(key: string, label: string, count: number): string {
-    const active: string = scoreFilter === key ? 'active' : '';
-    return `<button class="filter-item ${active}" data-score-filter="${key}">
-      <span>${label}</span><span class="filter-count">${count}</span>
-    </button>`;
-  }
-  function sourceFilterBtn(key: string, label: string, count: number): string {
-    const active: string = sourceFilter === key ? 'active' : '';
-    return `<button class="filter-item ${active}" data-source-filter="${key}" style="font-size:12px">
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span><span class="filter-count">${count}</span>
-    </button>`;
+  function scorePill(key: string, label: string, count: number, current: string): string {
+    const active = current === key ? ' active' : '';
+    return `<button class="pill${active}" data-score-filter="${key}">${label} <span>${count}</span></button>`;
   }
 
   function renderArticles(): void {
@@ -307,8 +290,6 @@ const base = import.meta.env.BASE_URL;
     }
     if (scoreFilter === 'high') filtered = filtered.filter((a: any) => (a.score || 0) >= 50);
     else if (scoreFilter === 'med') filtered = filtered.filter((a: any) => (a.score || 0) >= 25 && (a.score || 0) < 50);
-    else if (scoreFilter === 'low') filtered = filtered.filter((a: any) => (a.score || 0) < 25);
-    if (sourceFilter !== 'all') filtered = filtered.filter((a: any) => (a.source_name || 'Autre') === sourceFilter);
 
     // Filtre temporel — toujours bas\u00e9 sur created_at (date d'ingestion dans Early Watch)
     const now = new Date();
@@ -336,31 +317,28 @@ const base = import.meta.env.BASE_URL;
       return sortMode === 'oldest' ? da - db : db - da;
     });
 
-    const sortSelectHtml = `<div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-      <select id="sort-select" style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 10px;border:0.5px solid var(--ew-border2);border-radius:8px;background:var(--ew-bg);color:var(--ew-ink);cursor:pointer;outline:none">
-        <option value="recent"${sortMode === 'recent' ? ' selected' : ''}>Plus r\u00e9cent</option>
-        <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien</option>
-        <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine</option>
-        <option value="7days"${sortMode === '7days' ? ' selected' : ''}>7 derniers jours</option>
-      </select>
-    </div>`;
-
     if (filtered.length === 0) {
-      document.getElementById('article-list')!.innerHTML = sortSelectHtml + `
+      const container = document.getElementById('article-list')!;
+      // Keep toolbar, replace rest
+      const toolbar = container.querySelector('.toolbar-filters');
+      container.innerHTML = `
         <div class="empty-state">
           <div class="icon">&#128196;</div>
           <p>Aucun article dans cette vue</p>
         </div>`;
-      bindSortSelect();
+      if (toolbar) container.insertAdjacentElement('afterbegin', toolbar);
       return;
     }
 
-    document.getElementById('article-list')!.innerHTML = sortSelectHtml + filtered.map((a: any) => `
-      <div class="article-card" data-article-nav="${a.id}">
+    const container = document.getElementById('article-list')!;
+    const toolbar = container.querySelector('.toolbar-filters');
+    container.innerHTML = filtered.map((a: any) => `
+      <div class="article-card${a.impact_type === 'sanction' ? ' card-sanction' : ''}" data-article-nav="${a.id}">
         <div class="article-meta">
+          ${a.impact_type ? `<span class="impact-tag impact-${a.impact_type}">${impactLabel(a.impact_type)}</span>` : ''}
           <span>${a.source_name || 'Source inconnue'}</span>
           <span>&middot;</span>
-          <span>${a.published_at ? formatDate(a.published_at) : `<span class="date-unknown-badge" style="background:var(--ew-orange);color:#fff;font-size:10px;padding:1px 6px;border-radius:3px;font-style:normal">Date inconnue</span><a href="#" class="fix-date-link" data-fix-date="${a.id}" onclick="event.stopPropagation();event.preventDefault()" style="font-size:10px;color:var(--ew-ink3);margin-left:4px;text-decoration:underline">Corriger</a>`}</span>
+          <span>${a.published_at ? formatDate(a.published_at) : `<span class="date-unknown-badge" style="background:var(--ew-accent);color:#fff;font-size:10px;padding:1px 6px;border-radius:3px;font-style:normal">Date inconnue</span><a href="#" class="fix-date-link" data-fix-date="${a.id}" onclick="event.stopPropagation();event.preventDefault()" style="font-size:10px;color:var(--ew-ink3);margin-left:4px;text-decoration:underline">Corriger</a>`}</span>
           ${a.detected_action_type ? actionBadge(a.detected_action_type) : ''}
           <span style="margin-left:auto">${statusBadge(a.status)}</span>
         </div>
@@ -397,7 +375,7 @@ const base = import.meta.env.BASE_URL;
       </div>
     `).join('');
 
-    bindSortSelect();
+    if (toolbar) container.insertAdjacentElement('afterbegin', toolbar);
 
     // Bind events
     document.querySelectorAll('[data-article-nav]').forEach((el: any) => {
@@ -491,7 +469,7 @@ const base = import.meta.env.BASE_URL;
         articles[idx].status = status;
         articles[idx].lifecycle_status = LIFECYCLE_MAP[status] || articles[idx].lifecycle_status;
       }
-      renderSidebar();
+      renderToolbar();
       renderArticles();
       toast(`Article \u2192 ${status === 'quotidien' ? 'Quotidien' : status === 'hebdo' ? 'Hebdo' : 'Ignor\u00e9'}`);
     } catch (e: any) {
@@ -542,7 +520,7 @@ const base = import.meta.env.BASE_URL;
       <div class="sidebar-section">
         <h3>Tracker</h3>
         <div style="font-size:11px;color:var(--ew-ink2)">
-          <span style="color:var(--ew-orange);font-weight:600">${trackerPendingCount}</span> article${trackerPendingCount > 1 ? 's' : ''} éligible${trackerPendingCount > 1 ? 's' : ''} non ajouté${trackerPendingCount > 1 ? 's' : ''}
+          <span style="color:var(--ew-accent);font-weight:600">${trackerPendingCount}</span> article${trackerPendingCount > 1 ? 's' : ''} éligible${trackerPendingCount > 1 ? 's' : ''} non ajouté${trackerPendingCount > 1 ? 's' : ''}
         </div>
       </div>` : '';
 
@@ -550,7 +528,7 @@ const base = import.meta.env.BASE_URL;
     const flashArticles = articles.filter((a: any) => a.lifecycle_status === 'triaged' && a.status === 'quotidien' && !a.published_to_newsletter);
     const flashBlock: string = (newsletterEnabled() && flashArticles.length > 0) ? `
       <div class="sidebar-section">
-        <h3 style="display:flex;align-items:center;gap:6px"><span style="color:var(--ew-orange);font-size:10px">&#9679;</span> Flash</h3>
+        <h3 style="display:flex;align-items:center;gap:6px"><span style="color:var(--ew-accent);font-size:10px">&#9679;</span> Flash</h3>
         <div style="display:flex;flex-direction:column;gap:4px">
           ${flashArticles.map((a: any) => `
             <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:0.5px solid var(--ew-border2)">
@@ -1056,8 +1034,8 @@ const base = import.meta.env.BASE_URL;
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: var(--ew-orange-bg);
-    color: var(--ew-orange-text);
+    background: var(--ew-accent-bg);
+    color: var(--ew-accent-text);
     font-size: 11px;
     padding: 2px 10px;
     border-radius: var(--ew-radius-sm);
@@ -1084,7 +1062,7 @@ const base = import.meta.env.BASE_URL;
     display: inline-block;
     width: 6px;
     height: 6px;
-    background-color: var(--ew-orange);
+    background-color: var(--ew-accent);
     border-radius: 50%;
     margin-left: 6px;
     vertical-align: middle;
@@ -1174,5 +1152,71 @@ const base = import.meta.env.BASE_URL;
     display: flex;
     flex-direction: column;
     animation: slideInRight 0.2s ease-out;
+  }
+
+  /* Toolbar filters */
+  .toolbar-filters {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-bottom: 0.5px solid var(--ew-border);
+    flex-shrink: 0;
+    background: var(--ew-bg);
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: var(--ew-radius-pill);
+    font-size: 12px;
+    border: 0.5px solid var(--ew-border2);
+    background: transparent;
+    color: var(--ew-ink2);
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: var(--ew-font);
+  }
+  .pill:hover { background: rgba(26,26,22,0.05); color: var(--ew-ink); }
+  .pill.active {
+    background: var(--ew-ink);
+    color: var(--ew-bg);
+    border-color: var(--ew-ink);
+    font-weight: 500;
+  }
+  .pill span { font-size: 11px; opacity: 0.7; }
+  .pill.active span { opacity: 1; }
+  .toolbar-sep { width: 1px; height: 16px; background: var(--ew-border); margin: 0 4px; flex-shrink: 0; }
+  .toolbar-sort { margin-left: auto; }
+
+  /* Impact tags */
+  .impact-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .impact-sanction,
+  .impact-appel_vigilance {
+    background: var(--ew-accent-bg2);
+    color: var(--ew-accent-text);
+    border: 0.5px solid var(--ew-accent-border);
+  }
+  .impact-nouvelle_regle,
+  .impact-mise_a_jour {
+    background: rgba(26,26,22,0.07);
+    color: var(--ew-ink2);
+    border: 0.5px solid var(--ew-border2);
+  }
+
+  .card-sanction {
+    border-left: 2px solid var(--ew-accent);
   }
 </style>

@@ -192,7 +192,7 @@ const base = import.meta.env.BASE_URL;
             <div class="proc-legend">
               <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-ink2)"></span> ${valide} validees</div>
               <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-ink2)"></span> ${encours} en cours</div>
-              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-orange-text)"></span> ${avalider} a valider</div>
+              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-accent-text)"></span> ${avalider} a valider</div>
             </div>
           </div>
           ${procs.filter((p: any) => p.status !== 'valide').slice(0, 4).map((p: any) => `
@@ -328,10 +328,10 @@ const base = import.meta.env.BASE_URL;
   }
   .score-pct { font-size: 28px; font-weight: 500; line-height: 1; }
   .score-label { font-size: 10px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
-  .score-red { border-color: var(--ew-orange-text); }
-  .score-red .score-pct { color: var(--ew-orange-text); }
-  .score-orange { border-color: var(--ew-orange-text); }
-  .score-orange .score-pct { color: var(--ew-orange-text); }
+  .score-red { border-color: var(--ew-accent-text); }
+  .score-red .score-pct { color: var(--ew-accent-text); }
+  .score-orange { border-color: var(--ew-accent-text); }
+  .score-orange .score-pct { color: var(--ew-accent-text); }
   .score-green { border-color: var(--ew-ink2); }
   .score-green .score-pct { color: var(--ew-ink2); }
 
@@ -376,7 +376,7 @@ const base = import.meta.env.BASE_URL;
   }
   .rem-item:last-child { border-bottom: none; }
   .rem-sev { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
-  :global(.sev-critical) { background: var(--ew-orange-text); }
+  :global(.sev-critical) { background: var(--ew-accent-text); }
   :global(.sev-high) { background: var(--ew-ink2); }
   :global(.sev-medium) { background: var(--ew-ink3); }
   :global(.sev-low) { background: var(--ew-ink3); }
@@ -409,8 +409,8 @@ const base = import.meta.env.BASE_URL;
   :global(.dl-title) { flex: 1; margin: 0 10px; color: var(--noir); }
   :global(.dl-date) { font-size: 12px; font-weight: 500; white-space: nowrap; }
   :global(.dl-passed) { color: var(--color-text-tertiary); }
-  :global(.dl-imminent) { color: var(--ew-orange-text); }
-  :global(.dl-soon) { color: var(--ew-orange-text); }
+  :global(.dl-imminent) { color: var(--ew-accent-text); }
+  :global(.dl-soon) { color: var(--ew-accent-text); }
   :global(.dl-upcoming) { color: var(--color-text-tertiary); }
 
   :global(.sanc-item) { padding: 8px 0; border-bottom: 1px solid var(--color-border-tertiary); font-size: 13px; }

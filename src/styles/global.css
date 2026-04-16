@@ -12,11 +12,11 @@
   --ew-ink3: #A8A49C;
   --ew-border: rgba(26, 26, 22, 0.12);
   --ew-border2: rgba(26, 26, 22, 0.20);
-  --ew-orange: #D4845A;
-  --ew-orange-bg: rgba(212, 132, 90, 0.10);
-  --ew-orange-bg2: rgba(212, 132, 90, 0.16);
-  --ew-orange-border: rgba(212, 132, 90, 0.35);
-  --ew-orange-text: #A86840;
+  --ew-accent: #D4845A;
+  --ew-accent-bg: rgba(212,132,90,0.10);
+  --ew-accent-bg2: rgba(212,132,90,0.16);
+  --ew-accent-border: rgba(212,132,90,0.30);
+  --ew-accent-text: #A05830;
   --ew-font: 'IBM Plex Sans', system-ui, sans-serif;
   --ew-font-mono: 'IBM Plex Mono', monospace;
   --ew-radius-sm: 4px;
@@ -63,7 +63,7 @@
   --color-warning: var(--ew-ink2);
   --color-warning-bg: rgba(26,26,22,0.05);
   --color-danger: var(--color-error);
-  --color-danger-bg: var(--ew-orange-bg2);
+  --color-danger-bg: var(--ew-accent-bg2);
   --kaki: var(--ew-ink);
   --kaki-hover: var(--ew-ink);
   --terra: var(--ew-ink);
@@ -190,6 +190,17 @@ h3 { font-size: 13px; font-weight: 500; }
   color: var(--ew-bg);
   font-size: 10px;
   font-weight: 500;
+  padding: 1px 6px;
+  border-radius: var(--ew-radius-pill);
+}
+
+.nav-badge-urgent {
+  margin-left: auto;
+  background: var(--ew-accent-bg2);
+  color: var(--ew-accent-text);
+  border: 0.5px solid var(--ew-accent-border);
+  font-size: 10px;
+  font-weight: 600;
   padding: 1px 6px;
   border-radius: var(--ew-radius-pill);
 }
@@ -369,7 +380,7 @@ h3 { font-size: 13px; font-weight: 500; }
 }
 .badge-success { background: rgba(26,26,22,0.05); color: var(--ew-ink2); border-color: var(--ew-border2); }
 .badge-warning { background: rgba(26,26,22,0.05); color: var(--ew-ink2); border-color: var(--ew-border2); }
-.badge-danger { background: var(--ew-orange-bg2); color: var(--ew-orange-text); border-color: var(--ew-orange-border); }
+.badge-danger { background: var(--ew-accent-bg2); color: var(--ew-accent-text); border-color: var(--ew-accent-border); }
 .badge-neutral { background: rgba(26,26,22,0.07); color: var(--ew-ink2); border-color: var(--ew-border2); }
 
 /* Tag */
@@ -484,7 +495,7 @@ label {
 .score-low .score-bar-fill { background: var(--ew-ink3); }
 .score-med .score-bar-fill { background: var(--ew-ink2); }
 .score-high .score-bar-fill { background: var(--ew-ink); }
-.score-critical .score-bar-fill { background: var(--ew-orange-text); }
+.score-critical .score-bar-fill { background: var(--ew-accent-text); }
 
 /* ---- Legacy Header/Nav (kept for backward compat, hidden by sidebar) ---- */
 .header-wrap { display: none; }
@@ -710,7 +721,7 @@ a.article-title:hover { text-decoration: underline; }
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--ew-orange-text);
+  background: var(--ew-accent-text);
   flex-shrink: 0;
 }
 .impact-link {
@@ -780,12 +791,12 @@ a.article-title:hover { text-decoration: underline; }
 
 /* ---- Warning box ---- */
 .warning-box {
-  background: var(--ew-orange-bg);
-  border: 0.5px solid var(--ew-orange-border);
+  background: var(--ew-accent-bg);
+  border: 0.5px solid var(--ew-accent-border);
   border-radius: var(--ew-radius);
   padding: 10px 14px;
   font-size: 12px;
-  color: var(--ew-orange-text);
+  color: var(--ew-accent-text);
   display: flex;
   gap: 8px;
   align-items: flex-start;
@@ -897,13 +908,13 @@ tbody tr:hover td { background: var(--ew-bg); }
 }
 
 /* ---- Severity badges ---- */
-.severity-critical { background: var(--ew-orange-bg2); color: var(--ew-orange-text); border: 0.5px solid var(--ew-orange-border); }
+.severity-critical { background: var(--ew-accent-bg2); color: var(--ew-accent-text); border: 0.5px solid var(--ew-accent-border); }
 .severity-high     { background: rgba(26,26,22,0.08); color: var(--ew-ink2); border: 0.5px solid var(--ew-border2); }
 .severity-medium   { background: rgba(26,26,22,0.05); color: var(--ew-ink3); border: 0.5px solid var(--ew-border); }
 .severity-low      { background: transparent; color: var(--ew-ink3); border: 0.5px solid var(--ew-border); }
 
 /* ---- Procedure status badges ---- */
-.status-a-reviser  { background: var(--ew-orange-bg2); color: var(--ew-orange-text); border: 0.5px solid var(--ew-orange-border); }
+.status-a-reviser  { background: var(--ew-accent-bg2); color: var(--ew-accent-text); border: 0.5px solid var(--ew-accent-border); }
 .status-en-cours   { background: rgba(26,26,22,0.08); color: var(--ew-ink2); border: 0.5px solid var(--ew-border2); }
 .status-valide     { background: rgba(26,26,22,0.05); color: var(--ew-ink2); border: 0.5px solid var(--ew-border2); }
 .status-obsolete   { background: transparent; color: var(--ew-ink3); border: 0.5px solid var(--ew-border); }

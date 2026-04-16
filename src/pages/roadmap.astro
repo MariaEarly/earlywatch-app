@@ -11,7 +11,7 @@ const base = import.meta.env.BASE_URL;
     <div class="stats-row" id="stats-row"></div>
 
     <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--ew-orange)"></div> Critique</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--ew-accent)"></div> Critique</div>
       <div class="legend-item"><div class="legend-dot" style="background:var(--ew-ink2)"></div> Eleve</div>
       <div class="legend-item"><div class="legend-dot" style="background:var(--ew-ink3)"></div> Moyen</div>
       <div class="legend-item"><div class="legend-dot" style="background:var(--ew-border)"></div> Passe</div>
@@ -67,7 +67,7 @@ const base = import.meta.env.BASE_URL;
 
   .tl-item{position:relative;margin-bottom:12px;}
   .tl-dot{position:absolute;left:-24px;top:18px;width:12px;height:12px;border-radius:50%;border:2px solid var(--ew-bg);z-index:1;}
-  .tl-dot.critical{background:var(--ew-orange);}
+  .tl-dot.critical{background:var(--ew-accent);}
   .tl-dot.high{background:var(--ew-ink2);}
   .tl-dot.medium{background:var(--ew-ink3);}
   .tl-dot.low{background:var(--ew-ink3);}
@@ -76,7 +76,7 @@ const base = import.meta.env.BASE_URL;
   .rm-card{background:var(--ew-bg);border:0.5px solid var(--ew-border2);border-radius:8px;padding:18px 20px;transition:all .15s;cursor:pointer;box-shadow:none;}
   .rm-card:hover{border-color:var(--ew-border-strong);}
   .rm-card.passed{opacity:.55;}
-  .rm-card.imminent{border-left:3px solid var(--ew-orange);}
+  .rm-card.imminent{border-left:3px solid var(--ew-accent);}
   .rm-card.soon{border-left:3px solid var(--ew-ink2);}
 
   .rm-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
@@ -88,7 +88,7 @@ const base = import.meta.env.BASE_URL;
   .rm-card-date{text-align:right;flex-shrink:0;}
   .date-main{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--noir);}
   .date-delta{font-size:11px;margin-top:2px;}
-  .date-delta.imminent{color:var(--ew-orange-text);}
+  .date-delta.imminent{color:var(--ew-accent-text);}
   .date-delta.soon{color:var(--ew-ink2);}
   .date-delta.upcoming{color:var(--text-secondary);}
   .date-delta.passed{color:var(--text-secondary);}
