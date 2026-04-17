@@ -321,9 +321,13 @@ const base = import.meta.env.BASE_URL;
       filtered = filtered.filter((a: any) => new Date(a.created_at) >= cutoff);
     }
 
-    // Tri par date — utilise created_at (date d'ingestion) comme référence
-    // pour garantir un classement cohérent même si published_at est absent ou imprécis
+    // Tri : score DESC puis date DESC quand Prioritaire est actif
+    // Sinon tri par date seule (created_at = date d'ingestion)
     filtered.sort((a: any, b: any) => {
+      if (scoreFilter === 'high') {
+        const sa = (a.score || 0), sb = (b.score || 0);
+        if (sa !== sb) return sb - sa;
+      }
       const da = new Date(a.created_at).getTime();
       const db = new Date(b.created_at).getTime();
       return sortMode === 'oldest' ? da - db : db - da;
