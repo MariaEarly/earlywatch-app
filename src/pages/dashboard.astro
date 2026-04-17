@@ -141,6 +141,24 @@ const base = import.meta.env.BASE_URL;
 
   const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
 
+  /** Date d'affichage intelligente pour une card article.
+   *  - Si published_at est précise (pas le 1er du mois à minuit) → formatDate(published_at)
+   *  - Sinon fallback sur created_at (date d'ingestion)
+   *  - Si aucune date → badge "Date inconnue" + lien "Corriger"
+   */
+  function displayDate(a: any): string {
+    const pub = a.published_at;
+    if (pub) {
+      const d = new Date(pub);
+      // Heuristique : date imprécise = 1er du mois à minuit UTC (extraction URL PDF)
+      const isImprecise = d.getUTCDate() === 1 && d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0;
+      if (!isImprecise) return formatDate(pub);
+    }
+    // Fallback sur created_at
+    if (a.created_at) return formatDate(a.created_at);
+    return `<span class="date-unknown-badge" style="background:var(--ew-accent);color:#fff;font-size:10px;padding:1px 6px;border-radius:3px;font-style:normal">Date inconnue</span><a href="#" class="fix-date-link" data-fix-date="${a.id}" onclick="event.stopPropagation();event.preventDefault()" style="font-size:10px;color:var(--ew-ink3);margin-left:4px;text-decoration:underline">Corriger</a>`;
+  }
+
   // Mapping proc\u00e9dures : code → nom complet
   const PROC_LABELS: Record<string, string> = {
     'EB-POL-001': 'Politique g\u00e9n\u00e9rale LCB-FT',
@@ -222,7 +240,7 @@ const base = import.meta.env.BASE_URL;
 
     const scoreCounts: any = { all: visible.length, high: 0, med: 0 };
     visible.forEach((a: any) => {
-      if ((a.score || 0) >= 50) scoreCounts.high++;
+      if ((a.score || 0) >= 45) scoreCounts.high++;
       else if ((a.score || 0) >= 25) scoreCounts.med++;
     });
 
@@ -288,8 +306,8 @@ const base = import.meta.env.BASE_URL;
     if (activeFilter !== 'all') {
       filtered = filtered.filter((a: any) => a.status === activeFilter);
     }
-    if (scoreFilter === 'high') filtered = filtered.filter((a: any) => (a.score || 0) >= 50);
-    else if (scoreFilter === 'med') filtered = filtered.filter((a: any) => (a.score || 0) >= 25 && (a.score || 0) < 50);
+    if (scoreFilter === 'high') filtered = filtered.filter((a: any) => (a.score || 0) >= 45);
+    else if (scoreFilter === 'med') filtered = filtered.filter((a: any) => (a.score || 0) >= 25 && (a.score || 0) < 45);
 
     // Filtre temporel — toujours bas\u00e9 sur created_at (date d'ingestion dans Early Watch)
     const now = new Date();
@@ -303,17 +321,11 @@ const base = import.meta.env.BASE_URL;
       filtered = filtered.filter((a: any) => new Date(a.created_at) >= cutoff);
     }
 
-    // Tri par date — NULLS LAST : articles sans published_at en dernier
+    // Tri par date — utilise created_at (date d'ingestion) comme référence
+    // pour garantir un classement cohérent même si published_at est absent ou imprécis
     filtered.sort((a: any, b: any) => {
-      const hasA = !!a.published_at;
-      const hasB = !!b.published_at;
-      // Articles sans date de publication → toujours en dernier (ou premier si 'oldest')
-      if (hasA !== hasB) {
-        if (sortMode === 'oldest') return hasA ? -1 : 1;
-        return hasA ? -1 : 1;
-      }
-      const da = new Date(a.published_at || a.created_at).getTime();
-      const db = new Date(b.published_at || b.created_at).getTime();
+      const da = new Date(a.created_at).getTime();
+      const db = new Date(b.created_at).getTime();
       return sortMode === 'oldest' ? da - db : db - da;
     });
 
@@ -338,7 +350,7 @@ const base = import.meta.env.BASE_URL;
           ${a.impact_type ? `<span class="impact-tag impact-${a.impact_type}">${impactLabel(a.impact_type)}</span>` : ''}
           <span>${a.source_name || 'Source inconnue'}</span>
           <span>&middot;</span>
-          <span>${a.published_at ? formatDate(a.published_at) : `<span class="date-unknown-badge" style="background:var(--ew-accent);color:#fff;font-size:10px;padding:1px 6px;border-radius:3px;font-style:normal">Date inconnue</span><a href="#" class="fix-date-link" data-fix-date="${a.id}" onclick="event.stopPropagation();event.preventDefault()" style="font-size:10px;color:var(--ew-ink3);margin-left:4px;text-decoration:underline">Corriger</a>`}</span>
+          <span>${displayDate(a)}</span>
           ${a.detected_action_type ? actionBadge(a.detected_action_type) : ''}
           <span style="margin-left:auto">${statusBadge(a.status)}</span>
         </div>
@@ -706,8 +718,7 @@ const base = import.meta.env.BASE_URL;
       : (a: any) => a.status === 'hebdo' || a.status === 'quotidien';
     apercuOrder = articles.filter(statusFilter)
       .sort((a: any, b: any) => {
-        if (!!a.published_at !== !!b.published_at) return a.published_at ? -1 : 1;
-        return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
 
     const overlay = document.getElementById('apercu-overlay')!;
@@ -738,7 +749,7 @@ const base = import.meta.env.BASE_URL;
         <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ew-ink2);flex-shrink:0;width:20px;text-align:center">${i + 1}</span>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:500;color:var(--ew-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.title || 'Sans titre')}</div>
-          <div style="font-size:11px;color:var(--ew-ink2);margin-top:2px">${a.source_name || ''} \u00b7 ${a.published_at ? formatDate(a.published_at) : 'Date inconnue'}</div>
+          <div style="font-size:11px;color:var(--ew-ink2);margin-top:2px">${a.source_name || ''} &middot; ${displayDate(a)}</div>
         </div>
       </div>
     `).join('');
