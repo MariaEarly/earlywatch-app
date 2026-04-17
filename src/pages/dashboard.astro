@@ -141,20 +141,13 @@ const base = import.meta.env.BASE_URL;
 
   const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
 
-  /** Date effective pour le tri : published_at si disponible et cohérente, sinon created_at.
-   *  Articles backfillés (published_at > 30j avant created_at) → created_at pour ne pas
-   *  remonter du vieux contenu en tête de liste.
+  /** Date effective pour le tri : toujours published_at quand disponible, sinon created_at.
+   *  Les articles backfillés (published_at ancien) se trient naturellement en bas
+   *  de la vue "Plus récent" grâce à leur vraie date de publication.
    */
   function sortDate(a: any): number {
-    const created = new Date(a.created_at).getTime();
-    if (a.published_at) {
-      const pub = new Date(a.published_at).getTime();
-      const daysDiff = (created - pub) / 86400000;
-      // Backfill : published_at trop ancien par rapport à created_at → utiliser created_at
-      if (daysDiff > 30) return created;
-      return pub;
-    }
-    return created;
+    if (a.published_at) return new Date(a.published_at).getTime();
+    return new Date(a.created_at).getTime();
   }
 
   /** Date d'affichage intelligente pour une card article.
