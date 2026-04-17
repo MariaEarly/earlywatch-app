@@ -159,18 +159,20 @@ const base = import.meta.env.BASE_URL;
 
   /** Date d'affichage intelligente pour une card article.
    *  - Si published_at est précise (pas le 1er du mois à minuit) → formatDate(published_at)
-   *  - Sinon fallback sur created_at (date d'ingestion)
-   *  - Si aucune date → badge "Date inconnue" + lien "Corriger"
+   *  - Si published_at est imprécise (1er du mois) → affiche "janv. 2025" (mois + année)
+   *  - Si published_at est NULL → created_at
+   *  - Si aucune date → badge "Date inconnue"
    */
   function displayDate(a: any): string {
     const pub = a.published_at;
     if (pub) {
       const d = new Date(pub);
-      // Heuristique : date imprécise = 1er du mois à minuit UTC (extraction URL PDF)
       const isImprecise = d.getUTCDate() === 1 && d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0;
       if (!isImprecise) return formatDate(pub);
+      // Date imprécise → afficher mois + année uniquement
+      const monthNames = ['janv.', 'fév.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+      return `${monthNames[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
     }
-    // Fallback sur created_at
     if (a.created_at) return formatDate(a.created_at);
     return `<span class="date-unknown-badge" style="background:var(--ew-accent);color:#fff;font-size:10px;padding:1px 6px;border-radius:3px;font-style:normal">Date inconnue</span><a href="#" class="fix-date-link" data-fix-date="${a.id}" onclick="event.stopPropagation();event.preventDefault()" style="font-size:10px;color:var(--ew-ink3);margin-left:4px;text-decoration:underline">Corriger</a>`;
   }
