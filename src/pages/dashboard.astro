@@ -141,6 +141,22 @@ const base = import.meta.env.BASE_URL;
 
   const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
 
+  /** Date effective pour le tri : published_at si disponible et cohérente, sinon created_at.
+   *  Articles backfillés (published_at > 30j avant created_at) → created_at pour ne pas
+   *  remonter du vieux contenu en tête de liste.
+   */
+  function sortDate(a: any): number {
+    const created = new Date(a.created_at).getTime();
+    if (a.published_at) {
+      const pub = new Date(a.published_at).getTime();
+      const daysDiff = (created - pub) / 86400000;
+      // Backfill : published_at trop ancien par rapport à created_at → utiliser created_at
+      if (daysDiff > 30) return created;
+      return pub;
+    }
+    return created;
+  }
+
   /** Date d'affichage intelligente pour une card article.
    *  - Si published_at est précise (pas le 1er du mois à minuit) → formatDate(published_at)
    *  - Sinon fallback sur created_at (date d'ingestion)
@@ -281,7 +297,9 @@ const base = import.meta.env.BASE_URL;
     });
     container.querySelectorAll('[data-score-filter]').forEach((el: any) => {
       el.addEventListener('click', () => {
-        scoreFilter = el.dataset.scoreFilter;
+        const clicked = el.dataset.scoreFilter;
+        // Toggle : re-clic sur le filtre actif → retour à "Tous scores"
+        scoreFilter = (clicked === scoreFilter && clicked !== 'all') ? 'all' : clicked;
         renderToolbar();
         renderArticles();
       });
@@ -309,28 +327,29 @@ const base = import.meta.env.BASE_URL;
     if (scoreFilter === 'high') filtered = filtered.filter((a: any) => (a.score || 0) >= 45);
     else if (scoreFilter === 'med') filtered = filtered.filter((a: any) => (a.score || 0) >= 25 && (a.score || 0) < 45);
 
-    // Filtre temporel — toujours bas\u00e9 sur created_at (date d'ingestion dans Early Watch)
+    // Filtre temporel — basé sur sortDate() (published_at si cohérente, sinon created_at)
     const now = new Date();
     if (sortMode === 'week') {
       const startOfWeek = new Date(now);
       startOfWeek.setDate(now.getDate() - now.getDay() + 1);
       startOfWeek.setHours(0, 0, 0, 0);
-      filtered = filtered.filter((a: any) => new Date(a.created_at) >= startOfWeek);
+      const startTs = startOfWeek.getTime();
+      filtered = filtered.filter((a: any) => sortDate(a) >= startTs);
     } else if (sortMode === '7days') {
-      const cutoff = new Date(now.getTime() - 7 * 86400000);
-      filtered = filtered.filter((a: any) => new Date(a.created_at) >= cutoff);
+      const cutoff = now.getTime() - 7 * 86400000;
+      filtered = filtered.filter((a: any) => sortDate(a) >= cutoff);
     }
 
     // Tri : score DESC puis date DESC quand Prioritaire est actif
-    // Sinon tri par date seule (created_at = date d'ingestion)
+    // Date = published_at si dispo et cohérente, sinon created_at (cf. sortDate())
     filtered.sort((a: any, b: any) => {
       if (scoreFilter === 'high') {
         const sa = (a.score || 0), sb = (b.score || 0);
         if (sa !== sb) return sb - sa;
       }
-      const da = new Date(a.created_at).getTime();
-      const db = new Date(b.created_at).getTime();
-      return sortMode === 'oldest' ? da - db : db - da;
+      const da = sortDate(a);
+      const db2 = sortDate(b);
+      return sortMode === 'oldest' ? da - db2 : db2 - da;
     });
 
     if (filtered.length === 0) {
@@ -721,9 +740,7 @@ const base = import.meta.env.BASE_URL;
       ? (a: any) => a.status === 'quotidien'
       : (a: any) => a.status === 'hebdo' || a.status === 'quotidien';
     apercuOrder = articles.filter(statusFilter)
-      .sort((a: any, b: any) => {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      });
+      .sort((a: any, b: any) => sortDate(b) - sortDate(a));
 
     const overlay = document.getElementById('apercu-overlay')!;
     overlay.style.display = 'flex';
