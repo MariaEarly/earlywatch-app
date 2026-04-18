@@ -50,7 +50,13 @@ export async function api(path, opts = {}) {
   }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || 'Erreur serveur');
+    const detail = err.detail;
+    const msg = typeof detail === 'string'
+      ? detail
+      : Array.isArray(detail)
+        ? detail.map(d => d.msg || JSON.stringify(d)).join(', ')
+        : detail ? JSON.stringify(detail) : 'Erreur serveur';
+    throw new Error(msg);
   }
   if (res.status === 204) return null;
   const ct = res.headers.get('content-type') || '';
