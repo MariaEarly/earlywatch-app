@@ -190,15 +190,15 @@ const base = import.meta.env.BASE_URL;
               <div class="proc-bar-fill proc-fill-avalider" style="width:${pctA}%"></div>
             </div>
             <div class="proc-legend">
-              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-ink2)"></span> ${valide} validees</div>
-              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-ink2)"></span> ${encours} en cours</div>
-              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-accent-text)"></span> ${avalider} a valider</div>
+              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-kaki)"></span> ${valide} validees</div>
+              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-border-strong)"></span> ${encours} en cours</div>
+              <div class="proc-legend-item"><span class="proc-legend-dot" style="background:var(--ew-border-strong)"></span> ${avalider} a valider</div>
             </div>
           </div>
           ${procs.filter((p: any) => p.status !== 'valide').slice(0, 4).map((p: any) => `
-            <div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--color-border-tertiary);display:flex;justify-content:space-between">
-              <span><b>${p.reference}</b> ${p.title}</span>
-              <span style="font-size:11px;color:var(--ew-text-secondary)">${p.status === 'en_cours' ? 'En cours' : 'A valider'}</span>
+            <div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--ew-border);display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${p.reference}</b> ${p.title}</span>
+              <span class="${p.status === 'en_cours' ? 'status-en-cours' : 'status-a-reviser'}" style="flex-shrink:0">${p.status === 'en_cours' ? 'En cours' : 'A valider'}</span>
             </div>
           `).join('')}
         `;
@@ -322,16 +322,16 @@ const base = import.meta.env.BASE_URL;
 
   .score-circle {
     width: 100px; height: 100px; border-radius: 50%;
-    border: 1px solid var(--text-primary); display: flex; flex-direction: column;
+    border: 1px solid var(--ew-border-strong); display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     box-shadow: none; background: var(--ew-bg);
   }
   .score-pct { font-size: 28px; font-weight: 500; line-height: 1; }
   .score-label { font-size: 10px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
-  .score-red { border-color: var(--ew-accent-text); }
-  .score-red .score-pct { color: var(--ew-accent-text); }
-  .score-orange { border-color: var(--ew-accent-text); }
-  .score-orange .score-pct { color: var(--ew-accent-text); }
+  .score-red { border-color: var(--ew-text); }
+  .score-red .score-pct { color: var(--ew-text); }
+  .score-orange { border-color: var(--ew-kaki); }
+  .score-orange .score-pct { color: var(--ew-kaki); }
   .score-green { border-color: var(--ew-ink2); }
   .score-green .score-pct { color: var(--ew-ink2); }
 
@@ -345,7 +345,7 @@ const base = import.meta.env.BASE_URL;
     box-shadow: none;
   }
   .stat-card:last-child { border-right: none; }
-  .stat-card-value { font-family: 'IBM Plex Mono', monospace; font-size: 32px; font-weight: 300; line-height: 1; color: var(--noir); }
+  .stat-card-value { font-family: var(--ew-font-mono); font-size: 32px; font-weight: 300; line-height: 1; color: var(--noir); }
   .stat-card-label { font-size: 12px; color: var(--color-text-tertiary); margin-top: 2px; }
   .stat-card-sub { font-size: 11px; color: var(--color-text-tertiary); margin-top: 4px; }
   .stat-accent .stat-card-value { color: var(--noir); }
@@ -363,7 +363,7 @@ const base = import.meta.env.BASE_URL;
   }
   .module-header {
     padding: 14px 18px; display: flex; justify-content: space-between;
-    align-items: center; border-bottom: 1px solid var(--color-border-tertiary);
+    align-items: center; border-bottom: 1px solid var(--ew-border);
   }
   .module-title { font-size: 14px; font-weight: 500; color: var(--noir); }
   .module-link { font-size: 12px; color: var(--ew-text); text-decoration: none; font-weight: 500; }
@@ -372,11 +372,11 @@ const base = import.meta.env.BASE_URL;
 
   .rem-item {
     display: flex; gap: 10px; align-items: flex-start; padding: 8px 0;
-    border-bottom: 1px solid var(--color-border-tertiary); font-size: 13px;
+    border-bottom: 1px solid var(--ew-border); font-size: 13px;
   }
   .rem-item:last-child { border-bottom: none; }
   .rem-sev { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
-  :global(.sev-critical) { background: var(--ew-accent-text); }
+  :global(.sev-critical) { background: var(--ew-kaki); }
   :global(.sev-high) { background: var(--ew-ink2); }
   :global(.sev-medium) { background: var(--ew-ink3); }
   :global(.sev-low) { background: var(--ew-ink3); }
@@ -386,7 +386,7 @@ const base = import.meta.env.BASE_URL;
   .proc-progress { margin-bottom: 12px; }
   :global(.proc-bar-bg) {
     height: 14px; background: var(--ew-bg); border-radius: 8px;
-    border: 1px solid var(--color-border-tertiary); overflow: hidden; display: flex;
+    border: 1px solid var(--ew-border); overflow: hidden; display: flex;
   }
   :global(.proc-bar-fill) { height: 100%; transition: width 0.4s; }
   :global(.proc-fill-valide) { background: var(--ew-ink2); }
@@ -398,10 +398,10 @@ const base = import.meta.env.BASE_URL;
 
   :global(.dl-item) {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 8px 0; border-bottom: 1px solid var(--color-border-tertiary); font-size: 13px;
+    padding: 8px 0; border-bottom: 1px solid var(--ew-border); font-size: 13px;
   }
   :global(.dl-item:last-child) { border-bottom: none; }
-  :global(.dl-reg) { font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: 400; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.06em; }
+  :global(.dl-reg) { font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: 400; font-family: var(--ew-font-mono); letter-spacing: 0.06em; }
   :global(.dl-reg-dora) { background: transparent; color: var(--ew-text); border: 0.5px solid var(--ew-text); }
   :global(.dl-reg-amlr) { background: transparent; color: var(--ew-text); border: 0.5px solid var(--ew-text); }
   :global(.dl-reg-ai) { background: transparent; color: var(--ew-text); border: 0.5px solid var(--ew-text); }
@@ -409,11 +409,11 @@ const base = import.meta.env.BASE_URL;
   :global(.dl-title) { flex: 1; margin: 0 10px; color: var(--noir); }
   :global(.dl-date) { font-size: 12px; font-weight: 500; white-space: nowrap; }
   :global(.dl-passed) { color: var(--color-text-tertiary); }
-  :global(.dl-imminent) { color: var(--ew-accent-text); }
-  :global(.dl-soon) { color: var(--ew-accent-text); }
+  :global(.dl-imminent) { color: var(--ew-kaki); font-weight: 500; }
+  :global(.dl-soon) { color: var(--ew-kaki); }
   :global(.dl-upcoming) { color: var(--color-text-tertiary); }
 
-  :global(.sanc-item) { padding: 8px 0; border-bottom: 1px solid var(--color-border-tertiary); font-size: 13px; }
+  :global(.sanc-item) { padding: 8px 0; border-bottom: 1px solid var(--ew-border); font-size: 13px; }
   :global(.sanc-item:last-child) { border-bottom: none; }
   :global(.sanc-title) { color: var(--noir); font-weight: 500; }
   :global(.sanc-title a) { color: var(--ew-text); text-decoration: none; }
