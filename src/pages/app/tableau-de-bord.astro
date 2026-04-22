@@ -226,21 +226,19 @@ const base = import.meta.env.BASE_URL;
     if (visitEl) visitEl.textContent = '';
 
     try {
-      const [articles, deadlines] = await Promise.all([
-        api('/api/v1/articles?page_size=50&score_min=11'),
+      const [counts, inboxData, tasksData, deadlines] = await Promise.all([
+        api('/api/v1/app/articles/counts'),
+        api('/api/v1/app/articles?status=inbox&page_size=5'),
+        api('/api/v1/app/articles?status=to_process&page_size=5'),
         api('/api/v1/deadlines?include_passed=false'),
       ]);
 
-      const list: any[] = Array.isArray(articles) ? articles : (articles?.items || []);
-      const inbox = list.filter((a: any) => a.lifecycle_status === 'inbox' || a.lifecycle_status === 'triaged');
-
-      // KPIs (approximation v1 — avant table tenant_article_states)
       const setKpi = (id: string, val: number) => {
         const el = document.querySelector(`#${id} .kpi-num`);
         if (el) el.textContent = String(val);
       };
-      setKpi('kpi-unread',    inbox.length);
-      setKpi('kpi-toprocess', 0);
+      setKpi('kpi-unread',    counts.inbox    ?? 0);
+      setKpi('kpi-toprocess', counts.to_process ?? 0);
       setKpi('kpi-tracker',   0);
 
       const dl: any[] = Array.isArray(deadlines) ? deadlines : (deadlines?.deadlines || []);
@@ -250,13 +248,8 @@ const base = import.meta.env.BASE_URL;
       });
       setKpi('kpi-deadlines', soon.length);
 
-      // Preview veille — 5 premiers articles inbox
-      renderVeille(inbox.slice(0, 5));
-
-      // Preview tâches — vide en v1 (pas de to_process avant migration)
-      renderTasks([]);
-
-      // Preview échéances — 3 premières
+      renderVeille(inboxData.articles || []);
+      renderTasks(tasksData.articles || []);
       renderDeadlines(dl.slice(0, 3));
 
     } catch (e: any) {
@@ -295,7 +288,7 @@ const base = import.meta.env.BASE_URL;
     el.innerHTML = tasks.map((t: any) => `
       <div class="task-card">
         <div class="task-card-title">${t.title || 'Sans titre'}</div>
-        <div class="task-card-meta">${formatDate(t.processed_at)}</div>
+        <div class="task-card-meta">${t.source_name || ''}</div>
       </div>
     `).join('');
   }
