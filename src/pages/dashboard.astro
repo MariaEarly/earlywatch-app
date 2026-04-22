@@ -39,33 +39,6 @@ const base = import.meta.env.BASE_URL;
   </div>
 </div>
 
-<!-- ── Pub drawer ── -->
-<div id="pub-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,24,20,0.35);z-index:1000;justify-content:flex-end">
-  <div id="pub-drawer" style="width:420px;max-width:90vw;height:100vh;background:var(--bg);display:flex;flex-direction:column;animation:ew-slide-in 0.2s ease-out">
-    <header style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:0.5px solid var(--line)">
-      <div style="font-size:14px;font-weight:500;color:var(--ink)">Ajouter aux Autres Publications</div>
-      <button id="pub-close" style="background:none;border:none;font-size:20px;color:var(--taupe);cursor:pointer;padding:4px;line-height:1">&times;</button>
-    </header>
-    <div id="pub-form" style="flex:1;overflow-y:auto;padding:16px 22px;display:flex;flex-direction:column;gap:14px">
-      <div class="ew-field"><label class="ew-label">Date</label><input type="date" id="pub-date" class="ew-input" /></div>
-      <div class="ew-field"><label class="ew-label">Source</label><input type="text" id="pub-source" class="ew-input" /></div>
-      <div class="ew-field"><label class="ew-label">Type</label>
-        <select id="pub-type" class="ew-input">
-          <option value="Rapport">Rapport</option>
-          <option value="Intelligence">Intelligence</option>
-        </select>
-      </div>
-      <div class="ew-field"><label class="ew-label">Titre</label><input type="text" id="pub-titre" class="ew-input" /></div>
-      <div class="ew-field"><label class="ew-label">Synthèse</label><textarea id="pub-synthese" class="ew-input ew-textarea" rows="3" placeholder="Description opérationnelle courte"></textarea></div>
-      <div class="ew-field"><label class="ew-label">Lien</label><input type="url" id="pub-lien" class="ew-input" /></div>
-    </div>
-    <footer style="padding:14px 22px;border-top:0.5px solid var(--line);display:flex;gap:8px;justify-content:flex-end">
-      <button id="pub-cancel" class="ew-btn">Annuler</button>
-      <button id="pub-confirm" class="ew-btn ew-btn-primary">Confirmer</button>
-    </footer>
-  </div>
-</div>
-
 <!-- ── Modale confirmation clôture ── -->
 <div id="cloturer-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,24,20,0.45);z-index:1100;align-items:center;justify-content:center">
   <div id="cloturer-modal" style="background:var(--bg);border:0.5px solid var(--line-strong);border-radius:8px;width:440px;max-width:90vw">
@@ -179,7 +152,6 @@ const base = import.meta.env.BASE_URL;
 
   let articles: any[] = [];
   let activeFilter = 'all';
-  let scoreFilter = 'all';
   let sortMode = 'recent';
   let newsletterCounts: any = null;
   let trackerPendingCount = 0;
@@ -234,12 +206,6 @@ const base = import.meta.env.BASE_URL;
     const cnt: any = { all: visible.length, nouveau: 0, quotidien: 0, hebdo: 0, ignorer: 0 };
     visible.forEach((a: any) => { if (cnt[a.status] !== undefined) cnt[a.status]++; });
 
-    const sco: any = { all: visible.length, high: 0, med: 0 };
-    visible.forEach((a: any) => {
-      if ((a.score || 0) >= 45) sco.high++;
-      else if ((a.score || 0) >= 25) sco.med++;
-    });
-
     const tabHtml = `
       <div class="ew-tabs" id="ew-tabs">
         ${tab('all', 'Tous', cnt.all, activeFilter)}
@@ -247,10 +213,6 @@ const base = import.meta.env.BASE_URL;
         ${tab('quotidien', 'Quotidien', cnt.quotidien, activeFilter)}
         ${tab('hebdo', 'Hebdo', cnt.hebdo, activeFilter)}
         ${tab('ignorer', 'Ignorés', cnt.ignorer, activeFilter)}
-        <span class="ew-tab-sep"></span>
-        ${scoreTab('all', 'Tous scores', sco.all, scoreFilter)}
-        ${scoreTab('high', 'Prioritaire', sco.high, scoreFilter)}
-        ${scoreTab('med', 'Moyen', sco.med, scoreFilter)}
         <select class="ew-sort" id="sort-select">
           <option value="recent"${sortMode === 'recent' ? ' selected' : ''}>Plus récent ▾</option>
           <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien ▾</option>
@@ -274,14 +236,6 @@ const base = import.meta.env.BASE_URL;
         renderArticles();
       });
     });
-    container.querySelectorAll('[data-score-filter]').forEach((el: any) => {
-      el.addEventListener('click', () => {
-        const clicked = el.dataset.scoreFilter;
-        scoreFilter = (clicked === scoreFilter && clicked !== 'all') ? 'all' : clicked;
-        renderTabs();
-        renderArticles();
-      });
-    });
     const sortEl = document.getElementById('sort-select') as HTMLSelectElement;
     if (sortEl) {
       sortEl.addEventListener('change', () => { sortMode = sortEl.value; renderArticles(); });
@@ -291,10 +245,6 @@ const base = import.meta.env.BASE_URL;
   function tab(key: string, label: string, count: number, current: string): string {
     return `<button class="ew-tab${current === key ? ' active' : ''}" data-filter="${key}">${label} <span class="ew-tab-num">${count}</span></button>`;
   }
-  function scoreTab(key: string, label: string, count: number, current: string): string {
-    return `<button class="ew-tab${current === key ? ' active' : ''}" data-score-filter="${key}">${label} <span class="ew-tab-num">${count}</span></button>`;
-  }
-
   // ── Articles ─────────────────────────────────────────────────────────────
 
   function renderArticles(): void {
@@ -302,8 +252,6 @@ const base = import.meta.env.BASE_URL;
       a.lifecycle_status === 'inbox' || a.lifecycle_status === 'triaged'
     );
     if (activeFilter !== 'all') filtered = filtered.filter((a: any) => a.status === activeFilter);
-    if (scoreFilter === 'high') filtered = filtered.filter((a: any) => (a.score || 0) >= 45);
-    else if (scoreFilter === 'med') filtered = filtered.filter((a: any) => (a.score || 0) >= 25 && (a.score || 0) < 45);
 
     const now = new Date();
     if (sortMode === 'week') {
@@ -314,10 +262,6 @@ const base = import.meta.env.BASE_URL;
     }
 
     filtered.sort((a: any, b: any) => {
-      if (scoreFilter === 'high') {
-        const diff = (b.score || 0) - (a.score || 0);
-        if (diff !== 0) return diff;
-      }
       return sortMode === 'oldest' ? sortDate(a) - sortDate(b) : sortDate(b) - sortDate(a);
     });
 
@@ -356,9 +300,6 @@ const base = import.meta.env.BASE_URL;
         triage(el.dataset.triage, el.dataset.triageStatus);
       });
     });
-    container.querySelectorAll('[data-publish]').forEach((el: any) => {
-      el.addEventListener('click', (e: any) => { e.stopPropagation(); publishArticle(el.dataset.publish); });
-    });
     container.querySelectorAll('.fix-date-link').forEach((el: any) => {
       el.addEventListener('click', (e: any) => {
         e.stopPropagation(); e.preventDefault();
@@ -393,20 +334,11 @@ const base = import.meta.env.BASE_URL;
       ? `<span class="ew-badge ew-badge-ok" style="font-family:var(--font-mono);font-size:9px">✓ Tracker</span>`
       : `<button class="ew-btn ew-btn-ghost" data-tracker="${a.id}" data-source="${escHtml(a.source_name||'')}" data-date="${a.published_at||''}" data-title="${escHtml(a.title||'')}" data-synthese="${escHtml(a.reminder_text||'')}" data-type="${a.impact_type||'info'}" data-url="${escHtml(a.original_url||'')}">+ Tracker</button>`;
 
-    const pubBtn = a.pub_added
-      ? `<span class="ew-badge ew-badge-ok" style="font-family:var(--font-mono);font-size:9px">✓ Pub</span>`
-      : `<button class="ew-btn ew-btn-ghost" data-pub="${a.id}" data-source="${escHtml(a.source_name||'')}" data-date="${a.published_at||''}" data-title="${escHtml(a.title||'')}" data-type="${a.impact_type||'info'}" data-url="${escHtml(a.original_url||'')}">+ Pub</button>`;
-
-    const publishBtn = (newsletterEnabled() && (a.status === 'quotidien' || a.status === 'hebdo'))
-      ? `<button class="ew-btn${a.published_to_newsletter ? ' ew-btn-ghost' : ' ew-btn-primary'}" data-publish="${a.id}" ${a.published_to_newsletter ? `disabled title="Publié le ${formatDate(a.published_to_newsletter_at)}"` : ''}>
-          ${a.published_to_newsletter ? '✓ Publié' : 'Publier'}
-        </button>` : '';
-
     const impactRow = (a.has_impact && a.impacted_procedures?.length)
-      ? `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap" onclick="event.stopPropagation()">
-          <span style="font-size:11px;color:var(--taupe)">Impacte →</span>
-          ${a.impacted_procedures.map((p: string) => `<span style="font-size:11px;font-weight:500;color:var(--ink-soft)" title="${escHtml(p)}">${escHtml(procLabel(p))}</span>`).join(' · ')}
-          <a href="${BASE}controle" style="font-size:11px;color:var(--mute);text-decoration:underline" onclick="event.stopPropagation()">Voir reminder</a>
+      ? `<div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap;background:#E6E2D8;padding:8px 10px;border-radius:2px" onclick="event.stopPropagation()">
+          <span style="font-size:11px;font-weight:500;color:#5C6347">Impacte →</span>
+          ${a.impacted_procedures.map((p: string) => `<span style="font-size:11px;font-weight:500;color:#5C6347" title="${escHtml(p)}">${escHtml(procLabel(p))}</span>`).join(' · ')}
+          <a href="${BASE}controle" style="font-size:11px;color:#5C6347;text-decoration:underline;margin-left:auto" onclick="event.stopPropagation()">Voir reminder</a>
         </div>` : '';
 
     const newBadge = a.status === 'nouveau'
@@ -434,8 +366,6 @@ const base = import.meta.env.BASE_URL;
             <button class="ew-btn${hClass}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo${a.status === 'hebdo' ? ` <span class="triage-reset" data-reset="${a.id}">×</span>` : ''}</button>
             <div class="ew-act-sep"></div>
             ${trackerBtn}
-            ${pubBtn}
-            ${publishBtn}
             <div class="ew-act-sep"></div>
             <button class="ew-btn ew-btn-ghost${a.status === 'ignorer' ? ' ew-btn-active' : ''}" data-triage="${a.id}" data-triage-status="ignorer">Ignorer</button>
           </div>
@@ -463,23 +393,6 @@ const base = import.meta.env.BASE_URL;
       renderTabs(); renderArticles();
       const label = status === 'quotidien' ? 'Article — Quotidien' : status === 'hebdo' ? 'Article — Hebdo' : 'Article ignoré';
       toast(label);
-    } catch (e: any) { toast(e.message, 'error'); }
-  }
-
-  async function publishArticle(id: string): Promise<void> {
-    try {
-      const res: any = await api(`/api/v1/articles/${id}/published`, { method: 'POST', body: {} });
-      const idx = articles.findIndex((a: any) => a.id === id);
-      if (idx !== -1) {
-        articles[idx].published_to_newsletter = true;
-        articles[idx].published_to_newsletter_at = res.published_to_newsletter_at;
-        articles[idx].lifecycle_status = 'published';
-      }
-      if (newsletterEnabled()) {
-        newsletterCounts = await api('/api/v1/articles/newsletter/counts').catch(() => newsletterCounts);
-      }
-      renderArticles(); renderRightPanel();
-      toast('Article publié dans la newsletter');
     } catch (e: any) { toast(e.message, 'error'); }
   }
 
@@ -512,8 +425,8 @@ const base = import.meta.env.BASE_URL;
             <button class="ew-digest-btn" id="btn-apercu-hebdo" ${hTotal === 0 ? 'disabled style="opacity:.4"' : ''}>Aperçu</button>
           </div>
         </div>
-        <button class="ew-close" id="btn-publish-all" ${!canClose ? 'disabled style="opacity:.4"' : ''}>Clôturer la session</button>
-        <div class="ew-close-note">Marque tous les triagés comme publiés.</div>
+        <button class="ew-close" id="btn-publish-all" ${!canClose ? 'disabled style="opacity:.4"' : ''}>Archiver la sélection</button>
+        <div class="ew-close-note">Archive tous les articles triagés. Compteurs remis à 0.</div>
       </div>` : `
       <div>
         <div class="ew-r-title">Digest</div>
@@ -620,7 +533,7 @@ const base = import.meta.env.BASE_URL;
       toast(`${res.published || 0} article${(res.published||0) > 1 ? 's' : ''} publiés — session clôturée`);
     } catch (e: any) {
       toast('Erreur: ' + (e.message || 'publication échouée'), 'error');
-      if (btn) { btn.disabled = false; btn.textContent = 'Clôturer la session'; }
+      if (btn) { btn.disabled = false; btn.textContent = 'Archiver la sélection'; }
     }
   }
 
@@ -775,52 +688,6 @@ const base = import.meta.env.BASE_URL;
     } catch (err: any) { toast('Erreur: ' + err.message, 'error'); }
   });
 
-  // ── Pub drawer ────────────────────────────────────────────────────────────
-
-  let pubArticleId: string | null = null;
-  const PUB_TYPE_MAP: Record<string, string> = { rapport: 'Rapport', etude: 'Rapport', evaluation: 'Rapport' };
-
-  document.addEventListener('click', (e: Event) => {
-    const btn = (e.target as HTMLElement).closest('[data-pub]') as HTMLElement | null;
-    if (!btn) return;
-    pubArticleId = btn.dataset.pub!;
-    const pubArticle = articles.find((a: any) => a.id === pubArticleId);
-    (document.getElementById('pub-date') as HTMLInputElement).value = btn.dataset.date ? btn.dataset.date.slice(0,10) : '';
-    (document.getElementById('pub-source') as HTMLInputElement).value = btn.dataset.source || '';
-    (document.getElementById('pub-titre') as HTMLInputElement).value = btn.dataset.title || '';
-    (document.getElementById('pub-synthese') as HTMLTextAreaElement).value = pubArticle?.summary || '';
-    (document.getElementById('pub-lien') as HTMLInputElement).value = btn.dataset.url || '';
-    (document.getElementById('pub-type') as HTMLSelectElement).value = PUB_TYPE_MAP[btn.dataset.type||''] || 'Intelligence';
-    document.getElementById('pub-overlay')!.style.display = 'flex';
-  });
-
-  document.getElementById('pub-close')?.addEventListener('click', () => { document.getElementById('pub-overlay')!.style.display = 'none'; });
-  document.getElementById('pub-cancel')?.addEventListener('click', () => { document.getElementById('pub-overlay')!.style.display = 'none'; });
-  document.getElementById('pub-overlay')?.addEventListener('click', (e: Event) => {
-    if (e.target === e.currentTarget) (e.currentTarget as HTMLElement).style.display = 'none';
-  });
-
-  document.getElementById('pub-confirm')?.addEventListener('click', async () => {
-    const body = {
-      date:     (document.getElementById('pub-date') as HTMLInputElement).value,
-      source:   (document.getElementById('pub-source') as HTMLInputElement).value,
-      type:     (document.getElementById('pub-type') as HTMLSelectElement).value,
-      titre:    (document.getElementById('pub-titre') as HTMLInputElement).value,
-      synthese: (document.getElementById('pub-synthese') as HTMLTextAreaElement).value,
-      lien:     (document.getElementById('pub-lien') as HTMLInputElement).value,
-    };
-    try {
-      const res: any = await api(`/api/v1/tracker/pub/propose?article_id=${pubArticleId}`, { method: 'POST', body });
-      if (res.success) {
-        const idx = articles.findIndex((a: any) => a.id === pubArticleId);
-        if (idx !== -1) articles[idx].pub_added = true;
-        document.getElementById('pub-overlay')!.style.display = 'none';
-        renderArticles();
-        toast('Ajouté aux autres publications');
-      } else { toast('Erreur publication', 'error'); }
-    } catch (err: any) { toast('Erreur: ' + err.message, 'error'); }
-  });
-
   // ── Utils ─────────────────────────────────────────────────────────────────
 
   function escHtml(s: string): string {
@@ -867,6 +734,5 @@ const base = import.meta.env.BASE_URL;
   /* Les overlays sont contrôlés uniquement par JS (style.display = 'flex'/'none') */
   #apercu-overlay { display: none; }
   #cloturer-overlay { display: none; }
-  #pub-overlay { display: none; }
   #tracker-overlay { display: none; }
 </style>
