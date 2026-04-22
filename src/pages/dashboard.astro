@@ -335,8 +335,8 @@ const base = import.meta.env.BASE_URL;
       : `<button class="ew-btn ew-btn-ghost" data-tracker="${a.id}" data-source="${escHtml(a.source_name||'')}" data-date="${a.published_at||''}" data-title="${escHtml(a.title||'')}" data-synthese="${escHtml(a.reminder_text||'')}" data-type="${a.impact_type||'info'}" data-url="${escHtml(a.original_url||'')}">+ Tracker</button>`;
 
     const impactRow = (a.has_impact && a.impacted_procedures?.length)
-      ? `<div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap;border-left:2px solid #5C6347;padding-left:12px" onclick="event.stopPropagation()">
-          <span style="font-size:11px;font-weight:500;color:#5C6347">Impacte →</span>
+      ? `<div style="display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap" onclick="event.stopPropagation()">
+          <span style="font-size:11px;color:#888">Impacte →</span>
           ${a.impacted_procedures.map((p: string) => `<span style="font-size:11px;font-weight:500;color:#5C6347" title="${escHtml(p)}">${escHtml(procLabel(p))}</span>`).join(' · ')}
           <a href="${BASE}controle" style="font-size:11px;color:#5C6347;text-decoration:underline;margin-left:auto" onclick="event.stopPropagation()">Voir reminder</a>
         </div>` : '';
@@ -361,7 +361,7 @@ const base = import.meta.env.BASE_URL;
             }
           </h3>
           ${impactRow}
-          <div class="ew-actions">
+          <div class="ew-actions"${impactRow ? ' style="margin-top:16px"' : ''}>
             <button class="ew-btn ew-btn-primary${qClass}" data-triage="${a.id}" data-triage-status="quotidien">Quotidien${a.status === 'quotidien' ? ` <span class="triage-reset" data-reset="${a.id}">×</span>` : ''}</button>
             <button class="ew-btn${hClass}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo${a.status === 'hebdo' ? ` <span class="triage-reset" data-reset="${a.id}">×</span>` : ''}</button>
             <div class="ew-act-sep"></div>
