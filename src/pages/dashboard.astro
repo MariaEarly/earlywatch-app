@@ -864,10 +864,9 @@ const base = import.meta.env.BASE_URL;
   /* Scrollbar gutter pour les listes longues */
   #ew-list { scrollbar-gutter: stable; }
 
-  /* Aperçu overlay centré */
+  /* Les overlays sont contrôlés uniquement par JS (style.display = 'flex'/'none') */
   #apercu-overlay { display: none; }
-  #apercu-overlay[style*="flex"] { display: flex !important; }
-  #cloturer-overlay[style*="flex"] { display: flex !important; }
-  #pub-overlay[style*="flex"] { display: flex !important; }
-  #tracker-overlay[style*="flex"] { display: flex !important; }
+  #cloturer-overlay { display: none; }
+  #pub-overlay { display: none; }
+  #tracker-overlay { display: none; }
 </style>
