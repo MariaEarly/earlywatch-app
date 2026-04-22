@@ -10,7 +10,6 @@ const base = import.meta.env.BASE_URL;
     <div class="ew-h-date" id="client-today"></div>
   </div>
 
-  <div id="veille-tabs-container"></div>
   <div id="veille-list">
     <div class="ew-loading"><div class="ew-spinner"></div></div>
   </div>
@@ -21,86 +20,27 @@ const base = import.meta.env.BASE_URL;
 <div id="tracker-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,24,20,0.35);z-index:1000;justify-content:flex-end">
   <div style="width:420px;max-width:90vw;height:100vh;background:var(--bg);display:flex;flex-direction:column;animation:ew-slide-in 0.2s ease-out">
     <header style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:0.5px solid var(--line)">
-      <span style="font-size:14px;font-weight:500">+ Tracker</span>
-      <button id="tracker-close" style="background:none;border:none;font-size:18px;color:var(--taupe);cursor:pointer">&times;</button>
+      <span style="font-size:14px;font-weight:500;color:var(--ink)">+ Tracker</span>
+      <button id="tracker-close" style="background:none;border:none;font-size:20px;color:var(--taupe);cursor:pointer;padding:4px;line-height:1">&times;</button>
     </header>
     <div style="flex:1;overflow-y:auto;padding:18px 22px" id="tracker-form-body"></div>
   </div>
 </div>
 
-<style>
-  .veille-tabs {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    border-bottom: 0.5px solid var(--line);
-    margin-bottom: 0;
-  }
-  .veille-tab {
-    font-size: 13px;
-    padding: 8px 14px;
-    color: var(--taupe);
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    font-family: var(--font);
-    white-space: nowrap;
-    transition: color 0.12s;
-    margin-bottom: -0.5px;
-  }
-  .veille-tab:hover { color: var(--ink); }
-  .veille-tab.active { color: var(--ink); border-bottom-color: #5C6347; font-weight: 500; }
-  .veille-tab-num { font-family: var(--font-mono); font-size: 10px; color: var(--mute); margin-left: 5px; }
-
-  .client-item {
-    padding: 22px 0;
-    border-bottom: 0.5px solid var(--line);
-    display: grid;
-    grid-template-columns: 44px 1fr;
-    column-gap: 24px;
-    align-items: start;
-  }
-  .client-item:last-child { border-bottom: none; }
-
-  .client-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
-
-  .btn-primary-kaki {
-    font-size: 12px; padding: 7px 14px; background: #5C6347; color: #F4F0E6;
-    border: none; border-radius: var(--radius); font-family: var(--font);
-    cursor: pointer; white-space: nowrap; transition: opacity 0.12s;
-  }
-  .btn-primary-kaki:hover { opacity: 0.88; }
-  .btn-primary-kaki.active-task {
-    background: #888;
-  }
-  .btn-outline-kaki {
-    font-size: 12px; padding: 7px 14px; background: transparent; color: #5C6347;
-    border: 1px solid #5C6347; border-radius: var(--radius); font-family: var(--font);
-    cursor: pointer; white-space: nowrap; transition: background 0.12s;
-  }
-  .btn-outline-kaki:hover { background: rgba(92,99,71,0.06); }
-  .btn-text-kaki {
-    font-size: 12px; padding: 7px 10px; background: none; color: #5C6347;
-    border: none; font-family: var(--font); cursor: pointer; white-space: nowrap;
-  }
-  .btn-text-kaki:hover { text-decoration: underline; }
-  .btn-text-mute {
-    font-size: 12px; padding: 7px 10px; background: none; color: var(--taupe);
-    border: none; font-family: var(--font); cursor: pointer; white-space: nowrap;
-  }
-  .btn-text-mute:hover { color: var(--ink); }
-</style>
-
 <script>
-  import { api, getUser, formatDate, toast } from '../../scripts/api';
+  import { api, formatDate, toast } from '../../scripts/api';
+  import {
+    renderEwTab, renderSortDropdown, bindSortDropdown, renderClientCard, SORT_LABELS,
+  } from '../../scripts/article-card.js';
 
   const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
 
-  // ── State ────────────────────────────────────────────────────────────────
+  // ── State ─────────────────────────────────────────────────────────────────
+
   let articles: any[] = [];
   let counts = { inbox: 0, to_process: 0, read: 0, all_visible: 0 };
   let activeTab = 'all';
+  let sortMode = 'recent';
   let loading = false;
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -118,11 +58,16 @@ const base = import.meta.env.BASE_URL;
     await loadArticles();
   }
 
+  // ── Load ─────────────────────────────────────────────────────────────────
+
   async function loadArticles() {
     if (loading) return;
     loading = true;
-    document.getElementById('veille-list')!.innerHTML =
-      '<div class="ew-loading"><div class="ew-spinner"></div></div>';
+
+    const listEl = document.getElementById('veille-list')!;
+    const savedTabs = listEl.querySelector('#ew-tabs');
+    listEl.innerHTML = '<div class="ew-loading"><div class="ew-spinner"></div></div>';
+    if (savedTabs) listEl.insertAdjacentElement('afterbegin', savedTabs);
 
     try {
       const [data, cntData] = await Promise.all([
@@ -132,8 +77,10 @@ const base = import.meta.env.BASE_URL;
       articles = data.articles || [];
       counts = cntData;
     } catch (e: any) {
-      document.getElementById('veille-list')!.innerHTML =
-        `<div class="ew-empty"><div class="ew-empty-title">Erreur</div><div class="ew-empty-sub">${e.message}</div></div>`;
+      listEl.innerHTML = `<div class="ew-empty">
+        <div class="ew-empty-title">Erreur de chargement</div>
+        <div class="ew-empty-sub">${e.message}</div>
+      </div>`;
       loading = false;
       return;
     }
@@ -146,100 +93,85 @@ const base = import.meta.env.BASE_URL;
   // ── Tabs ─────────────────────────────────────────────────────────────────
 
   function renderTabs() {
-    const container = document.getElementById('veille-tabs-container')!;
-    container.innerHTML = `
-      <div class="veille-tabs">
-        ${tabBtn('all',        'Tous',      counts.all_visible, activeTab)}
-        ${tabBtn('inbox',      'Non lus',   counts.inbox,       activeTab)}
-        ${tabBtn('to_process', 'À traiter', counts.to_process,  activeTab)}
-        ${tabBtn('read',       'Traités',   counts.read,        activeTab)}
-        <div style="margin-left:auto;padding:0 4px">
-          <span style="font-size:13px;color:#888">Plus récent ▾</span>
-        </div>
-      </div>`;
-    container.querySelectorAll('[data-tab]').forEach((el: any) => {
+    const tabsHtml = `<div class="ew-tabs" id="ew-tabs">
+      ${renderEwTab('all',        'Tous',      counts.all_visible, activeTab)}
+      ${renderEwTab('inbox',      'Non lus',   counts.inbox,       activeTab)}
+      ${renderEwTab('to_process', 'À traiter', counts.to_process,  activeTab)}
+      ${renderEwTab('read',       'Traités',   counts.read,        activeTab)}
+      ${renderSortDropdown(sortMode)}
+    </div>`;
+
+    const listEl = document.getElementById('veille-list')!;
+    const existing = listEl.querySelector('#ew-tabs');
+    if (existing) {
+      existing.outerHTML = tabsHtml;
+    } else {
+      listEl.insertAdjacentHTML('afterbegin', tabsHtml);
+    }
+
+    listEl.querySelectorAll('[data-tab]').forEach((el: any) => {
       el.addEventListener('click', () => {
         activeTab = el.dataset.tab;
         loadArticles();
       });
     });
+
+    bindSortDropdown((key: string) => {
+      sortMode = key;
+      renderTabs();
+      renderList();
+    });
   }
 
-  function tabBtn(key: string, label: string, count: number, current: string): string {
-    return `<button class="veille-tab${current === key ? ' active' : ''}" data-tab="${key}">${label}<span class="veille-tab-num">${count}</span></button>`;
-  }
+  // ── List ─────────────────────────────────────────────────────────────────
 
-  // ── Rendu liste ──────────────────────────────────────────────────────────
+  function sortedArticles(): any[] {
+    const now = Date.now();
+    const ts = (a: any) => new Date(a.published_at || a.created_at).getTime();
+
+    if (sortMode === 'week') {
+      const start = new Date();
+      start.setDate(start.getDate() - start.getDay() + 1);
+      start.setHours(0, 0, 0, 0);
+      return articles.filter(a => ts(a) >= start.getTime());
+    }
+    if (sortMode === '7days') {
+      return articles.filter(a => ts(a) >= now - 7 * 86400000);
+    }
+    const dir = sortMode === 'oldest' ? 1 : -1;
+    return [...articles].sort((a, b) => dir * (ts(a) - ts(b)));
+  }
 
   function renderList() {
-    const container = document.getElementById('veille-list')!;
-    if (!articles.length) {
-      container.innerHTML = `<div class="ew-empty">
+    const listEl = document.getElementById('veille-list')!;
+    const tabs   = listEl.querySelector('#ew-tabs');
+
+    const items = sortedArticles();
+    if (!items.length) {
+      listEl.innerHTML = `<div class="ew-empty">
         <div class="ew-empty-title">Aucun article</div>
         <div class="ew-empty-sub">Pas d'article dans cet onglet.</div>
       </div>`;
-      return;
+    } else {
+      listEl.innerHTML = `<div class="ew-list" id="ew-list">
+        ${items.map((a: any) => renderClientCard(a, formatDate)).join('')}
+      </div>`;
     }
-    container.innerHTML = articles.map(renderCard).join('');
 
-    container.querySelectorAll('[data-action]').forEach((el: any) => {
+    if (tabs) listEl.insertAdjacentElement('afterbegin', tabs);
+
+    listEl.querySelectorAll('[data-action]').forEach((el: any) => {
       el.addEventListener('click', (e: Event) => {
         e.stopPropagation();
         handleAction(el.dataset.id, el.dataset.action);
       });
     });
-    container.querySelectorAll('[data-open-tracker]').forEach((el: any) => {
+    listEl.querySelectorAll('[data-open-tracker]').forEach((el: any) => {
       el.addEventListener('click', (e: Event) => {
         e.stopPropagation();
         openTracker(el.dataset.openTracker);
       });
     });
-  }
-
-  function renderCard(a: any): string {
-    const src = (a.source_name || '').toUpperCase().substring(0, 4);
-    const st  = a.client_status || 'inbox';
-
-    const impactRow = (a.has_impact && a.impacted_procedures?.length)
-      ? `<div style="display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap">
-           <span style="font-size:11px;color:#888">Impacte →</span>
-           ${a.impacted_procedures.map((p: string) =>
-             `<span style="font-size:11px;font-weight:500;color:#5C6347">${p}</span>`
-           ).join(' · ')}
-         </div>` : '';
-
-    const toProcessBtn = st === 'to_process'
-      ? `<button class="btn-primary-kaki active-task" data-action="inbox" data-id="${a.id}">Retirer des tâches ×</button>`
-      : `<button class="btn-primary-kaki" data-action="to_process" data-id="${a.id}">À traiter</button>`;
-
-    const readBtn = st === 'read'
-      ? `<button class="btn-outline-kaki" data-action="inbox" data-id="${a.id}">Marquer non lu</button>`
-      : `<button class="btn-outline-kaki" data-action="read" data-id="${a.id}">Marquer comme lu</button>`;
-
-    return `
-      <div class="client-item" id="card-${a.id}">
-        <div class="ew-source-avatar">${src}</div>
-        <div>
-          <div class="ew-meta">
-            <span>${a.source_name || '—'}</span>
-            <span class="dot">·</span>
-            <span>${formatDate(a.published_at)}</span>
-          </div>
-          <h3 class="ew-title" style="margin-bottom:0">
-            ${a.original_url
-              ? `<a href="${a.original_url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${a.title || 'Sans titre'}</a>`
-              : (a.title || 'Sans titre')
-            }
-          </h3>
-          ${impactRow}
-          <div class="client-actions">
-            ${toProcessBtn}
-            ${readBtn}
-            <button class="btn-text-kaki" data-open-tracker="${a.id}">+ Tracker</button>
-            <button class="btn-text-mute" data-action="ignored" data-id="${a.id}">Ignorer</button>
-          </div>
-        </div>
-      </div>`;
   }
 
   // ── Actions ──────────────────────────────────────────────────────────────

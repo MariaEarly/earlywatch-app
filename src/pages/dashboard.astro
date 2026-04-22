@@ -94,6 +94,7 @@ const base = import.meta.env.BASE_URL;
 <script>
   import { api, formatDate, toast, getUser } from '../scripts/api';
   import { sourceAvatarHTML } from '../scripts/sigles.js';
+  import { renderEwTab, renderSortDropdown, bindSortDropdown, SORT_LABELS } from '../scripts/article-card.js';
 
   const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
 
@@ -161,12 +162,6 @@ const base = import.meta.env.BASE_URL;
   let articles: any[] = [];
   let activeFilter = 'all';
   let sortMode = 'recent';
-  const SORT_LABELS: Record<string, string> = {
-    recent: 'Plus récent',
-    oldest: 'Plus ancien',
-    week: 'Cette semaine',
-    '7days': '7 derniers jours',
-  };
   let newsletterCounts: any = null;
   let trackerPendingCount = 0;
 
@@ -222,20 +217,12 @@ const base = import.meta.env.BASE_URL;
 
     const tabHtml = `
       <div class="ew-tabs" id="ew-tabs">
-        ${tab('all', 'Tous', cnt.all, activeFilter)}
-        ${tab('nouveau', 'Nouveaux', cnt.nouveau, activeFilter)}
-        ${tab('quotidien', 'Quotidien', cnt.quotidien, activeFilter)}
-        ${tab('hebdo', 'Hebdo', cnt.hebdo, activeFilter)}
-        ${tab('ignorer', 'Ignorés', cnt.ignorer, activeFilter)}
-        <div class="ew-sort-wrap" id="sort-wrap">
-          <button class="ew-sort-btn" id="sort-btn">${SORT_LABELS[sortMode] || 'Plus récent'} ▾</button>
-          <div class="ew-sort-menu" id="sort-menu" style="display:none">
-            <button class="ew-sort-opt" data-sort-opt="recent">Plus récent</button>
-            <button class="ew-sort-opt" data-sort-opt="oldest">Plus ancien</button>
-            <button class="ew-sort-opt" data-sort-opt="week">Cette semaine</button>
-            <button class="ew-sort-opt" data-sort-opt="7days">7 derniers jours</button>
-          </div>
-        </div>
+        ${renderEwTab('all',       'Tous',      cnt.all,      activeFilter)}
+        ${renderEwTab('nouveau',   'Nouveaux',  cnt.nouveau,  activeFilter)}
+        ${renderEwTab('quotidien', 'Quotidien', cnt.quotidien,activeFilter)}
+        ${renderEwTab('hebdo',     'Hebdo',     cnt.hebdo,    activeFilter)}
+        ${renderEwTab('ignorer',   'Ignorés',   cnt.ignorer,  activeFilter)}
+        ${renderSortDropdown(sortMode)}
       </div>`;
 
     const container = document.getElementById('article-list')!;
@@ -246,39 +233,21 @@ const base = import.meta.env.BASE_URL;
       container.insertAdjacentHTML('afterbegin', tabHtml);
     }
 
-    container.querySelectorAll('[data-filter]').forEach((el: any) => {
+    container.querySelectorAll('[data-tab]').forEach((el: any) => {
       el.addEventListener('click', () => {
-        activeFilter = el.dataset.filter;
+        activeFilter = el.dataset.tab;
         renderTabs();
         renderArticles();
       });
     });
-    const sortBtn = document.getElementById('sort-btn') as HTMLButtonElement;
-    const sortMenu = document.getElementById('sort-menu') as HTMLDivElement;
-    if (sortBtn && sortMenu) {
-      sortBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isOpen = sortMenu.style.display !== 'none';
-        sortMenu.style.display = isOpen ? 'none' : 'block';
-        if (!isOpen) {
-          document.addEventListener('click', () => { sortMenu.style.display = 'none'; }, { once: true });
-        }
-      });
-      sortMenu.querySelectorAll('[data-sort-opt]').forEach((el: any) => {
-        el.addEventListener('click', (e: Event) => {
-          e.stopPropagation();
-          sortMode = el.dataset.sortOpt;
-          sortMenu.style.display = 'none';
-          renderTabs();
-          renderArticles();
-        });
-      });
-    }
+
+    bindSortDropdown((key: string) => {
+      sortMode = key;
+      renderTabs();
+      renderArticles();
+    });
   }
 
-  function tab(key: string, label: string, count: number, current: string): string {
-    return `<button class="ew-tab${current === key ? ' active' : ''}" data-filter="${key}">${label} <span class="ew-tab-num">${count}</span></button>`;
-  }
   // ── Articles ─────────────────────────────────────────────────────────────
 
   function renderArticles(): void {

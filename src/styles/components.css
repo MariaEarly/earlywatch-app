@@ -466,6 +466,24 @@
   flex-shrink: 0;
 }
 
+/* Variante kaki (#5C6347) — boutons client (/app/veille) */
+.ew-btn-kaki {
+  background: #5C6347;
+  color: #F4F0E6;
+  border-color: transparent;
+  font-weight: 500;
+}
+.ew-btn-kaki:hover { opacity: 0.88; background: #5C6347; }
+.ew-btn-kaki.ew-btn-kaki-removing {
+  background: #888;
+  border-color: transparent;
+}
+.ew-btn-kaki-outline {
+  color: #5C6347;
+  border-color: #5C6347;
+}
+.ew-btn-kaki-outline:hover { background: rgba(92,99,71,0.06); }
+
 /* ================================================================
    PANNEAU DROIT (dashboard inbox uniquement)
    ================================================================ */
