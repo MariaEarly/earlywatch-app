@@ -472,79 +472,79 @@ const base = import.meta.env.BASE_URL;
   .ga-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
 
   .ga-header { margin-bottom: 28px; }
-  .ga-title { font-size: 15px; font-weight: 500; color: var(--text-primary); }
-  .ga-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+  .ga-title { font-size: 15px; font-weight: 500; color: var(--ink); }
+  .ga-subtitle { font-size: 12px; color: var(--taupe); margin-top: 4px; }
 
   /* KPI bar */
   .ga-kpis {
     display: grid; grid-template-columns: repeat(4, 1fr);
-    border: 0.5px solid var(--ew-border2); margin-bottom: 28px; border-radius: 8px;
+    border: 0.5px solid var(--line-strong); margin-bottom: 28px; border-radius: var(--radius);
   }
   .ga-kpi {
     padding: 1.25rem 1.5rem;
-    border-right: 0.5px solid var(--ew-border2);
+    border-right: 0.5px solid var(--line-strong);
   }
   .ga-kpi:last-child { border-right: none; }
   .ga-kpi-value {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 32px; font-weight: 300; line-height: 1;
-    color: var(--text-primary);
+    color: var(--ink);
   }
   .ga-kpi-label {
-    font-size: 11px; color: var(--text-secondary);
+    font-size: 11px; color: var(--taupe);
     letter-spacing: 0.02em; margin-top: 6px;
   }
 
   /* Tabs */
   .ga-tabs {
     display: flex; gap: 0; margin-bottom: 0;
-    border-bottom: 0.5px solid var(--ew-border2);
+    border-bottom: 0.5px solid var(--line-strong);
   }
   .ga-tab {
     padding: 10px 20px; font-family: inherit; font-size: 12px;
-    font-weight: 400; color: var(--text-secondary);
+    font-weight: 400; color: var(--taupe);
     background: transparent; border: none; border-bottom: 2px solid transparent;
     cursor: pointer; transition: all 0.15s;
   }
-  .ga-tab:hover { color: var(--text-primary); }
+  .ga-tab:hover { color: var(--ink); }
   .ga-tab.active {
-    color: var(--ew-text); font-weight: 500;
-    border-bottom-color: var(--ew-text);
+    color: var(--ink); font-weight: 500;
+    border-bottom-color: var(--ink);
   }
 
   /* Table */
   .ga-table-wrap { margin-bottom: 28px; }
   .ga-row { cursor: pointer; }
-  .ga-row:hover td { background: var(--bg-surface); }
+  .ga-row:hover td { background: var(--bg-side); }
   .ga-code {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px; color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px; color: var(--ink);
   }
   .ga-actions { display: flex; gap: 4px; }
 
   /* Badges */
   .ga-badge {
     display: inline-flex; align-items: center;
-    padding: 1px 6px; font-family: 'IBM Plex Mono', monospace;
+    padding: 1px 6px; font-family: var(--font-mono);
     font-size: 10px; font-weight: 400; letter-spacing: 0.06em;
-    border: 0.5px solid var(--ew-border2); color: var(--ew-ink3);
-    white-space: nowrap; border-radius: 8px;
+    border: 0.5px solid var(--line-strong); color: var(--taupe);
+    white-space: nowrap; border-radius: var(--radius);
   }
-  .ga-impact-critical { color: var(--ew-accent-text); border-color: var(--ew-accent-border); background: var(--ew-accent-bg); }
-  .ga-impact-high { color: var(--ew-ink2); border-color: var(--ew-ink2); background: var(--ew-bg); }
-  .ga-impact-medium { color: var(--ew-ink3); border-color: var(--ew-ink3); background: var(--ew-bg); }
-  .ga-impact-low { color: var(--ew-ink3); border-color: var(--ew-border2); background: var(--ew-bg); }
-  .ga-status-pending { color: var(--ew-ink2); border-color: var(--ew-ink2); background: var(--ew-bg); }
-  .ga-status-done { color: var(--ew-ink2); border-color: var(--ew-border2); background: rgba(26,26,22,0.05); }
-  .ga-status-validated { color: var(--ew-ink2); border-color: var(--ew-border2); background: rgba(26,26,22,0.05); }
-  .ga-status-rejected { color: var(--ew-accent-text); border-color: var(--ew-accent-border); background: var(--ew-accent-bg); }
-  .ga-status-error { color: var(--ew-accent-text); border-color: var(--ew-accent-border); background: var(--ew-accent-bg); }
-  .ga-type-badge { color: var(--ew-ink3); border-color: var(--ew-border2); background: var(--ew-bg); }
+  .ga-impact-critical { color: var(--moutarde); border-color: var(--moutarde); background: rgba(234,179,8,0.08); }
+  .ga-impact-high { color: var(--ink-soft); border-color: var(--ink-soft); background: var(--bg); }
+  .ga-impact-medium { color: var(--taupe); border-color: var(--taupe); background: var(--bg); }
+  .ga-impact-low { color: var(--taupe); border-color: var(--line-strong); background: var(--bg); }
+  .ga-status-pending { color: var(--ink-soft); border-color: var(--ink-soft); background: var(--bg); }
+  .ga-status-done { color: var(--ink-soft); border-color: var(--line-strong); background: rgba(26,26,22,0.05); }
+  .ga-status-validated { color: var(--ink-soft); border-color: var(--line-strong); background: rgba(26,26,22,0.05); }
+  .ga-status-rejected { color: var(--moutarde); border-color: var(--moutarde); background: rgba(234,179,8,0.08); }
+  .ga-status-error { color: var(--moutarde); border-color: var(--moutarde); background: rgba(234,179,8,0.08); }
+  .ga-type-badge { color: var(--taupe); border-color: var(--line-strong); background: var(--bg); }
 
   /* Detail view */
   .ga-detail {
-    border: 0.5px solid var(--ew-border2);
-    border-radius: 8px;
+    border: 0.5px solid var(--line-strong);
+    border-radius: var(--radius);
     padding: 24px; margin-top: 16px;
   }
   .ga-detail-top { margin-bottom: 24px; }
@@ -554,33 +554,33 @@ const base = import.meta.env.BASE_URL;
   }
   .ga-detail-title-row h2 { font-size: 15px; font-weight: 500; }
   .ga-detail-meta {
-    font-size: 12px; color: var(--text-secondary); margin-top: 4px;
+    font-size: 12px; color: var(--taupe); margin-top: 4px;
   }
   .ga-detail-actions {
     display: flex; gap: 6px; margin-top: 12px;
   }
 
   .ga-summary {
-    font-size: 13px; color: var(--ew-ink3);
-    padding: 14px 0; border-bottom: 0.5px solid var(--ew-border2);
+    font-size: 13px; color: var(--taupe);
+    padding: 14px 0; border-bottom: 0.5px solid var(--line-strong);
     margin-bottom: 20px; line-height: 1.6;
   }
 
   /* Sections */
   .ga-section {
-    border-top: 0.5px solid var(--ew-border2);
+    border-top: 0.5px solid var(--line-strong);
     padding-top: 20px; margin-top: 20px;
   }
   .ga-section-label {
     font-size: 10px; font-weight: 500; text-transform: uppercase;
-    letter-spacing: 0.1em; color: var(--ew-text); margin-bottom: 12px;
+    letter-spacing: 0.1em; color: var(--ink); margin-bottom: 12px;
   }
 
   .ga-change {
     display: flex; align-items: flex-start; gap: 10px;
-    padding: 12px 14px; border: 0.5px solid var(--ew-border2);
-    border-radius: 8px; margin-bottom: 8px;
-    font-size: 13px; color: var(--text-primary); line-height: 1.5;
+    padding: 12px 14px; border: 0.5px solid var(--line-strong);
+    border-radius: var(--radius); margin-bottom: 8px;
+    font-size: 13px; color: var(--ink); line-height: 1.5;
   }
   .ga-change .ga-badge { flex-shrink: 0; margin-top: 2px; }
 
@@ -589,42 +589,42 @@ const base = import.meta.env.BASE_URL;
   /* Coverage bar */
   .ga-coverage-bar {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 14px 0; border-bottom: 0.5px solid var(--ew-border2);
+    padding: 14px 0; border-bottom: 0.5px solid var(--line-strong);
     margin-bottom: 20px;
   }
   .ga-coverage-stats { display: flex; gap: 8px; }
   .ga-coverage-pct {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 14px; font-weight: 500; color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 14px; font-weight: 500; color: var(--ink);
   }
 
   /* Obligations */
   .ga-obligation {
-    padding: 14px; border: 0.5px solid var(--ew-border2);
-    border-radius: 8px; margin-bottom: 8px;
+    padding: 14px; border: 0.5px solid var(--line-strong);
+    border-radius: var(--radius); margin-bottom: 8px;
   }
   .ga-obl-header {
     display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
   }
-  .ga-obl-text { font-size: 13px; color: var(--text-primary); line-height: 1.5; }
+  .ga-obl-text { font-size: 13px; color: var(--ink); line-height: 1.5; }
   .ga-obl-analysis {
-    font-size: 12px; color: var(--text-secondary);
+    font-size: 12px; color: var(--taupe);
     margin-top: 6px; line-height: 1.5;
   }
   .ga-obl-reco {
-    font-size: 12px; color: var(--ew-text-secondary);
+    font-size: 12px; color: var(--taupe);
     margin-top: 6px; padding: 8px 12px;
-    background: var(--ew-surface); border-left: 2px solid var(--ew-ink2);
+    background: var(--bg-side); border-left: 2px solid var(--ink-soft);
   }
   .ga-confidence {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px; color: var(--ew-text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px; color: var(--mute);
   }
-  .ga-obl-covered .ga-obl-header .ga-code { color: var(--ew-ink2); }
-  .ga-obl-absent .ga-obl-header .ga-code { color: var(--ew-accent-text); }
+  .ga-obl-covered .ga-obl-header .ga-code { color: var(--ink-soft); }
+  .ga-obl-absent .ga-obl-header .ga-code { color: var(--moutarde); }
 
   .ga-provenance {
-    font-size: 11px; color: var(--text-muted);
+    font-size: 11px; color: var(--mute);
     margin-top: 20px; font-style: italic;
   }
 </style>

@@ -3,181 +3,168 @@ import AppLayout from '../layouts/AppLayout.astro';
 const base = import.meta.env.BASE_URL;
 ---
 
-<AppLayout title="Parametres — Early Watch" activePage="settings">
-  <div class="st-layout">
-    <div class="st-main">
-      <div class="page-title">Parametres</div>
-      <div class="page-subtitle">Profil d'assujetti, preferences d'alertes et utilisateurs</div>
+<AppLayout title="Paramètres — Early Watch" activePage="settings">
+  <div style="max-width:900px;margin:0 auto;">
+    <div class="st-page-title">Paramètres</div>
+    <div class="st-page-sub">Profil d'assujetti, préférences d'alertes et utilisateurs</div>
 
-      <div id="content">
-        <div class="loading">Chargement des parametres...</div>
-      </div>
+    <div id="content">
+      <div class="st-loading">Chargement des paramètres...</div>
+    </div>
 
-      <div class="save-bar" id="save-bar">
-        <button class="btn-save" id="btn-save">Enregistrer les modifications</button>
-      </div>
+    <div class="save-bar" id="save-bar">
+      <button class="ew-btn ew-btn-primary" id="btn-save">Enregistrer les modifications</button>
     </div>
   </div>
 </AppLayout>
 
 <style>
-  .st-layout { min-height: 100vh; display: flex; flex-direction: column; }
-  .st-main { flex: 1; max-width: 900px; margin: 0 auto; padding: 32px 24px; width: 100%; }
-  .page-title { font-size: 15px; font-weight: 500; color: var(--noir); margin-bottom: 4px; }
-  .page-subtitle { font-size: 14px; color: var(--color-text-tertiary); margin-bottom: 28px; }
+  .st-page-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+  .st-page-sub   { font-size: 13px; color: var(--mute); margin-bottom: 28px; }
 
   .save-bar {
-    position: sticky; bottom: 0; padding: 16px 0; background: rgba(242,237,228,0.95);
-    border-top: 1px solid var(--color-border); text-align: right; display: none;
+    position: sticky; bottom: 0; padding: 16px 0;
+    background: var(--bg); border-top: 0.5px solid var(--line);
+    text-align: right; display: none;
   }
   :global(.save-bar.visible) { display: block; }
-  .btn-save {
-    padding: 10px 28px; background: var(--ew-text); color: var(--ew-bg);
-    border: none; border-radius: 8px; font-size: 14px;
-    font-weight: 500; cursor: pointer; font-family: inherit;
-    box-shadow: none; transition: all 0.15s;
-  }
-  .btn-save:hover { }
-  .loading { padding: 40px; text-align: center; color: var(--color-text-tertiary); font-size: 14px; }
+  .st-loading { padding: 40px; text-align: center; color: var(--mute); font-size: 13px; }
 </style>
 
 <style is:global>
   .st-section {
-    background: var(--ew-bg); border: 0.5px solid var(--ew-border2); border-radius: 8px;
-    box-shadow: none; margin-bottom: 20px; overflow: hidden;
+    background: var(--bg); border: 0.5px solid var(--line);
+    margin-bottom: 20px; overflow: hidden;
   }
   .st-section-header {
-    padding: 14px 20px; font-size: 14px; font-weight: 500; color: var(--noir);
-    border-bottom: 0.5px solid var(--ew-border2); display: flex;
-    justify-content: space-between; align-items: center;
+    padding: 14px 20px; font-size: 13px; font-weight: 500; color: var(--ink);
+    border-bottom: 0.5px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center;
   }
   .st-section-body { padding: 20px; }
 
-  .st-form-row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .st-form-row   { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
   .st-form-group { flex: 1; min-width: 200px; }
   .st-form-group label {
-    display: block; font-size: 12px; font-weight: 500; color: var(--noir);
-    margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;
+    display: block; font-size: 12px; font-weight: 500;
+    color: var(--taupe); margin-bottom: 5px;
   }
-  .st-form-group input, .st-form-group select {
-    width: 100%; padding: 8px 12px; border: 0.5px solid var(--ew-border);
-    border-radius: 8px; font-size: 13px; font-family: inherit; background: var(--ew-bg); color: var(--noir);
+  .st-form-group input,
+  .st-form-group select {
+    width: 100%; padding: 8px 12px;
+    border: 0.5px solid var(--line-strong);
+    font-size: 13px; font-family: inherit;
+    background: var(--bg); color: var(--ink); outline: none;
+    transition: border-color 0.15s;
   }
-  .st-form-group input:focus, .st-form-group select:focus {
-    outline: none; border-color: var(--ew-text); box-shadow: none;
-  }
+  .st-form-group input:focus,
+  .st-form-group select:focus { border-color: var(--ink); }
+  .st-form-group input:disabled,
+  .st-form-group select:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .toggle-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 0; border-bottom: 1px solid var(--color-border);
+    padding: 10px 0; border-bottom: 0.5px solid var(--line);
   }
   .toggle-row:last-child { border-bottom: none; }
-  .toggle-label { font-size: 13px; color: var(--noir); }
-  .toggle-desc { font-size: 11px; color: var(--color-text-tertiary); margin-top: 1px; }
-  .toggle { position: relative; width: 44px; height: 24px; cursor: pointer; }
+  .toggle-label { font-size: 13px; color: var(--ink); }
+  .toggle-desc  { font-size: 11.5px; color: var(--mute); margin-top: 1px; }
+  .toggle       { position: relative; width: 40px; height: 22px; cursor: pointer; }
   .toggle input { opacity: 0; width: 0; height: 0; }
   .toggle-slider {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background: var(--color-border); border-radius: 12px; transition: 0.2s; border: 0.5px solid var(--ew-border);
+    background: var(--ghost); border-radius: 11px; transition: 0.2s;
   }
   .toggle-slider::before {
-    content: ''; position: absolute; height: 18px; width: 18px;
-    left: 2px; bottom: 2px; background: var(--ew-bg); border-radius: 50%;
+    content: ''; position: absolute; height: 16px; width: 16px;
+    left: 2px; bottom: 2px; background: var(--bg); border-radius: 50%;
     transition: 0.2s;
   }
-  .toggle input:checked + .toggle-slider { background: var(--ew-text); }
-  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+  .toggle input:checked + .toggle-slider { background: var(--moutarde); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
 
   .st-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
   .st-chip {
-    padding: 4px 12px; border-radius: 4px; border: 1px solid var(--border-medium);
+    padding: 4px 12px; border: 0.5px solid var(--line-strong);
     font-size: 12px; cursor: pointer; font-family: inherit;
-    background: var(--beige); color: var(--noir); transition: all 0.15s;
+    background: transparent; color: var(--taupe); transition: all 0.12s;
   }
-  .st-chip.active { background: var(--ew-text); color: var(--ew-bg); }
-  .st-chip:hover { background: var(--ew-bg); }
-  .st-chip.active:hover { background: var(--ew-text); opacity: 0.9; }
+  .st-chip:hover { background: var(--bg-side); color: var(--ink); }
+  .st-chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
   .users-table { width: 100%; font-size: 13px; }
   .users-table th {
-    text-align: left; font-size: 11px; font-weight: 500; color: var(--ew-ink3);
-    text-transform: uppercase; letter-spacing: 0.08em; padding: 6px 0;
-    border-bottom: 1px solid var(--color-border);
+    text-align: left; font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); padding: 6px 0;
+    border-bottom: 0.5px solid var(--line-strong);
   }
-  .users-table td { padding: 8px 0; border-bottom: 1px solid var(--color-border); color: var(--noir); }
-  .role-badge { font-size: 10px; padding: 2px 8px; border-radius: 0; font-family: 'IBM Plex Mono', monospace; font-weight: 400; letter-spacing: 0.06em; }
-  .role-admin { background: var(--ew-bg); color: var(--ew-ink3); }
-  .role-user { background: var(--ew-bg); color: var(--ew-ink3); }
-  .role-compliance_officer { background: var(--ew-bg); color: var(--ew-ink3); }
+  .users-table td { padding: 8px 0; border-bottom: 0.5px solid var(--line); color: var(--ink); }
+  .role-badge { font-family: var(--font-mono); font-size: 10px; padding: 2px 7px; border: 0.5px solid var(--line); }
+  .role-admin { color: var(--moutarde); border-color: var(--moutarde); }
+  .role-user  { color: var(--taupe); }
+  .role-compliance_officer { color: var(--taupe); }
 
-  .st-plan-badge { padding: 4px 12px; border-radius: 20px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400; letter-spacing: 0.06em; }
-  .st-plan-demo { background: var(--ew-bg); color: var(--ew-ink3); border: 1px solid var(--ew-border2); }
-  .st-plan-starter { background: var(--ew-bg); color: var(--ew-ink3); border: 1px solid var(--ew-border2); }
-  .st-plan-pro { background: var(--ew-bg); color: var(--ew-ink3); border: 1px solid var(--ew-border2); }
+  .st-plan-badge { padding: 2px 8px; font-family: var(--font-mono); font-size: 10px; font-weight: 400; border: 0.5px solid var(--line); }
+  .st-plan-demo    { color: var(--mute); }
+  .st-plan-starter { color: var(--ink-soft); border-color: var(--ink-soft); }
+  .st-plan-pro     { color: var(--moutarde); border-color: var(--moutarde); }
 
-  /* Wizard progress bar */
-  .wiz-progress { display: flex; align-items: center; gap: 0; margin-bottom: 8px; }
+  /* Stepper wizard */
+  .wiz-progress { display: flex; align-items: center; gap: 0; margin-bottom: 40px; }
   .wiz-dot {
-    width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border-medium);
-    background: var(--beige); font-size: 12px; font-weight: 600; color: var(--color-text-tertiary);
-    display: flex; align-items: center; justify-content: center; cursor: pointer;
-    transition: all 0.2s; font-family: inherit;
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 0.5px solid var(--line-strong);
+    background: var(--bg); font-family: var(--font-mono); font-size: 11px; font-weight: 400;
+    color: var(--mute); display: grid; place-items: center; cursor: pointer;
+    transition: background 0.2s, color 0.2s;
   }
-  .wiz-dot.active { background: var(--ew-text); color: var(--ew-bg); border-color: var(--ew-text); }
-  .wiz-dot.done { background: var(--ew-surface); color: var(--ew-text); border-color: var(--ew-border); }
-  .wiz-line { flex: 1; height: 2px; background: var(--border-medium); }
-  .wiz-step-label {
-    font-size: 12px; font-weight: 500; color: var(--ew-text); margin-bottom: 16px;
-    text-transform: uppercase; letter-spacing: 0.06em;
-  }
+  .wiz-dot.active { background: var(--moutarde); color: var(--ink); border-color: var(--moutarde); font-weight: 500; }
+  .wiz-dot.done   { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .wiz-line { flex: 1; height: 0.5px; background: var(--line); margin: 0 14px; }
+  .wiz-line.done { background: var(--ink); }
+  .wiz-step-label { font-size: 12.5px; color: var(--taupe); margin-bottom: 16px; }
   .wiz-step { min-height: 120px; }
 
   /* Wizard radios */
   .wiz-radios { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
   .wiz-radio {
-    padding: 8px 16px; border: 1px solid var(--border-medium); border-radius: 4px;
-    font-size: 13px; cursor: pointer; transition: all 0.15s; background: var(--beige);
-    color: var(--noir); font-family: inherit;
+    padding: 8px 16px; border: 0.5px solid var(--line-strong);
+    font-size: 13px; cursor: pointer; transition: all 0.12s;
+    background: transparent; color: var(--taupe); font-family: inherit;
   }
   .wiz-radio input { display: none; }
-  .wiz-radio.selected { background: var(--ew-text); color: var(--ew-bg); border-color: var(--ew-text); }
-  .wiz-radio:hover { border-color: var(--ew-text); }
+  .wiz-radio.selected { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .wiz-radio:hover:not(.selected) { border-color: var(--line-strong); background: var(--bg-side); }
 
   /* Wizard navigation */
-  .wiz-nav { display: flex; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border); }
+  .wiz-nav { display: flex; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 0.5px solid var(--line); }
   .wiz-btn {
-    padding: 8px 24px; border-radius: 4px; font-size: 13px; font-weight: 500;
-    cursor: pointer; font-family: inherit; border: 1px solid var(--border-medium);
-    transition: all 0.15s;
+    padding: 7px 20px; font-size: 12.5px; font-weight: 500;
+    cursor: pointer; font-family: inherit; border: 0.5px solid var(--line-strong);
+    transition: background 0.12s;
   }
-  .wiz-btn-prev { background: var(--beige); color: var(--noir); }
-  .wiz-btn-next { background: var(--ew-text); color: var(--ew-bg); border-color: var(--ew-text); }
-  .wiz-btn-save { background: var(--ew-text); color: var(--ew-bg); border-color: var(--ew-text); }
-  .wiz-btn:hover { opacity: 0.9; }
+  .wiz-btn-prev { background: transparent; color: var(--taupe); }
+  .wiz-btn-prev:hover { background: var(--bg-side); }
+  .wiz-btn-next { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .wiz-btn-next:hover { background: var(--ink-soft); border-color: var(--ink-soft); }
+  .wiz-btn-save { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .wiz-btn-save:hover { background: var(--ink-soft); border-color: var(--ink-soft); }
 
   /* Services fournis */
   .svc-group-title {
-    font-size: 11px; font-weight: 600; color: var(--ew-ink3); text-transform: uppercase;
-    letter-spacing: 0.06em; margin: 12px 0 8px; padding-bottom: 4px;
-    border-bottom: 1px solid var(--color-border);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute);
+    margin: 12px 0 8px; padding-bottom: 4px; border-bottom: 0.5px solid var(--line);
   }
   .svc-check {
     display: flex; align-items: center; gap: 8px; padding: 6px 0;
-    font-size: 13px; color: var(--noir); cursor: pointer;
+    font-size: 13px; color: var(--ink); cursor: pointer;
   }
-  .svc-check input[type="checkbox"] {
-    width: 16px; height: 16px; accent-color: var(--ew-text); cursor: pointer;
-  }
-  .svc-check.disabled { opacity: 0.7; cursor: default; }
-  .svc-check.disabled input { cursor: default; }
-  .svc-legal-ref {
-    font-size: 11px; font-style: italic; color: var(--color-text-tertiary);
-    margin-top: 8px;
-  }
-  .svc-separator {
-    margin: 14px 0 6px; padding-top: 10px;
-    border-top: 1px dashed var(--color-border);
-  }
+  .svc-check input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--moutarde); cursor: pointer; }
+  .svc-check.disabled { opacity: 0.4; cursor: not-allowed; }
+  .svc-check.disabled input { cursor: not-allowed; }
+  .svc-legal-ref { font-family: var(--font-mono); font-size: 10px; color: var(--mute); margin-top: 8px; }
+  .svc-separator { margin: 14px 0 6px; padding-top: 10px; border-top: 0.5px dashed var(--line); }
 </style>
 
 <script>
@@ -187,39 +174,39 @@ const base = import.meta.env.BASE_URL;
   let hasChanges: boolean = false;
 
   const ENTITY_TYPES: any[] = [
-    { value: 'EC', label: 'Etablissement de credit' },
-    { value: 'PSP', label: 'Prestataire de services de paiement' },
-    { value: 'EME', label: 'Etablissement de monnaie electronique' },
-    { value: 'SGP', label: 'Societe de gestion de portefeuille' },
-    { value: 'CASP', label: 'Prestataire de services sur actifs numeriques' },
-    { value: 'CIF', label: 'Conseiller en investissement financier' },
-    { value: 'IFP', label: 'Intermediaire en financement participatif' },
+    { value: 'EC',    label: 'Établissement de crédit' },
+    { value: 'PSP',   label: 'Prestataire de services de paiement' },
+    { value: 'EME',   label: 'Établissement de monnaie électronique' },
+    { value: 'SGP',   label: 'Société de gestion de portefeuille' },
+    { value: 'CASP',  label: 'Prestataire de services sur actifs numériques' },
+    { value: 'CIF',   label: 'Conseiller en investissement financier' },
+    { value: 'IFP',   label: 'Intermédiaire en financement participatif' },
     { value: 'OTHER', label: 'Autre' },
   ];
 
   // ═══ Services fournis — listes CMF par type d'entité ═══
   const PSP_SERVICES: any[] = [
-    { code: 'psp_versement_retrait', label: 'Versement / retrait d\'especes sur compte de paiement' },
-    { code: 'psp_prelevement', label: 'Prelevement' },
-    { code: 'psp_paiement_carte', label: 'Paiement par carte' },
-    { code: 'psp_virement', label: 'Virement' },
-    { code: 'psp_emission_instrument', label: 'Emission d\'instrument de paiement' },
-    { code: 'psp_acquisition', label: 'Acquisition d\'operations de paiement' },
-    { code: 'psp_transmission_fonds', label: 'Transmission de fonds' },
-    { code: 'psp_initiation', label: 'Initiation de paiement (DSP2)' },
-    { code: 'psp_information_comptes', label: 'Information sur les comptes (DSP2)' },
+    { code: 'psp_versement_retrait', label: 'Versement / retrait d\'espèces sur compte de paiement' },
+    { code: 'psp_prelevement',       label: 'Prélèvement' },
+    { code: 'psp_paiement_carte',    label: 'Paiement par carte' },
+    { code: 'psp_virement',          label: 'Virement' },
+    { code: 'psp_emission_instrument',label: 'Émission d\'instrument de paiement' },
+    { code: 'psp_acquisition',       label: 'Acquisition d\'opérations de paiement' },
+    { code: 'psp_transmission_fonds',label: 'Transmission de fonds' },
+    { code: 'psp_initiation',        label: 'Initiation de paiement (DSP2)' },
+    { code: 'psp_information_comptes',label: 'Information sur les comptes (DSP2)' },
   ];
   const CASP_OBLIGATOIRE: any[] = [
-    { code: 'casp_conservation', label: 'Conservation pour compte de tiers d\'actifs numeriques' },
-    { code: 'casp_achat_vente', label: 'Achat / vente d\'actifs numeriques contre monnaie legale' },
-    { code: 'casp_echange', label: 'Echange d\'actifs numeriques contre d\'autres actifs numeriques' },
-    { code: 'casp_plateforme', label: 'Exploitation d\'une plateforme de negociation' },
+    { code: 'casp_conservation', label: 'Conservation pour compte de tiers d\'actifs numériques' },
+    { code: 'casp_achat_vente',  label: 'Achat / vente d\'actifs numériques contre monnaie légale' },
+    { code: 'casp_echange',      label: 'Échange d\'actifs numériques contre d\'autres actifs numériques' },
+    { code: 'casp_plateforme',   label: 'Exploitation d\'une plateforme de négociation' },
   ];
   const CASP_AGREMENT: any[] = [
-    { code: 'casp_rto', label: 'Reception et transmission d\'ordres pour compte de tiers' },
-    { code: 'casp_gestion_portefeuille', label: 'Gestion de portefeuille d\'actifs numeriques pour compte de tiers' },
-    { code: 'casp_conseil', label: 'Conseil aux souscripteurs d\'actifs numeriques' },
-    { code: 'casp_prise_ferme', label: 'Prise ferme / placement garanti / placement non garanti' },
+    { code: 'casp_rto',                label: 'Réception et transmission d\'ordres pour compte de tiers' },
+    { code: 'casp_gestion_portefeuille',label: 'Gestion de portefeuille d\'actifs numériques pour compte de tiers' },
+    { code: 'casp_conseil',            label: 'Conseil aux souscripteurs d\'actifs numériques' },
+    { code: 'casp_prise_ferme',        label: 'Prise ferme / placement garanti / placement non garanti' },
   ];
 
   const REG_PRESELECTION: any = {
@@ -231,22 +218,21 @@ const base = import.meta.env.BASE_URL;
 
   function renderServicesSection(entityType: string, currentServices: string[]): string {
     if (!entityType) return '';
-    let html = '<label style="display:block;font-size:12px;font-weight:500;color:var(--noir);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.1em">Services fournis</label>';
+    let html = '<label style="display:block;font-size:12px;font-weight:500;color:var(--ink);margin-bottom:4px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.1em">Services fournis</label>';
 
     if (entityType === 'Banque') {
-      // Two toggles only
       const creditChecked = currentServices.includes('banque_credit') || !currentServices.length;
-      const corrChecked = currentServices.includes('banque_correspondance');
+      const corrChecked   = currentServices.includes('banque_correspondance');
       html += `
         <div class="toggle-row" style="margin:4px 0">
-          <div><div class="toggle-label">Activite de credit</div></div>
+          <div><div class="toggle-label">Activité de crédit</div></div>
           <label class="toggle"><input type="checkbox" class="svc-banque-toggle" data-svc="banque_credit" ${creditChecked ? 'checked' : ''}><span class="toggle-slider"></span></label>
         </div>
         <div class="toggle-row" style="margin:4px 0">
           <div><div class="toggle-label">Correspondance bancaire</div></div>
           <label class="toggle"><input type="checkbox" class="svc-banque-toggle" data-svc="banque_correspondance" ${corrChecked ? 'checked' : ''}><span class="toggle-slider"></span></label>
         </div>
-        <div class="svc-legal-ref">Les operations de banque (reception de fonds, credit, paiement) sont presumees pour tout etablissement de credit agree — Article L.311-1 CMF</div>
+        <div class="svc-legal-ref">Les opérations de banque sont présumées pour tout établissement de crédit agréé — Article L.311-1 CMF</div>
       `;
       return html;
     }
@@ -260,9 +246,8 @@ const base = import.meta.env.BASE_URL;
     }
 
     if (entityType === 'EME') {
-      // Fixed non-décochable
-      html += `<label class="svc-check disabled"><input type="checkbox" class="svc-cb" data-svc="eme_emission_gestion" checked disabled> Emission et gestion de monnaie electronique</label>`;
-      html += '<hr style="margin:8px 0;border:none;border-top:1px solid var(--color-border)">';
+      html += `<label class="svc-check disabled"><input type="checkbox" class="svc-cb" data-svc="eme_emission_gestion" checked disabled> Émission et gestion de monnaie électronique</label>`;
+      html += '<hr style="margin:8px 0;border:none;border-top:0.5px solid var(--line)">';
       html += PSP_SERVICES.map(s =>
         `<label class="svc-check"><input type="checkbox" class="svc-cb" data-svc="${s.code}" ${currentServices.includes(s.code) ? 'checked' : ''}> ${s.label}</label>`
       ).join('');
@@ -271,12 +256,12 @@ const base = import.meta.env.BASE_URL;
     }
 
     if (entityType === 'CASP') {
-      html += '<div class="svc-group-title">Services necessitant un enregistrement obligatoire (1° a 4°)</div>';
+      html += '<div class="svc-group-title">Services nécessitant un enregistrement obligatoire (1° à 4°)</div>';
       html += CASP_OBLIGATOIRE.map(s =>
         `<label class="svc-check"><input type="checkbox" class="svc-cb" data-svc="${s.code}" ${currentServices.includes(s.code) ? 'checked' : ''}> ${s.label}</label>`
       ).join('');
       html += '<div class="svc-separator"></div>';
-      html += '<div class="svc-group-title">Services necessitant un agrement optionnel (5°)</div>';
+      html += '<div class="svc-group-title">Services nécessitant un agrément optionnel (5°)</div>';
       html += CASP_AGREMENT.map(s =>
         `<label class="svc-check"><input type="checkbox" class="svc-cb" data-svc="${s.code}" ${currentServices.includes(s.code) ? 'checked' : ''}> ${s.label}</label>`
       ).join('');
@@ -289,7 +274,7 @@ const base = import.meta.env.BASE_URL;
 
   const ALL_REGULATIONS: string[] = ['LCB-FT', 'DORA', 'DSP2', 'MiCA', 'AI Act', 'AMLR', 'PSD3', 'RGPD'];
   const SEVERITIES: string[] = ['critical', 'high', 'medium', 'low'];
-  const SEV_LABELS: any = { critical: 'Critique', high: 'Eleve', medium: 'Moyen', low: 'Faible' };
+  const SEV_LABELS: any = { critical: 'Critique', high: 'Élevé', medium: 'Moyen', low: 'Faible' };
 
   async function loadSettings(): Promise<void> {
     try {
@@ -297,7 +282,7 @@ const base = import.meta.env.BASE_URL;
       settingsData = data;
       renderSettings(data);
     } catch (e: any) {
-      document.getElementById('content')!.innerHTML = `<div class="loading">Erreur : ${e.message}</div>`;
+      document.getElementById('content')!.innerHTML = `<div class="st-loading">Erreur : ${e.message}</div>`;
     }
   }
 
@@ -327,16 +312,12 @@ const base = import.meta.env.BASE_URL;
     const conf: any = s.conformite || {};
     const outils: any = s.outils || {};
     const perim: any = s.perimetre || {};
-    // v1 legacy fallbacks
     const org: any = s.organisation || {};
-    const sys_: any = s.systemes || {};
-    const seuils: any = s.seuils || {};
-    // Resolve entity_type: v2 > root > v1
     const resolvedEntityType: string = profil_v2.entity_type || s.entity_type || '';
     const resolvedNom: string = profil_v2.nom_etablissement || org.nom_etablissement || t.name || '';
 
     const CLIENT_TYPES: string[] = ['Particuliers', 'Entreprises', 'Institutionnels'];
-    const GEO_ZONES: string[] = ['France uniquement', 'Union europeenne', 'International'];
+    const GEO_ZONES: string[] = ['France uniquement', 'Union européenne', 'International'];
 
     const clientChips: string = CLIENT_TYPES.map((ct: string) => {
       const active: string = (perim.types_clients || []).includes(ct) ? 'active' : '';
@@ -371,22 +352,22 @@ const base = import.meta.env.BASE_URL;
         <div class="st-section-body">
           <div class="st-form-row">
             <div class="st-form-group">
-              <label>Nom de l'etablissement</label>
+              <label>Nom de l'établissement</label>
               <input type="text" id="f-name" value="${t.name || ''}">
             </div>
             <div class="st-form-group">
-              <label>Type d'entite</label>
+              <label>Type d'entité</label>
               <select id="f-entity-type">${entityOpts}</select>
             </div>
           </div>
           <div class="st-form-row">
             <div class="st-form-group">
-              <label>N ACPR / AMF</label>
+              <label>N° ACPR / AMF</label>
               <input type="text" id="f-acpr" value="${s.acpr_number || ''}" placeholder="Ex: 12345">
             </div>
           </div>
           <div class="st-form-group">
-            <label>Reglementations applicables</label>
+            <label>Réglementations applicables</label>
             <div class="st-chips" id="chips-reg">${regChips}</div>
           </div>
         </div>
@@ -406,16 +387,16 @@ const base = import.meta.env.BASE_URL;
             <div class="wiz-line"></div>
             <button class="wiz-dot" data-wstep="4">4</button>
           </div>
-          <div class="wiz-step-label" id="wiz-step-label">Etape 1 — Etablissement</div>
+          <div class="wiz-step-label" id="wiz-step-label">Étape 1 — Établissement</div>
 
           <!-- Step 1: Etablissement -->
           <div class="wiz-step" id="wiz-step-1">
             <div class="st-form-group" style="margin-bottom:16px">
-              <label>Nom de l'etablissement *</label>
+              <label>Nom de l'établissement *</label>
               <input type="text" id="f-profil-nom" value="${resolvedNom}" required>
             </div>
             <div class="st-form-group">
-              <label>Type d'entite *</label>
+              <label>Type d'entité *</label>
               <div class="wiz-radios" id="wiz-entity-radios">
                 <label class="wiz-radio ${resolvedEntityType === 'PSP' ? 'selected' : ''}"><input type="radio" name="wiz-entity" value="PSP" ${resolvedEntityType === 'PSP' ? 'checked' : ''}> PSP</label>
                 <label class="wiz-radio ${resolvedEntityType === 'Banque' || resolvedEntityType === 'EC' ? 'selected' : ''}"><input type="radio" name="wiz-entity" value="Banque" ${resolvedEntityType === 'Banque' || resolvedEntityType === 'EC' ? 'checked' : ''}> Banque</label>
@@ -423,7 +404,6 @@ const base = import.meta.env.BASE_URL;
                 <label class="wiz-radio ${resolvedEntityType === 'EME' ? 'selected' : ''}"><input type="radio" name="wiz-entity" value="EME" ${resolvedEntityType === 'EME' ? 'checked' : ''}> EME</label>
               </div>
             </div>
-            <!-- Services fournis (conditionnel selon entity_type) -->
             <div id="services-section" style="margin-top:16px;${resolvedEntityType ? '' : 'display:none'}">
               <div id="services-content"></div>
             </div>
@@ -436,23 +416,23 @@ const base = import.meta.env.BASE_URL;
               <div class="st-form-group"><label>Responsable LCB-FT — Fonction *</label><input type="text" id="f-conf-lcbft-fn" value="${conf.responsable_lcbft_fonction || ''}"></div>
             </div>
             <div class="st-form-row">
-              <div class="st-form-group"><label>Suppleant — Nom</label><input type="text" id="f-conf-suppleant" value="${conf.responsable_lcbft_suppleant || ''}"></div>
+              <div class="st-form-group"><label>Suppléant — Nom</label><input type="text" id="f-conf-suppleant" value="${conf.responsable_lcbft_suppleant || ''}"></div>
             </div>
             <div class="toggle-row" style="margin:12px 0">
-              <div><div class="toggle-label">Le declarant Tracfin est le responsable LCB-FT</div></div>
+              <div><div class="toggle-label">Le déclarant Tracfin est le responsable LCB-FT</div></div>
               <label class="toggle"><input type="checkbox" id="f-conf-declarant-est-resp" ${conf.declarant_est_responsable ? 'checked' : ''}><span class="toggle-slider"></span></label>
             </div>
             <div id="declarant-fields" style="${conf.declarant_est_responsable ? 'display:none' : ''}">
               <div class="st-form-row">
-                <div class="st-form-group"><label>Declarant Tracfin — Nom *</label><input type="text" id="f-conf-tracfin-nom" value="${conf.declarant_tracfin_nom || ''}"></div>
-                <div class="st-form-group"><label>Declarant Tracfin — Fonction *</label><input type="text" id="f-conf-tracfin-fn" value="${conf.declarant_tracfin_fonction || ''}"></div>
+                <div class="st-form-group"><label>Déclarant Tracfin — Nom *</label><input type="text" id="f-conf-tracfin-nom" value="${conf.declarant_tracfin_nom || ''}"></div>
+                <div class="st-form-group"><label>Déclarant Tracfin — Fonction *</label><input type="text" id="f-conf-tracfin-fn" value="${conf.declarant_tracfin_fonction || ''}"></div>
               </div>
             </div>
             <div class="st-form-group" style="margin-top:12px">
-              <label>Controle periodique *</label>
+              <label>Contrôle périodique *</label>
               <div class="wiz-radios" id="wiz-controle-radios">
-                <label class="wiz-radio ${(conf.controle_periodique || 'interne') === 'interne' ? 'selected' : ''}"><input type="radio" name="wiz-controle" value="interne" ${(conf.controle_periodique || 'interne') === 'interne' ? 'checked' : ''}> Internalise</label>
-                <label class="wiz-radio ${conf.controle_periodique === 'externe' ? 'selected' : ''}"><input type="radio" name="wiz-controle" value="externe" ${conf.controle_periodique === 'externe' ? 'checked' : ''}> Externalise</label>
+                <label class="wiz-radio ${(conf.controle_periodique || 'interne') === 'interne' ? 'selected' : ''}"><input type="radio" name="wiz-controle" value="interne" ${(conf.controle_periodique || 'interne') === 'interne' ? 'checked' : ''}> Internalisé</label>
+                <label class="wiz-radio ${conf.controle_periodique === 'externe' ? 'selected' : ''}"><input type="radio" name="wiz-controle" value="externe" ${conf.controle_periodique === 'externe' ? 'checked' : ''}> Externalisé</label>
               </div>
             </div>
             <div id="controle-prestataire" style="${conf.controle_periodique === 'externe' ? '' : 'display:none'}">
@@ -475,13 +455,13 @@ const base = import.meta.env.BASE_URL;
                 </select>
               </div>
               <div class="st-form-group" id="screening-autre-group" style="${outils.screening === 'autre' ? '' : 'display:none'}">
-                <label>Preciser</label>
+                <label>Préciser</label>
                 <input type="text" id="f-outils-screening-autre" value="${outils.screening_autre || ''}">
               </div>
             </div>
             <div class="st-form-row">
               <div class="st-form-group">
-                <label>Verification d'identite *</label>
+                <label>Vérification d'identité *</label>
                 <select id="f-outils-kyc">
                   <option value="">— Choisir —</option>
                   <option value="Synaps" ${outils.kyc === 'Synaps' ? 'selected' : ''}>Synaps</option>
@@ -492,15 +472,15 @@ const base = import.meta.env.BASE_URL;
                 </select>
               </div>
               <div class="st-form-group" id="kyc-autre-group" style="${outils.kyc === 'autre' ? '' : 'display:none'}">
-                <label>Preciser</label>
+                <label>Préciser</label>
                 <input type="text" id="f-outils-kyc-autre" value="${outils.kyc_autre || ''}">
               </div>
             </div>
             <div class="st-form-group" style="margin-bottom:12px">
               <label>Monitoring transactionnel *</label>
               <div class="wiz-radios" id="wiz-monitoring-radios">
-                <label class="wiz-radio ${(outils.monitoring || 'interne') === 'interne' ? 'selected' : ''}"><input type="radio" name="wiz-monitoring" value="interne" ${(outils.monitoring || 'interne') === 'interne' ? 'checked' : ''}> Interne (pas d'outil dedie)</label>
-                <label class="wiz-radio ${outils.monitoring === 'outil' ? 'selected' : ''}"><input type="radio" name="wiz-monitoring" value="outil" ${outils.monitoring === 'outil' ? 'checked' : ''}> Outil dedie</label>
+                <label class="wiz-radio ${(outils.monitoring || 'interne') === 'interne' ? 'selected' : ''}"><input type="radio" name="wiz-monitoring" value="interne" ${(outils.monitoring || 'interne') === 'interne' ? 'checked' : ''}> Interne (pas d'outil dédié)</label>
+                <label class="wiz-radio ${outils.monitoring === 'outil' ? 'selected' : ''}"><input type="radio" name="wiz-monitoring" value="outil" ${outils.monitoring === 'outil' ? 'checked' : ''}> Outil dédié</label>
               </div>
             </div>
             <div id="monitoring-outil-group" style="${outils.monitoring === 'outil' ? '' : 'display:none'}">
@@ -510,34 +490,34 @@ const base = import.meta.env.BASE_URL;
               <label>Canal signalement interne *</label>
               <select id="f-outils-signalement">
                 <option value="">— Choisir —</option>
-                <option value="email" ${outils.signalement_interne === 'email' ? 'selected' : ''}>Email dedie conformite</option>
+                <option value="email"     ${outils.signalement_interne === 'email'     ? 'selected' : ''}>Email dédié conformité</option>
                 <option value="ticketing" ${outils.signalement_interne === 'ticketing' ? 'selected' : ''}>Outil de ticketing</option>
-                <option value="direct" ${outils.signalement_interne === 'direct' ? 'selected' : ''}>Remontee directe au responsable LCB-FT</option>
+                <option value="direct"    ${outils.signalement_interne === 'direct'    ? 'selected' : ''}>Remontée directe au responsable LCB-FT</option>
               </select>
             </div>
             <!-- Blockchain analytics — CASP only -->
             <div id="blockchain-section" style="${resolvedEntityType === 'CASP' ? '' : 'display:none'}">
-              <hr style="margin:16px 0;border:none;border-top:1px solid var(--color-border)">
+              <hr style="margin:16px 0;border:none;border-top:0.5px solid var(--line)">
               <div class="st-form-row">
                 <div class="st-form-group">
                   <label>Blockchain analytics *</label>
                   <select id="f-outils-blockchain">
                     <option value="">— Choisir —</option>
-                    <option value="Scorechain" ${outils.blockchain_analytics === 'Scorechain' ? 'selected' : ''}>Scorechain</option>
+                    <option value="Scorechain"  ${outils.blockchain_analytics === 'Scorechain'  ? 'selected' : ''}>Scorechain</option>
                     <option value="Chainalysis" ${outils.blockchain_analytics === 'Chainalysis' ? 'selected' : ''}>Chainalysis</option>
-                    <option value="Elliptic" ${outils.blockchain_analytics === 'Elliptic' ? 'selected' : ''}>Elliptic</option>
-                    <option value="autre" ${outils.blockchain_analytics === 'autre' ? 'selected' : ''}>Autre</option>
+                    <option value="Elliptic"    ${outils.blockchain_analytics === 'Elliptic'    ? 'selected' : ''}>Elliptic</option>
+                    <option value="autre"       ${outils.blockchain_analytics === 'autre'       ? 'selected' : ''}>Autre</option>
                   </select>
                 </div>
                 <div class="st-form-group" id="blockchain-autre-group" style="${outils.blockchain_analytics === 'autre' ? '' : 'display:none'}">
-                  <label>Preciser</label>
+                  <label>Préciser</label>
                   <input type="text" id="f-outils-blockchain-autre" value="${outils.blockchain_analytics_autre || ''}">
                 </div>
               </div>
               <div class="st-form-group">
-                <label>Seuil d'alerte (defaut : 75)</label>
+                <label>Seuil d'alerte (défaut : 75)</label>
                 <input type="number" id="f-outils-blockchain-seuil" min="0" max="100" value="${outils.blockchain_seuil ?? 75}">
-                <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:4px;font-style:italic">La valeur standard reglementaire est 75. Ne modifier que si votre outil applique une echelle differente.</div>
+                <div style="font-size:11px;color:var(--mute);margin-top:4px">La valeur standard réglementaire est 75. Ne modifier que si votre outil applique une échelle différente.</div>
               </div>
             </div>
           </div>
@@ -549,15 +529,15 @@ const base = import.meta.env.BASE_URL;
               <div class="st-chips" id="chips-clients">${clientChips}</div>
             </div>
             <div class="st-form-group" style="margin-top:12px">
-              <label>Zones geographiques</label>
+              <label>Zones géographiques</label>
               <div class="st-chips" id="chips-zones">${zoneChips}</div>
             </div>
             <div class="st-form-group" style="margin-top:12px">
-              <label>Canal d'entree en relation *</label>
+              <label>Canal d'entrée en relation *</label>
               <div class="wiz-radios" id="wiz-canal-radios">
                 <label class="wiz-radio ${perim.canal_entree_relation === 'digital' ? 'selected' : ''}"><input type="radio" name="wiz-canal" value="digital" ${perim.canal_entree_relation === 'digital' ? 'checked' : ''}> 100% digital</label>
                 <label class="wiz-radio ${perim.canal_entree_relation === 'mixte' ? 'selected' : ''}"><input type="radio" name="wiz-canal" value="mixte" ${perim.canal_entree_relation === 'mixte' ? 'checked' : ''}> Mixte</label>
-                <label class="wiz-radio ${perim.canal_entree_relation === 'presentiel' ? 'selected' : ''}"><input type="radio" name="wiz-canal" value="presentiel" ${perim.canal_entree_relation === 'presentiel' ? 'checked' : ''}> Presentiel</label>
+                <label class="wiz-radio ${perim.canal_entree_relation === 'presentiel' ? 'selected' : ''}"><input type="radio" name="wiz-canal" value="presentiel" ${perim.canal_entree_relation === 'presentiel' ? 'checked' : ''}> Présentiel</label>
               </div>
             </div>
             <div style="margin-top:16px">
@@ -578,7 +558,7 @@ const base = import.meta.env.BASE_URL;
 
           <!-- Navigation buttons -->
           <div class="wiz-nav">
-            <button class="wiz-btn wiz-btn-prev" id="wiz-prev" style="display:none">Precedent</button>
+            <button class="wiz-btn wiz-btn-prev" id="wiz-prev" style="display:none">Précédent</button>
             <div style="flex:1"></div>
             <button class="wiz-btn wiz-btn-next" id="wiz-next">Suivant</button>
             <button class="wiz-btn wiz-btn-save" id="wiz-save" style="display:none">Enregistrer</button>
@@ -587,12 +567,12 @@ const base = import.meta.env.BASE_URL;
       </div>
 
       <div class="st-section">
-        <div class="st-section-header">Preferences d'alertes</div>
+        <div class="st-section-header">Préférences d'alertes</div>
         <div class="st-section-body">
           <div class="toggle-row">
             <div>
               <div class="toggle-label">Alertes email</div>
-              <div class="toggle-desc">Recevoir un email pour chaque reminder selon la severite selectionnee</div>
+              <div class="toggle-desc">Recevoir un email pour chaque reminder selon la sévérité sélectionnée</div>
             </div>
             <label class="toggle">
               <input type="checkbox" id="f-alert-email" ${s.alert_email_enabled ? 'checked' : ''}>
@@ -600,16 +580,16 @@ const base = import.meta.env.BASE_URL;
             </label>
           </div>
           <div style="margin-top:12px">
-            <label style="display:block;font-size:12px;font-weight:500;color:var(--noir);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.1em">Severites declenchant un email</label>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--ink);margin-bottom:4px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.1em">Sévérités déclenchant un email</label>
             <div class="st-chips" id="chips-sev">${sevChips}</div>
           </div>
           <div class="st-form-row" style="margin-top:16px">
             <div class="st-form-group">
               <label>Mode d'envoi</label>
               <select id="f-digest">
-                <option value="immediate" ${s.alert_digest === 'immediate' ? 'selected' : ''}>Immediat</option>
-                <option value="daily" ${s.alert_digest === 'daily' ? 'selected' : ''}>Digest quotidien</option>
-                <option value="weekly" ${s.alert_digest === 'weekly' ? 'selected' : ''}>Digest hebdomadaire</option>
+                <option value="immediate" ${s.alert_digest === 'immediate' ? 'selected' : ''}>Immédiat</option>
+                <option value="daily"     ${s.alert_digest === 'daily'     ? 'selected' : ''}>Digest quotidien</option>
+                <option value="weekly"    ${s.alert_digest === 'weekly'    ? 'selected' : ''}>Digest hebdomadaire</option>
               </select>
             </div>
           </div>
@@ -620,19 +600,19 @@ const base = import.meta.env.BASE_URL;
         <div class="st-section-header">Modules actifs</div>
         <div class="st-section-body">
           <div class="toggle-row">
-            <div><div class="toggle-label">Procedures LCB-FT</div><div class="toggle-desc">${counts.procedures_count || 0} procedures attribuees</div></div>
+            <div><div class="toggle-label">Procédures LCB-FT</div><div class="toggle-desc">${counts.procedures_count || 0} procédures attribuées</div></div>
             <label class="toggle"><input type="checkbox" id="f-mod-procs" ${s.procedures_enabled ? 'checked' : ''}><span class="toggle-slider"></span></label>
           </div>
           <div class="toggle-row">
-            <div><div class="toggle-label">Pays a risque</div><div class="toggle-desc">Liste FATF / EU / ACPR avec croisement veille</div></div>
+            <div><div class="toggle-label">Pays à risque</div><div class="toggle-desc">Liste FATF / EU / ACPR avec croisement veille</div></div>
             <label class="toggle"><input type="checkbox" id="f-mod-country" ${s.country_risk_enabled !== false ? 'checked' : ''}><span class="toggle-slider"></span></label>
           </div>
           <div class="toggle-row">
-            <div><div class="toggle-label">Roadmap reglementaire</div><div class="toggle-desc">Echeances DORA, AMLR, AI Act</div></div>
+            <div><div class="toggle-label">Roadmap réglementaire</div><div class="toggle-desc">Échéances DORA, AMLR, AI Act</div></div>
             <label class="toggle"><input type="checkbox" id="f-mod-roadmap" ${s.roadmap_enabled !== false ? 'checked' : ''}><span class="toggle-slider"></span></label>
           </div>
           <div class="toggle-row">
-            <div><div class="toggle-label">Fiches reflexes</div><div class="toggle-desc">Guides operationnels par situation</div></div>
+            <div><div class="toggle-label">Fiches réflexes</div><div class="toggle-desc">Guides opérationnels par situation</div></div>
             <label class="toggle"><input type="checkbox" id="f-mod-situations" ${s.situations_enabled !== false ? 'checked' : ''}><span class="toggle-slider"></span></label>
           </div>
         </div>
@@ -643,7 +623,7 @@ const base = import.meta.env.BASE_URL;
         <div class="st-section-body">
           <div class="st-form-row">
             <div class="st-form-group">
-              <label>Prenom</label>
+              <label>Prénom</label>
               <input type="text" id="f-firstname" value="${p.first_name || ''}">
             </div>
             <div class="st-form-group">
@@ -657,8 +637,8 @@ const base = import.meta.env.BASE_URL;
               <input type="email" id="f-email" value="${p.email || ''}">
             </div>
             <div class="st-form-group">
-              <label>Role</label>
-              <input type="text" value="${p.role || ''}" disabled style="background:#f5f5f5">
+              <label>Rôle</label>
+              <input type="text" value="${p.role || ''}" disabled>
             </div>
           </div>
         </div>
@@ -668,14 +648,14 @@ const base = import.meta.env.BASE_URL;
         <div class="st-section-header">Utilisateurs (${users.length})</div>
         <div class="st-section-body">
           <table class="users-table">
-            <thead><tr><th>Nom</th><th>Email</th><th>Role</th><th>Derniere connexion</th><th>Statut</th></tr></thead>
-            <tbody>${usersRows || '<tr><td colspan="5" style="color:var(--color-text-tertiary)">Aucun utilisateur</td></tr>'}</tbody>
+            <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Dernière connexion</th><th>Statut</th></tr></thead>
+            <tbody>${usersRows || '<tr><td colspan="5" style="color:var(--mute);padding:12px 0">Aucun utilisateur</td></tr>'}</tbody>
           </table>
         </div>
       </div>
 
-      <div style="font-size:12px;color:var(--color-text-tertiary);text-align:center;padding:16px 0">
-        ${counts.sources_count || 0} sources surveillees \u00b7 ${counts.procedures_count || 0} procedures \u00b7 ${counts.reminders_active || 0} reminders actifs
+      <div style="font-size:12px;color:var(--mute);text-align:center;padding:16px 0">
+        ${counts.sources_count || 0} sources surveillées &middot; ${counts.procedures_count || 0} procédures &middot; ${counts.reminders_active || 0} reminders actifs
       </div>
     `;
 
@@ -699,19 +679,16 @@ const base = import.meta.env.BASE_URL;
 
   function collectServices(entityType: string): string[] {
     if (entityType === 'Banque') {
-      // Banque: collect toggle values as service codes
       const svcs: string[] = [];
       document.querySelectorAll('.svc-banque-toggle').forEach((el: any) => {
         if (el.checked) svcs.push(el.dataset.svc);
       });
       return svcs;
     }
-    // PSP, EME, CASP: collect checked checkboxes
     const svcs: string[] = [];
     document.querySelectorAll('.svc-cb').forEach((el: any) => {
       if (el.checked) svcs.push(el.dataset.svc);
     });
-    // EME: always include eme_emission_gestion (disabled checkbox)
     if (entityType === 'EME' && !svcs.includes('eme_emission_gestion')) {
       svcs.unshift('eme_emission_gestion');
     }
@@ -722,15 +699,12 @@ const base = import.meta.env.BASE_URL;
     try {
       const regs: string[] = Array.from(document.querySelectorAll('#chips-reg .st-chip.active')).map((c: any) => c.dataset.reg);
       const sevs: string[] = Array.from(document.querySelectorAll('#chips-sev .st-chip.active')).map((c: any) => c.dataset.sev);
-
       const clients: string[] = Array.from(document.querySelectorAll('#chips-clients .st-chip.active')).map((c: any) => c.dataset.client);
       const zones: string[] = Array.from(document.querySelectorAll('#chips-zones .st-chip.active')).map((c: any) => c.dataset.zone);
-
-      // Build entity type from wizard
       const wizEntity: string = (document.querySelector('input[name="wiz-entity"]:checked') as HTMLInputElement)?.value || '';
       const declarantEstResp: boolean = (document.getElementById('f-conf-declarant-est-resp') as HTMLInputElement)?.checked || false;
       const respNom: string = (document.getElementById('f-conf-lcbft-nom') as HTMLInputElement)?.value || '';
-      const respFn: string = (document.getElementById('f-conf-lcbft-fn') as HTMLInputElement)?.value || '';
+      const respFn: string  = (document.getElementById('f-conf-lcbft-fn') as HTMLInputElement)?.value || '';
 
       await api('/api/v1/settings', {
         method: 'PUT',
@@ -746,39 +720,38 @@ const base = import.meta.env.BASE_URL;
           country_risk_enabled: (document.getElementById('f-mod-country') as HTMLInputElement).checked,
           roadmap_enabled: (document.getElementById('f-mod-roadmap') as HTMLInputElement).checked,
           situations_enabled: (document.getElementById('f-mod-situations') as HTMLInputElement).checked,
-          // v2 profil organisation
           profil: {
             nom_etablissement: (document.getElementById('f-profil-nom') as HTMLInputElement)?.value || '',
             entity_type: wizEntity,
             services: collectServices(wizEntity),
           },
           conformite: {
-            responsable_lcbft_nom: respNom,
-            responsable_lcbft_fonction: respFn,
+            responsable_lcbft_nom:       respNom,
+            responsable_lcbft_fonction:  respFn,
             responsable_lcbft_suppleant: (document.getElementById('f-conf-suppleant') as HTMLInputElement)?.value || '',
-            declarant_tracfin_nom: declarantEstResp ? respNom : ((document.getElementById('f-conf-tracfin-nom') as HTMLInputElement)?.value || ''),
-            declarant_tracfin_fonction: declarantEstResp ? respFn : ((document.getElementById('f-conf-tracfin-fn') as HTMLInputElement)?.value || ''),
-            declarant_est_responsable: declarantEstResp,
-            controle_periodique: (document.querySelector('input[name="wiz-controle"]:checked') as HTMLInputElement)?.value || 'interne',
+            declarant_tracfin_nom:       declarantEstResp ? respNom : ((document.getElementById('f-conf-tracfin-nom') as HTMLInputElement)?.value || ''),
+            declarant_tracfin_fonction:  declarantEstResp ? respFn  : ((document.getElementById('f-conf-tracfin-fn') as HTMLInputElement)?.value || ''),
+            declarant_est_responsable:   declarantEstResp,
+            controle_periodique:         (document.querySelector('input[name="wiz-controle"]:checked') as HTMLInputElement)?.value || 'interne',
             controle_periodique_prestataire: (document.getElementById('f-conf-prestataire') as HTMLInputElement)?.value || '',
           },
           outils: {
-            screening: (document.getElementById('f-outils-screening') as HTMLSelectElement)?.value || '',
-            screening_autre: (document.getElementById('f-outils-screening-autre') as HTMLInputElement)?.value || '',
-            kyc: (document.getElementById('f-outils-kyc') as HTMLSelectElement)?.value || '',
-            kyc_autre: (document.getElementById('f-outils-kyc-autre') as HTMLInputElement)?.value || '',
-            monitoring: (document.querySelector('input[name="wiz-monitoring"]:checked') as HTMLInputElement)?.value || 'interne',
-            monitoring_outil: (document.getElementById('f-outils-monitoring-outil') as HTMLInputElement)?.value || '',
-            signalement_interne: (document.getElementById('f-outils-signalement') as HTMLSelectElement)?.value || '',
-            blockchain_analytics: (document.getElementById('f-outils-blockchain') as HTMLSelectElement)?.value || '',
+            screening:              (document.getElementById('f-outils-screening') as HTMLSelectElement)?.value || '',
+            screening_autre:        (document.getElementById('f-outils-screening-autre') as HTMLInputElement)?.value || '',
+            kyc:                    (document.getElementById('f-outils-kyc') as HTMLSelectElement)?.value || '',
+            kyc_autre:              (document.getElementById('f-outils-kyc-autre') as HTMLInputElement)?.value || '',
+            monitoring:             (document.querySelector('input[name="wiz-monitoring"]:checked') as HTMLInputElement)?.value || 'interne',
+            monitoring_outil:       (document.getElementById('f-outils-monitoring-outil') as HTMLInputElement)?.value || '',
+            signalement_interne:    (document.getElementById('f-outils-signalement') as HTMLSelectElement)?.value || '',
+            blockchain_analytics:   (document.getElementById('f-outils-blockchain') as HTMLSelectElement)?.value || '',
             blockchain_analytics_autre: (document.getElementById('f-outils-blockchain-autre') as HTMLInputElement)?.value || '',
-            blockchain_seuil: parseInt((document.getElementById('f-outils-blockchain-seuil') as HTMLInputElement)?.value) || 75,
+            blockchain_seuil:       parseInt((document.getElementById('f-outils-blockchain-seuil') as HTMLInputElement)?.value) || 75,
           },
           perimetre: {
-            types_clients: clients,
-            zones_geographiques: zones,
-            canal_entree_relation: (document.querySelector('input[name="wiz-canal"]:checked') as HTMLInputElement)?.value || '',
-            transferts_fonds: (document.getElementById('f-per-transferts') as HTMLInputElement)?.checked || false,
+            types_clients:        clients,
+            zones_geographiques:  zones,
+            canal_entree_relation:(document.querySelector('input[name="wiz-canal"]:checked') as HTMLInputElement)?.value || '',
+            transferts_fonds:     (document.getElementById('f-per-transferts') as HTMLInputElement)?.checked || false,
             correspondance_bancaire: (document.getElementById('f-per-correspondance') as HTMLInputElement)?.checked || false,
             agents_distributeurs: (document.getElementById('f-per-agents') as HTMLInputElement)?.checked || false,
           },
@@ -789,14 +762,14 @@ const base = import.meta.env.BASE_URL;
         method: 'PUT',
         body: {
           first_name: (document.getElementById('f-firstname') as HTMLInputElement).value,
-          last_name: (document.getElementById('f-lastname') as HTMLInputElement).value,
-          email: (document.getElementById('f-email') as HTMLInputElement).value,
+          last_name:  (document.getElementById('f-lastname') as HTMLInputElement).value,
+          email:      (document.getElementById('f-email') as HTMLInputElement).value,
         },
       });
 
       hasChanges = false;
       document.getElementById('save-bar')!.classList.remove('visible');
-      toast('Parametres enregistres', 'success');
+      toast('Paramètres enregistrés', 'success');
     } catch (e: any) {
       toast(e.message || 'Erreur', 'error');
     }
@@ -805,7 +778,7 @@ const base = import.meta.env.BASE_URL;
   document.getElementById('btn-save')!.addEventListener('click', saveAll);
 
   // ═══ Wizard step logic ═══
-  const STEP_LABELS: string[] = ['', 'Etape 1 — Etablissement', 'Etape 2 — Equipe conformite', 'Etape 3 — Outils', 'Etape 4 — Perimetre'];
+  const STEP_LABELS: string[] = ['', 'Étape 1 — Établissement', 'Étape 2 — Équipe conformité', 'Étape 3 — Outils', 'Étape 4 — Périmètre'];
   let wizStep: number = 1;
 
   function showWizStep(step: number): void {
@@ -814,17 +787,14 @@ const base = import.meta.env.BASE_URL;
       const el: HTMLElement | null = document.getElementById(`wiz-step-${i}`);
       if (el) el.style.display = i === step ? '' : 'none';
     }
-    // Update dots
     document.querySelectorAll('.wiz-dot').forEach((dot: any) => {
       const s: number = parseInt(dot.dataset.wstep);
       dot.classList.remove('active', 'done');
       if (s === step) dot.classList.add('active');
       else if (s < step) dot.classList.add('done');
     });
-    // Update label
     const label: HTMLElement | null = document.getElementById('wiz-step-label');
     if (label) label.textContent = STEP_LABELS[step] || '';
-    // Update buttons
     const prev: HTMLElement | null = document.getElementById('wiz-prev');
     const next: HTMLElement | null = document.getElementById('wiz-next');
     const save: HTMLElement | null = document.getElementById('wiz-save');
@@ -834,33 +804,26 @@ const base = import.meta.env.BASE_URL;
   }
 
   function initWizard(): void {
-    // Dot click navigation
     document.querySelectorAll('.wiz-dot').forEach((dot: any) => {
       dot.addEventListener('click', () => showWizStep(parseInt(dot.dataset.wstep)));
     });
-    // Prev/Next
     document.getElementById('wiz-prev')?.addEventListener('click', () => { if (wizStep > 1) showWizStep(wizStep - 1); });
     document.getElementById('wiz-next')?.addEventListener('click', () => { if (wizStep < 4) showWizStep(wizStep + 1); });
-    // Save button triggers main save
     document.getElementById('wiz-save')?.addEventListener('click', saveAll);
 
-    // Radio button styling
     document.querySelectorAll('.wiz-radios').forEach((group: any) => {
       group.querySelectorAll('.wiz-radio').forEach((label: any) => {
         label.addEventListener('click', () => {
           group.querySelectorAll('.wiz-radio').forEach((l: any) => l.classList.remove('selected'));
           label.classList.add('selected');
           markChanged();
-          // Entity type change → toggle conditional fields
           const radio: HTMLInputElement | null = label.querySelector('input[name="wiz-entity"]');
           if (radio) onEntityTypeChange(radio.value);
-          // Controle periodique change
           const ctrlRadio: HTMLInputElement | null = label.querySelector('input[name="wiz-controle"]');
           if (ctrlRadio) {
             const el: HTMLElement | null = document.getElementById('controle-prestataire');
             if (el) el.style.display = ctrlRadio.value === 'externe' ? '' : 'none';
           }
-          // Monitoring change
           const monRadio: HTMLInputElement | null = label.querySelector('input[name="wiz-monitoring"]');
           if (monRadio) {
             const el: HTMLElement | null = document.getElementById('monitoring-outil-group');
@@ -870,14 +833,12 @@ const base = import.meta.env.BASE_URL;
       });
     });
 
-    // Declarant est responsable toggle
     document.getElementById('f-conf-declarant-est-resp')?.addEventListener('change', (e: any) => {
       const el: HTMLElement | null = document.getElementById('declarant-fields');
       if (el) el.style.display = e.target.checked ? 'none' : '';
       markChanged();
     });
 
-    // Select "Autre" toggles
     document.getElementById('f-outils-screening')?.addEventListener('change', (e: any) => {
       const el: HTMLElement | null = document.getElementById('screening-autre-group');
       if (el) el.style.display = e.target.value === 'autre' ? '' : 'none';
@@ -902,17 +863,13 @@ const base = import.meta.env.BASE_URL;
   }
 
   function onEntityTypeChange(entityType: string): void {
-    // Blockchain analytics: visible only for CASP
     const bc: HTMLElement | null = document.getElementById('blockchain-section');
     if (bc) bc.style.display = entityType === 'CASP' ? '' : 'none';
-    // Transferts de fonds: PSP or EME
     const tf: HTMLElement | null = document.getElementById('toggle-transferts');
     if (tf) tf.style.display = ['PSP', 'EME'].includes(entityType) ? '' : 'none';
-    // Correspondance bancaire: Banque only
     const cb: HTMLElement | null = document.getElementById('toggle-correspondance');
     if (cb) cb.style.display = entityType === 'Banque' ? '' : 'none';
 
-    // Render services section
     const svcEl: HTMLElement | null = document.getElementById('services-content');
     const svcSection: HTMLElement | null = document.getElementById('services-section');
     if (svcEl) {
@@ -921,7 +878,6 @@ const base = import.meta.env.BASE_URL;
       bindServicesEvents();
     }
 
-    // Preselect regulations if currently empty
     const regChips: NodeListOf<Element> = document.querySelectorAll('#chips-reg .st-chip');
     const activeRegs: Element[] = Array.from(regChips).filter((c: any) => c.classList.contains('active'));
     if (activeRegs.length === 0 && REG_PRESELECTION[entityType]) {
@@ -941,7 +897,6 @@ const base = import.meta.env.BASE_URL;
     _origRender(data);
     initWizard();
     showWizStep(1);
-    // Render services for current entity type
     const s: any = data.settings || {};
     const profil_v2_init: any = s.profil || {};
     const currentET: string = profil_v2_init.entity_type || s.entity_type || '';

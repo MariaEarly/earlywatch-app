@@ -1,13 +1,20 @@
 ---
 import Nav from '../components/Nav.astro';
 import '../styles/global.css';
+import '../styles/design-tokens.css';
+import '../styles/components.css';
 
 interface Props {
   title: string;
   activePage?: string;
+  /**
+   * '2col' (défaut) : sidebar 220px + main 1fr  — toutes les pages sauf dashboard
+   * '3col'          : sidebar 220px + main 1fr + panel 300px — dashboard inbox uniquement
+   */
+  layout?: '2col' | '3col';
 }
 
-const { title, activePage = '' } = Astro.props;
+const { title, activePage = '', layout = '2col' } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -18,13 +25,14 @@ const { title, activePage = '' } = Astro.props;
   <title>{title}</title>
 </head>
 <body>
-  <div class="app-shell">
+  <div class={layout === '3col' ? 'ew-frame' : 'ew-frame-2col'}>
     <Nav activePage={activePage} />
-    <main class="app-content">
+    <main class="ew-main" id="ew-main">
       <slot />
     </main>
+    {layout === '3col' && <slot name="right" />}
   </div>
-  <div class="toast-container"></div>
+  <div class="ew-toast-container" id="toast-container"></div>
 
   <script>
     import { requireAuth } from '../scripts/api';

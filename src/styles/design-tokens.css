@@ -1,0 +1,68 @@
+/* ================================================================
+   Early Watch — Design Tokens V9
+   Crème · IBM Plex Sans + Mono · Moutarde · Zéro shadow · Zéro gradient
+   ================================================================ */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap');
+
+/* ---- Palette V9 ---- */
+:root {
+  /* Surfaces */
+  --bg:       #F4F0E6;   /* crème principale */
+  --bg-side:  #EFEADC;   /* sidebar / panel droit */
+  --bg-hover: #E8E2D0;   /* hover, avatar, fond actif */
+
+  /* Texte */
+  --ink:      #1A1814;   /* encre principale */
+  --ink-soft: #3A3530;   /* encre secondaire */
+  --taupe:    #5C574E;   /* nav inactif, labels */
+  --mute:     #8A8579;   /* muted, dates, counts */
+  --ghost:    #BFB8A5;   /* très atténué, separateurs tabs */
+
+  /* Bordures */
+  --line:        rgba(26, 24, 20, 0.08);  /* bordure douce */
+  --line-strong: rgba(26, 24, 20, 0.14); /* bordure visible */
+
+  /* Accent unique — moutarde */
+  --moutarde: #EAB308;
+
+  /* Fond actif digest (triage bouton sélectionné) */
+  --bg-triage-active: #EEE7D2;
+
+  /* Erreur */
+  --color-error: #DC2626;
+
+  /* Typographie */
+  --font:      'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius:    6px;
+  --radius-lg: 10px;
+}
+
+/* ---- Reset ---- */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ---- Base ---- */
+/* Pas de background sur body — chaque page V9 le pose via .ew-frame/.ew-login-page.
+   Évite la collision avec global.css quand les deux fichiers sont importés ensemble. */
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Typographie utilitaires ---- */
+.ew-mono { font-family: var(--font-mono); }
+.ew-mute { color: var(--mute); }
+.ew-taupe { color: var(--taupe); }
