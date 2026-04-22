@@ -1,9 +1,9 @@
 ---
-import AppLayout from '../layouts/AppLayout.astro';
+import SmartLayout from '../layouts/SmartLayout.astro';
 const base = import.meta.env.BASE_URL;
 ---
 
-<AppLayout title="Fiches Réflexes — Early Watch" activePage="situations">
+<SmartLayout title="Fiches Réflexes — Early Watch" activePage="situations">
   <div style="max-width:1100px;margin:0 auto;">
     <div class="sit-page-title">Fiches Réflexes</div>
     <div class="sit-page-sub">Guides opérationnels par situation — liés à votre veille réglementaire en temps réel</div>
@@ -24,7 +24,7 @@ const base = import.meta.env.BASE_URL;
       <div class="sit-loading">Chargement des fiches réflexes...</div>
     </div>
   </div>
-</AppLayout>
+</SmartLayout>
 
 <style>
   .sit-page-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
