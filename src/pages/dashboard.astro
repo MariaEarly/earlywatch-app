@@ -9,6 +9,14 @@ const base = import.meta.env.BASE_URL;
   <div class="ew-header">
     <h1 class="ew-h-title">Inbox</h1>
     <div class="ew-h-date" id="ew-today"></div>
+    <!-- Sélecteur vue client — visible uniquement pour superadmin -->
+    <button
+      id="btn-demo-client"
+      style="display:none;font-size:11px;font-family:var(--font-mono);letter-spacing:0.08em;color:var(--taupe);background:none;border:0.5px solid var(--line-strong);border-radius:var(--radius);padding:5px 12px;cursor:pointer;transition:color 0.12s,border-color 0.12s"
+      title="Basculer vers la vue client Demo PSP"
+    >
+      Voir comme client Demo PSP →
+    </button>
   </div>
   <div id="article-list">
     <div class="ew-loading"><div class="ew-spinner"></div></div>
@@ -762,3 +770,43 @@ const base = import.meta.env.BASE_URL;
   #cloturer-overlay { display: none; }
   #tracker-overlay { display: none; }
 </style>
+
+<!-- ── Sélecteur vue client (superadmin uniquement) ── -->
+<script>
+  import { getUser, api, startImpersonation } from '../scripts/api';
+  const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
+
+  async function initDemoButton() {
+    const user = getUser();
+    if (!user || user.role !== 'superadmin') return;
+
+    const btn = document.getElementById('btn-demo-client') as HTMLButtonElement;
+    if (!btn) return;
+    btn.style.display = 'inline-block';
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.textContent = 'Chargement…';
+      try {
+        // Trouver le tenant Demo PSP
+        const { tenants } = await api('/api/v1/admin/tenants');
+        const demo = (tenants as any[]).find((t: any) => t.name === 'Demo PSP');
+        if (!demo) { alert('Tenant Demo PSP introuvable. Lancez setup_demo_psp.py d\'abord.'); return; }
+
+        // Obtenir le token d'impersonation
+        const result = await api('/api/v1/admin/impersonate', {
+          method: 'POST',
+          body: { tenant_id: demo.id },
+        });
+        startImpersonation(result.access_token, result.user);
+        window.location.href = BASE + 'app/tableau-de-bord';
+      } catch (e: any) {
+        alert('Erreur : ' + e.message);
+        btn.disabled = false;
+        btn.textContent = 'Voir comme client Demo PSP →';
+      }
+    });
+  }
+
+  initDemoButton();
+</script>

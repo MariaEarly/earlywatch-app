@@ -1,0 +1,38 @@
+---
+import ClientLayout from '../../layouts/ClientLayout.astro';
+---
+
+<ClientLayout title="Paramètres" activePage="parametres">
+
+  <div class="ew-header">
+    <h1 class="ew-h-title">Profil organisation</h1>
+  </div>
+
+  <div style="max-width:520px">
+    <div style="background:var(--bg-side);border:0.5px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:16px">
+      <div id="org-name" style="font-size:15px;font-weight:500;color:var(--ink);margin-bottom:4px">—</div>
+      <div id="org-type" style="font-size:12px;color:var(--taupe)">—</div>
+    </div>
+    <div style="font-size:13px;color:var(--taupe);line-height:1.6">
+      La configuration détaillée du profil organisation (responsable LCB-FT, outils, périmètre) est accessible via la page Paramètres complète.<br>
+      <a href="#" style="color:#5C6347;text-decoration:underline" id="link-settings">Accéder aux paramètres →</a>
+    </div>
+  </div>
+
+</ClientLayout>
+
+<script>
+  import { getUser } from '../../scripts/api';
+  const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
+
+  const user = getUser();
+  if (user) {
+    const nameEl = document.getElementById('org-name');
+    const typeEl = document.getElementById('org-type');
+    if (nameEl) nameEl.textContent = user.tenant_name || '—';
+    if (typeEl) typeEl.textContent = 'Tenant · ' + (user.role || '—');
+  }
+
+  const linkEl = document.getElementById('link-settings');
+  if (linkEl) linkEl.setAttribute('href', BASE + 'settings');
+</script>

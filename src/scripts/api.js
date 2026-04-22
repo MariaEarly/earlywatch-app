@@ -28,9 +28,47 @@ export function requireAuth() {
   }
   return true;
 }
+
+// ---- Client view auth ----
+export function requireClientAuth() {
+  if (!getToken()) {
+    window.location.href = BASE + 'login';
+    return false;
+  }
+  const user = getUser();
+  if (!user || !['admin', 'reader', 'superadmin'].includes(user.role)) {
+    window.location.href = BASE + 'login';
+    return false;
+  }
+  return true;
+}
+
+// ---- Impersonation (sélecteur admin → vue client) ----
+export function isImpersonating() {
+  return !!sessionStorage.getItem('ew_token_original');
+}
+
+export function startImpersonation(impersonToken, impersonUser) {
+  sessionStorage.setItem('ew_token_original', getToken() || '');
+  sessionStorage.setItem('ew_user_original', sessionStorage.getItem('ew_user') || '{}');
+  sessionStorage.setItem('ew_token', impersonToken);
+  sessionStorage.setItem('ew_user', JSON.stringify(impersonUser));
+}
+
+export function stopImpersonation() {
+  const originalToken = sessionStorage.getItem('ew_token_original');
+  const originalUser  = sessionStorage.getItem('ew_user_original');
+  if (originalToken) sessionStorage.setItem('ew_token', originalToken);
+  if (originalUser)  sessionStorage.setItem('ew_user', originalUser);
+  sessionStorage.removeItem('ew_token_original');
+  sessionStorage.removeItem('ew_user_original');
+}
+
 export function logout() {
   sessionStorage.removeItem('ew_token');
   sessionStorage.removeItem('ew_user');
+  sessionStorage.removeItem('ew_token_original');
+  sessionStorage.removeItem('ew_user_original');
   window.location.href = BASE + 'login';
 }
 

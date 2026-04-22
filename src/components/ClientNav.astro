@@ -1,0 +1,115 @@
+---
+interface Props {
+  activePage?: string;
+}
+const { activePage = '' } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+
+<aside class="ew-side">
+
+  <!-- Bannière impersonation — visible uniquement quand Maria simule le tenant -->
+  <div id="impersonate-banner" style="display:none;background:#5C6347;padding:8px 16px;margin-bottom:8px">
+    <button
+      id="btn-back-admin"
+      style="width:100%;background:none;border:none;color:#F4F0E6;font-size:11px;font-family:var(--font-mono);letter-spacing:0.08em;cursor:pointer;text-align:left;padding:0"
+    >
+      ← Retour admin Early Brief
+    </button>
+  </div>
+
+  <a href={`${base}app/tableau-de-bord`} class="ew-logo">Early <span>Watch</span></a>
+
+  <div class="ew-section">Ma Veille</div>
+  <a href={`${base}app/tableau-de-bord`} class:list={['ew-nav', { active: activePage === 'tableau-de-bord' }]}>
+    Tableau de bord
+    <span id="client-badge-unread" class="ew-count" style="display:none"></span>
+  </a>
+  <a href={`${base}app/veille`} class:list={['ew-nav', { active: activePage === 'veille' }]}>
+    Fil réglementaire
+  </a>
+  <a href={`${base}app/tracker`} class:list={['ew-nav', { active: activePage === 'tracker' }]}>
+    Tracker
+  </a>
+
+  <div class="ew-section">Conformité</div>
+  <a href={`${base}app/feuille-de-route`} class:list={['ew-nav', { active: activePage === 'feuille-de-route' }]}>
+    Feuille de route
+  </a>
+  <a href={`${base}app/procedures`} class:list={['ew-nav', { active: activePage === 'procedures' }]}>
+    Mes procédures
+  </a>
+  <a href={`${base}app/fiches-reflexes`} class:list={['ew-nav', { active: activePage === 'fiches-reflexes' }]}>
+    Fiches réflexes
+  </a>
+  <a href={`${base}app/pays-risque`} class:list={['ew-nav', { active: activePage === 'pays-risque' }]}>
+    Pays à risque
+  </a>
+
+  <div class="ew-section">Paramètres</div>
+  <a href={`${base}app/parametres`} class:list={['ew-nav', { active: activePage === 'parametres' }]}>
+    Profil organisation
+  </a>
+
+  <!-- Footer utilisateur -->
+  <div class="ew-user">
+    <div id="client-nav-avatar" class="ew-avatar">?</div>
+    <div style="min-width:0">
+      <div id="client-nav-name" style="font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        Mon compte
+      </div>
+      <div id="client-nav-tenant" style="font-size:11px;color:var(--taupe);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        &nbsp;
+      </div>
+    </div>
+  </div>
+
+</aside>
+
+<script>
+  import { getUser, isImpersonating, stopImpersonation } from '../scripts/api';
+
+  const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
+
+  function initClientNav() {
+    const user = getUser();
+    if (!user) return;
+
+    // Avatar initiales
+    const initials = (user.first_name?.[0] || '') + (user.last_name?.[0] || '');
+    const avatarEl = document.getElementById('client-nav-avatar');
+    if (avatarEl) avatarEl.textContent = initials || '?';
+
+    // Nom + tenant
+    const nameEl   = document.getElementById('client-nav-name');
+    const tenantEl = document.getElementById('client-nav-tenant');
+    if (nameEl) {
+      nameEl.textContent = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Mon compte';
+    }
+    if (tenantEl) {
+      tenantEl.textContent = user.tenant_name || '—';
+    }
+
+    // Bannière impersonation
+    const banner = document.getElementById('impersonate-banner');
+    if (banner && isImpersonating()) {
+      banner.style.display = 'block';
+    }
+  }
+
+  function initBackAdmin() {
+    const btn = document.getElementById('btn-back-admin');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      stopImpersonation();
+      window.location.href = BASE + 'dashboard';
+    });
+  }
+
+  initClientNav();
+  initBackAdmin();
+  document.addEventListener('astro:after-swap', () => {
+    initClientNav();
+    initBackAdmin();
+  });
+</script>

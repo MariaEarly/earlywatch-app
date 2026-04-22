@@ -1,0 +1,133 @@
+---
+import ClientLayout from '../../layouts/ClientLayout.astro';
+---
+
+<ClientLayout title="Tracker" activePage="tracker">
+
+  <div class="ew-header">
+    <h1 class="ew-h-title">Tracker réglementaire</h1>
+  </div>
+
+  <div id="tracker-list">
+    <div class="ew-loading"><div class="ew-spinner"></div></div>
+  </div>
+
+</ClientLayout>
+
+<style>
+  .tracker-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 16px;
+    align-items: start;
+    padding: 16px 0;
+    border-bottom: 0.5px solid var(--line);
+  }
+  .tracker-row:last-child { border-bottom: none; }
+  .tracker-title  { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+  .tracker-meta   { font-size: 11px; color: var(--taupe); }
+  .tracker-source {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--mute);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .badge-integration {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    letter-spacing: 0.06em;
+  }
+  .badge-not-processed { background: var(--bg-hover); color: var(--taupe); }
+  .badge-to-integrate  { background: rgba(92,99,71,0.12); color: #5C6347; }
+  .badge-integrated    { background: #5C6347; color: #F4F0E6; }
+</style>
+
+<script>
+  import { api, formatDate, toast } from '../../scripts/api';
+
+  // v1 : statut d'intégration stocké en mémoire (avant migration TenantTrackerState)
+  const integrationStatus: Record<string, string> = {};
+
+  async function loadTracker() {
+    const container = document.getElementById('tracker-list')!;
+    try {
+      const data = await api('/api/v1/tracker?limit=100');
+      const entries: any[] = Array.isArray(data) ? data : (data?.entries || data?.items || []);
+
+      if (!entries.length) {
+        container.innerHTML = '<div class="ew-empty"><div class="ew-empty-title">Tracker vide</div><div class="ew-empty-sub">Aucune entrée de veille réglementaire.</div></div>';
+        return;
+      }
+
+      entries.forEach((e: any) => {
+        if (!integrationStatus[e.id]) integrationStatus[e.id] = 'not_processed';
+      });
+
+      render(entries);
+
+    } catch (e: any) {
+      container.innerHTML = `<div class="ew-empty"><div class="ew-empty-title">Erreur</div><div class="ew-empty-sub">${e.message}</div></div>`;
+    }
+  }
+
+  function badgeHtml(id: string): string {
+    const s = integrationStatus[id] || 'not_processed';
+    const labels: Record<string, string> = {
+      not_processed: 'Non traité',
+      to_integrate:  'À intégrer',
+      integrated:    'Intégré',
+    };
+    const cls: Record<string, string> = {
+      not_processed: 'badge-not-processed',
+      to_integrate:  'badge-to-integrate',
+      integrated:    'badge-integrated',
+    };
+    return `<span class="badge-integration ${cls[s]}">${labels[s] || s}</span>`;
+  }
+
+  function statusSelect(id: string): string {
+    const s = integrationStatus[id] || 'not_processed';
+    return `<select class="ew-sort-btn" data-integration-id="${id}" style="font-size:11px;color:#888;border:none;background:none;cursor:pointer;padding:0">
+      <option value="not_processed"${s === 'not_processed' ? ' selected' : ''}>Non traité</option>
+      <option value="to_integrate"${s === 'to_integrate' ? ' selected' : ''}>À intégrer</option>
+      <option value="integrated"${s === 'integrated' ? ' selected' : ''}>Intégré</option>
+    </select>`;
+  }
+
+  function render(entries: any[]) {
+    const container = document.getElementById('tracker-list')!;
+    container.innerHTML = entries.map((e: any) => `
+      <div class="tracker-row">
+        <div>
+          <div class="tracker-title">${e.title || e.summary || 'Sans titre'}</div>
+          <div class="tracker-meta">${formatDate(e.date || e.created_at)}${e.source ? ' · ' + e.source : ''}</div>
+        </div>
+        <div class="tracker-source">${e.regulation || e.type || '—'}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${badgeHtml(e.id)}
+          ${statusSelect(e.id)}
+        </div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('[data-integration-id]').forEach((el: any) => {
+      el.addEventListener('change', () => {
+        integrationStatus[el.dataset.integrationId] = el.value;
+        // Re-render only the badge in this row
+        const row = el.closest('.tracker-row');
+        if (row) {
+          const badge = row.querySelector('.badge-integration');
+          if (badge) badge.outerHTML = badgeHtml(el.dataset.integrationId);
+        }
+        toast('Statut mis à jour');
+      });
+    });
+  }
+
+  loadTracker();
+</script>
