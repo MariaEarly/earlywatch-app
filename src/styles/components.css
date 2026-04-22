@@ -296,7 +296,7 @@
   border-bottom: 0.5px solid var(--line);
   display: grid;
   grid-template-columns: 44px 1fr auto;
-  column-gap: 18px;
+  column-gap: 24px;
   align-items: center;
 }
 .ew-item:last-child { border-bottom: none; }
@@ -442,10 +442,11 @@
 
 /* Bouton triage actif (digest sélectionné) */
 .ew-btn-active {
-  border: 1.5px solid var(--moutarde);
+  border: 1.5px solid #5C6347;
   background: var(--bg-triage-active);
-  font-weight: 500;
+  font-weight: normal;
 }
+.ew-btn-primary.ew-btn-active::after { display: none; }
 
 /* Bouton ghost — transparent, moins saillant */
 .ew-btn-ghost {
