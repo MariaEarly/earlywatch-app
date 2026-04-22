@@ -239,22 +239,47 @@
   background: var(--line-strong);
   flex-shrink: 0;
 }
-/* Bouton tri (Plus récent ▾) */
-.ew-sort {
+/* Tri inline — lien texte avec dropdown */
+.ew-sort-wrap {
   margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--taupe);
-  padding: 4px 10px;
+  position: relative;
+}
+.ew-sort-btn {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: #888;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+}
+.ew-sort-btn:hover { color: #1A1918; }
+.ew-sort-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  background: var(--bg);
   border: 0.5px solid var(--line-strong);
   border-radius: var(--radius);
-  background: transparent;
-  cursor: pointer;
-  transition: background 0.12s;
+  min-width: 160px;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
-.ew-sort:hover { background: var(--bg-side); }
+.ew-sort-opt {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ew-sort-opt:hover { background: var(--bg-hover); }
 
 /* ================================================================
    LISTE D'ARTICLES
@@ -295,6 +320,7 @@
   letter-spacing: 0.04em;
   flex-shrink: 0;
   user-select: none;
+  align-self: center;
 }
 /* Variante sm pour sigles ≥ 4 caractères (listés dans SM_SIGLES de sigles.js) */
 .ew-source-avatar.sm {

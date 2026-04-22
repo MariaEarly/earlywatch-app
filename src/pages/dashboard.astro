@@ -153,6 +153,12 @@ const base = import.meta.env.BASE_URL;
   let articles: any[] = [];
   let activeFilter = 'all';
   let sortMode = 'recent';
+  const SORT_LABELS: Record<string, string> = {
+    recent: 'Plus récent',
+    oldest: 'Plus ancien',
+    week: 'Cette semaine',
+    '7days': '7 derniers jours',
+  };
   let newsletterCounts: any = null;
   let trackerPendingCount = 0;
 
@@ -213,12 +219,15 @@ const base = import.meta.env.BASE_URL;
         ${tab('quotidien', 'Quotidien', cnt.quotidien, activeFilter)}
         ${tab('hebdo', 'Hebdo', cnt.hebdo, activeFilter)}
         ${tab('ignorer', 'Ignorés', cnt.ignorer, activeFilter)}
-        <select class="ew-sort" id="sort-select">
-          <option value="recent"${sortMode === 'recent' ? ' selected' : ''}>Plus récent ▾</option>
-          <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien ▾</option>
-          <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine ▾</option>
-          <option value="7days"${sortMode === '7days' ? ' selected' : ''}>7 derniers jours ▾</option>
-        </select>
+        <div class="ew-sort-wrap" id="sort-wrap">
+          <button class="ew-sort-btn" id="sort-btn">${SORT_LABELS[sortMode] || 'Plus récent'} ▾</button>
+          <div class="ew-sort-menu" id="sort-menu" style="display:none">
+            <button class="ew-sort-opt" data-sort-opt="recent">Plus récent</button>
+            <button class="ew-sort-opt" data-sort-opt="oldest">Plus ancien</button>
+            <button class="ew-sort-opt" data-sort-opt="week">Cette semaine</button>
+            <button class="ew-sort-opt" data-sort-opt="7days">7 derniers jours</button>
+          </div>
+        </div>
       </div>`;
 
     const container = document.getElementById('article-list')!;
@@ -236,9 +245,26 @@ const base = import.meta.env.BASE_URL;
         renderArticles();
       });
     });
-    const sortEl = document.getElementById('sort-select') as HTMLSelectElement;
-    if (sortEl) {
-      sortEl.addEventListener('change', () => { sortMode = sortEl.value; renderArticles(); });
+    const sortBtn = document.getElementById('sort-btn') as HTMLButtonElement;
+    const sortMenu = document.getElementById('sort-menu') as HTMLDivElement;
+    if (sortBtn && sortMenu) {
+      sortBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = sortMenu.style.display !== 'none';
+        sortMenu.style.display = isOpen ? 'none' : 'block';
+        if (!isOpen) {
+          document.addEventListener('click', () => { sortMenu.style.display = 'none'; }, { once: true });
+        }
+      });
+      sortMenu.querySelectorAll('[data-sort-opt]').forEach((el: any) => {
+        el.addEventListener('click', (e: Event) => {
+          e.stopPropagation();
+          sortMode = el.dataset.sortOpt;
+          sortMenu.style.display = 'none';
+          renderTabs();
+          renderArticles();
+        });
+      });
     }
   }
 
