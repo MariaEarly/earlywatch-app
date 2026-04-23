@@ -364,7 +364,7 @@ const base = import.meta.env.BASE_URL;
             }
           </h3>
           ${impactRow}
-          <div class="ew-actions"${impactRow ? ' style="margin-top:16px"' : ''}>
+          <div class="ew-actions" style="margin-top:16px">
             <button class="ew-btn ew-btn-primary${qClass}" data-triage="${a.id}" data-triage-status="quotidien">Quotidien${a.status === 'quotidien' ? ` <span class="triage-reset" data-reset="${a.id}">×</span>` : ''}</button>
             <button class="ew-btn${hClass}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo${a.status === 'hebdo' ? ` <span class="triage-reset" data-reset="${a.id}">×</span>` : ''}</button>
             <div class="ew-act-sep"></div>

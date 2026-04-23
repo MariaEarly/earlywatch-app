@@ -384,11 +384,11 @@
 
 /* Titre de l'article */
 .ew-title {
-  font-size: 17px;
+  font-size: 14px;
   line-height: 1.4;
   color: var(--ink);
   font-weight: 500;
-  margin: 0 0 14px;
+  margin: 0;
   max-width: 92%;
   letter-spacing: -0.005em;
 }

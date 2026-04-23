@@ -92,7 +92,7 @@ export function renderClientCard(a, formatDate) {
   const st = a.client_status || 'inbox';
 
   const impactRow = (a.has_impact && a.impacted_procedures?.length)
-    ? `<div style="display:flex;align-items:center;gap:6px;margin-top:14px;flex-wrap:wrap">
+    ? `<div style="display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap">
          <span style="font-size:11px;color:#888">Impacte →</span>
          ${a.impacted_procedures.map(p =>
            `<span style="font-size:11px;font-weight:500;color:#5C6347">${p}</span>`
@@ -116,14 +116,14 @@ export function renderClientCard(a, formatDate) {
           <span class="dot">·</span>
           <span class="date">${formatDate(a.published_at)}</span>
         </div>
-        <h3 class="ew-title" style="margin-bottom:0">
+        <h3 class="ew-title">
           ${a.original_url
             ? `<a href="${a.original_url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${a.title || 'Sans titre'}</a>`
             : (a.title || 'Sans titre')
           }
         </h3>
         ${impactRow}
-        <div class="ew-actions"${impactRow ? ' style="margin-top:14px"' : ''}>
+        <div class="ew-actions" style="margin-top:16px">
           ${toProcessBtn}
           ${readBtn}
           <div class="ew-act-sep"></div>
