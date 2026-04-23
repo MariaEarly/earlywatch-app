@@ -1,0 +1,36 @@
+---
+import ClientNav from '../components/ClientNav.astro';
+import '../styles/global.css';
+import '../styles/design-tokens.css';
+import '../styles/components.css';
+
+interface Props {
+  title: string;
+  activePage?: string;
+}
+
+const { title, activePage = '' } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title} — Early Watch</title>
+</head>
+<body>
+  <div class="ew-frame-2col">
+    <ClientNav activePage={activePage} />
+    <main class="ew-main" id="ew-main">
+      <slot />
+    </main>
+  </div>
+  <div class="ew-toast-container" id="toast-container"></div>
+
+  <script>
+    import { requireClientAuth } from '../scripts/api';
+    if (!requireClientAuth()) throw new Error('redirect');
+  </script>
+</body>
+</html>

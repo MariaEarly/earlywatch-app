@@ -1,0 +1,9 @@
+---
+// /app/ → redirect vers /app/tableau-de-bord
+const base = import.meta.env.BASE_URL;
+---
+<meta http-equiv="refresh" content={`0;url=${base}app/tableau-de-bord`} />
+<script>
+  const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
+  window.location.replace(BASE + 'app/tableau-de-bord');
+</script>

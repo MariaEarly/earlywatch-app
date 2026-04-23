@@ -1,0 +1,58 @@
+---
+import Nav from '../components/Nav.astro';
+import ClientNav from '../components/ClientNav.astro';
+import '../styles/global.css';
+import '../styles/design-tokens.css';
+import '../styles/components.css';
+
+interface Props {
+  title: string;
+  activePage?: string;
+}
+
+const { title, activePage = '' } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <script is:inline>
+    // Runs before first paint — prevents sidebar flash when impersonating
+    try {
+      if (sessionStorage.getItem('ew_token_original')) {
+        document.documentElement.classList.add('is-impersonating');
+      }
+    } catch(e) {}
+  </script>
+</head>
+<body>
+  <div class="ew-frame-2col">
+    <div id="smart-nav-admin">
+      <Nav activePage={activePage} />
+    </div>
+    <div id="smart-nav-client">
+      <ClientNav activePage={activePage} />
+    </div>
+    <main class="ew-main" id="ew-main">
+      <slot />
+    </main>
+  </div>
+  <div class="ew-toast-container" id="toast-container"></div>
+
+  <script>
+    import { requireAuth } from '../scripts/api';
+    if (!requireAuth()) throw new Error('redirect');
+  </script>
+</body>
+</html>
+
+<style is:global>
+  #smart-nav-admin { display: contents; }
+  #smart-nav-client { display: none; }
+
+  html.is-impersonating #smart-nav-admin { display: none; }
+  html.is-impersonating #smart-nav-client { display: contents; }
+</style>
