@@ -1,0 +1,13 @@
+import{g as y,a as s,f as m}from"./api.CcTKbNwm.js";import{r as v}from"./article-card.Bk_eNW22.js";async function x(){const n=y();if(!n)return;const e=document.getElementById("client-greeting");e&&(e.textContent=`Bonjour ${n.first_name||""}`.trim());const t=document.getElementById("client-today");t&&(t.textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}));const i=document.getElementById("client-last-visit");i&&(i.textContent="");try{const[a,d,g,l]=await Promise.all([s("/api/v1/app/articles/counts"),s("/api/v1/app/articles?status=inbox&page_size=5"),s("/api/v1/app/articles?status=to_process&page_size=5"),s("/api/v1/deadlines?include_passed=false")]),r=(c,o)=>{const u=document.querySelector(`#${c} .kpi-num`);u&&(u.textContent=String(o))};r("kpi-unread",a.inbox??0),r("kpi-toprocess",a.to_process??0),r("kpi-tracker",0);const p=Array.isArray(l)?l:l?.deadlines||[],f=p.filter(c=>{const o=Math.ceil((new Date(c.deadline_date).getTime()-Date.now())/864e5);return o>=0&&o<=30});r("kpi-deadlines",f.length),w(d.articles||[]),D(g.articles||[]),h(p.slice(0,3))}catch(a){console.error("Dashboard load error:",a)}}function w(n){const e=document.getElementById("preview-veille");if(e){if(!n.length){e.innerHTML='<div style="font-size:13px;color:var(--taupe);padding:16px 0">Aucun article récent.</div>';return}e.innerHTML=`<div class="ew-list">${n.map(t=>v(t,m,{compact:!0})).join("")}</div>`}}function D(n){const e=document.getElementById("preview-tasks");if(e){if(!n.length){e.innerHTML='<div style="font-size:13px;color:var(--taupe);padding:12px 0">Aucune tâche en cours.</div>';return}e.innerHTML=`<div class="ew-list">${n.map(t=>v(t,m,{compact:!0})).join("")}</div>`}}function h(n){const e=document.getElementById("preview-deadlines");if(e){if(!n.length){e.innerHTML='<div style="font-size:13px;color:var(--taupe);padding:12px 0">Aucune échéance.</div>';return}e.innerHTML=n.map(t=>{const i=Math.ceil((new Date(t.deadline_date).getTime()-Date.now())/864e5),a=i<=0?"Passée":i===1?"demain":`dans ${i} jours`,d=t.priority==="critical"?'<span class="deadline-badge-critical">CRITIQUE</span>':"";return`
+        <div class="deadline-row">
+          <div class="deadline-date">
+            ${new Date(t.deadline_date).toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric"})}
+            <div style="font-size:10px;color:var(--mute)">${a}</div>
+          </div>
+          <div style="flex:1">
+            <div class="deadline-label">${t.title||t.regulation||"—"}</div>
+            ${t.description?`<div style="font-size:12px;color:var(--taupe);margin-top:2px">${t.description}</div>`:""}
+          </div>
+          ${d}
+        </div>
+      `}).join("")}}x();
