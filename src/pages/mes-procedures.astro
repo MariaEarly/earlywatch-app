@@ -9,8 +9,7 @@ const base = import.meta.env.BASE_URL;
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
         <div>
           <div class="page-title">Mes procédures LCB-FT</div>
-          <div class="page-subtitle">Vos procédures réglementaires — statut, articles liés et téléchargement</div>
-          <div id="stats-summary" class="stats-summary" style="display:none"></div>
+          <p id="page-subtitle" class="page-subtitle"></p>
         </div>
         <button id="btn-export-pdf" class="btn-export-audit">
           Exporter piste d'audit PDF
@@ -25,7 +24,7 @@ const base = import.meta.env.BASE_URL;
         <button class="filter-btn" data-filter="status" data-value="valide">Validé</button>
         <button class="filter-btn" data-filter="status" data-value="obsolete">Obsolète</button>
 
-        <span class="filter-label" style="margin-left:8px">Domaine :</span>
+        <span class="filter-label" style="margin-left:20px">Domaine :</span>
         <button class="filter-btn active" data-filter="domain" data-value="">Tous</button>
         <button class="filter-btn" data-filter="domain" data-value="KYC">KYC</button>
         <button class="filter-btn" data-filter="domain" data-value="Sanctions">Sanctions</button>
@@ -43,14 +42,13 @@ const base = import.meta.env.BASE_URL;
 <style>
   .mp-layout { min-height: 100vh; display: flex; flex-direction: column; }
   .mp-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
-  .page-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
-  .page-subtitle { font-size: 14px; color: var(--mute); margin-bottom: 4px; }
-  .stats-summary { font-size: 13px; color: var(--mute); margin-bottom: 24px; }
+  .page-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+  .page-subtitle { font-size: 13px; color: var(--mute); margin: 0 0 24px; line-height: 1.6; max-width: 680px; }
 
-  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
   .filter-label { font-size: 12px; color: var(--mute); font-weight: 500; }
   .filter-btn {
-    padding: 5px 12px; border-radius: var(--radius); border: 0.5px solid #D5D2CB;
+    padding: 4px 10px; border-radius: var(--radius); border: 0.5px solid #D5D2CB;
     background: transparent; font-size: 12px; color: #666;
     cursor: pointer; font-family: inherit; transition: all 0.15s;
   }
@@ -61,7 +59,7 @@ const base = import.meta.env.BASE_URL;
     background: var(--ink); color: var(--bg); font-weight: 500;
     padding: 8px 18px; margin-top: 4px; border-radius: var(--radius);
     border: 1px solid var(--ink); font-size: 13px; cursor: pointer;
-    font-family: inherit; transition: background 0.15s;
+    font-family: inherit; transition: background 0.15s; white-space: nowrap;
   }
   .btn-export-audit:hover { background: var(--ink-soft); }
 
@@ -78,8 +76,8 @@ const base = import.meta.env.BASE_URL;
     padding: 20px; display: flex; flex-direction: column; gap: 12px;
     box-shadow: none; transition: border-color 0.15s;
   }
-  .mp-card:hover { border-color: var(--line-strong); }
   .mp-card.alert-border { border-color: var(--moutarde); }
+  .mp-card.is-obsolete .card-title { color: var(--taupe); }
 
   .card-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .card-top-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
@@ -93,7 +91,25 @@ const base = import.meta.env.BASE_URL;
     white-space: nowrap; letter-spacing: .02em;
   }
 
-  .mp-card.is-obsolete .card-title { color: var(--taupe); }
+  /* Status badge (top-right, replaces 4-button selector) */
+  .status-badge {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    letter-spacing: .06em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 3px; white-space: nowrap;
+    background: rgba(92,99,71,0.12); color: #5C6347; border: 0.5px solid #5C6347;
+  }
+  .status-badge-obsolete {
+    background: rgba(150,150,150,0.08); color: var(--taupe); border-color: #C5C2BB;
+  }
+
+  /* Articles count badge */
+  .articles-count-badge {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500;
+    padding: 3px 8px; border-radius: var(--radius); white-space: nowrap; cursor: pointer;
+    background: var(--bg-side); color: var(--taupe); border: 0.5px solid var(--line-strong);
+    transition: color 0.1s;
+  }
+  .articles-count-badge:hover { color: var(--ink); }
 
   .alert-ribbon {
     font-size: 11px; font-weight: 500; color: var(--moutarde); background: rgba(234,179,8,0.08);
@@ -101,61 +117,62 @@ const base = import.meta.env.BASE_URL;
     display: flex; align-items: center; gap: 6px;
   }
 
-  .freshness-badge {
-    display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500;
-    padding: 4px 10px; border-radius: var(--radius); white-space: nowrap; cursor: pointer;
-    border: 1px solid transparent;
-  }
-  .freshness-badge.hot { background: rgba(234,179,8,0.15); color: var(--moutarde); border-color: var(--moutarde); }
-  .freshness-badge.warm { background: rgba(234,179,8,0.08); color: var(--moutarde); border-color: var(--moutarde); }
-  .freshness-badge.ok { background: var(--bg-side); color: var(--ink-soft); border-color: var(--line-strong); }
-  .freshness-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-
   .card-title { font-size: 15px; font-weight: 500; color: var(--ink); line-height: 1.4; }
   .card-subtitle { font-size: 13px; color: var(--mute); margin-top: 2px; }
-
-  .status-selector {
-    display: flex; gap: 6px; flex-wrap: wrap; padding-top: 10px;
-    border-top: 0.5px solid var(--line-strong);
-  }
-  .status-opt {
-    padding: 4px 11px; border-radius: var(--radius); border: 0.5px solid #D5D2CB;
-    background: transparent; font-size: 12px; cursor: pointer;
-    font-family: inherit; transition: all 0.15s; color: #666;
-  }
-  .status-opt:hover { background: var(--bg-side); color: var(--ink); }
-  .status-opt.active        { background: rgba(92,99,71,0.12); color: #5C6347; border-color: #5C6347; }
-  .status-opt.active-valide  { background: rgba(92,99,71,0.12); color: #5C6347; border-color: #5C6347; }
-  .status-opt.active-obsolete { background: rgba(92,99,71,0.12); color: #5C6347; border-color: #5C6347; }
 
   .linked-articles { border-top: 0.5px solid var(--line-strong); padding-top: 12px; display: none; }
   .linked-articles.open { display: block; }
   .linked-articles-title { font-size: 12px; font-weight: 500; color: var(--ink-soft); margin-bottom: 10px; }
-  .article-item { padding: 8px 10px; border-radius: var(--radius); background: var(--bg); margin-bottom: 6px; display: flex; flex-direction: column; gap: 3px; }
+  .article-item { padding: 8px 10px; border-radius: var(--radius); background: var(--bg-side); margin-bottom: 6px; display: flex; flex-direction: column; gap: 3px; }
   .article-item-title { font-size: 13px; color: var(--ink); font-weight: 500; text-decoration: none; line-height: 1.3; }
-  .article-item-title:hover { color: var(--ink); }
+  .article-item-title:hover { text-decoration: underline; }
   .article-item-meta { font-size: 11px; color: var(--mute); display: flex; gap: 8px; flex-wrap: wrap; }
-  .article-theme-tag { font-size: 10px; padding: 1px 5px; border-radius: var(--radius); background: var(--bg-side); color: var(--taupe); border: 0.5px solid var(--line-strong); }
+  .article-theme-tag { font-size: 10px; padding: 1px 5px; border-radius: var(--radius); background: var(--bg); color: var(--taupe); border: 0.5px solid var(--line-strong); }
   .no-articles { font-size: 13px; color: var(--mute); font-style: italic; }
 
-  .card-actions { display: flex; gap: 10px; align-items: center; margin-top: auto; }
+  /* Card footer: download + sub-actions stacked */
+  .card-footer { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
+
+  .card-actions { display: flex; gap: 10px; }
   .btn-download {
     flex: 1; padding: 8px 16px; background: #5C6347; color: var(--bg);
     border: 1px solid #5C6347; border-radius: var(--radius); font-size: 13px; font-weight: 500;
     cursor: pointer; text-decoration: none; text-align: center; font-family: inherit;
     display: flex; align-items: center; justify-content: center; gap: 6px;
-    transition: background 0.15s; box-shadow: none;
+    transition: background 0.15s;
   }
   .btn-download:hover { background: #4a5038; border-color: #4a5038; }
-  .btn-toggle {
-    padding: 8px 14px; background: var(--bg); color: var(--ink);
-    border: 0.5px solid var(--line-strong); border-radius: var(--radius); font-size: 13px;
-    cursor: pointer; font-family: inherit; transition: all 0.15s;
-    display: flex; align-items: center; gap: 5px; white-space: nowrap;
-    box-shadow: none;
+
+  .card-sub-actions { display: flex; justify-content: space-between; align-items: center; }
+
+  /* Articles link (replaces Articles button) */
+  .articles-link {
+    font-size: 12px; color: #5C6347; text-decoration: underline;
+    text-underline-offset: 2px; cursor: pointer; white-space: nowrap;
+    background: none; border: none; font-family: inherit; padding: 0;
   }
-  .btn-toggle:hover { background: var(--bg-side); }
-  .btn-toggle.active { background: rgba(92,99,71,0.12); color: #5C6347; border-color: #5C6347; }
+  .articles-link:hover { color: #4a5038; }
+  .articles-link.open { color: var(--taupe); text-decoration: none; }
+
+  /* Status change dropdown */
+  .status-change-wrap { position: relative; }
+  .status-change-link {
+    font-size: 12px; color: var(--taupe); background: none; border: none;
+    cursor: pointer; font-family: inherit; padding: 0; white-space: nowrap;
+  }
+  .status-change-link:hover { color: var(--ink); }
+  .status-change-menu {
+    position: absolute; bottom: calc(100% + 6px); right: 0;
+    background: var(--bg); border: 0.5px solid var(--line-strong);
+    border-radius: var(--radius); padding: 4px; min-width: 130px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1); z-index: 20;
+  }
+  .status-menu-opt {
+    display: block; width: 100%; text-align: left; padding: 7px 10px;
+    font-size: 12px; color: var(--ink); background: none; border: none;
+    cursor: pointer; font-family: inherit; border-radius: 3px; transition: background 0.1s;
+  }
+  .status-menu-opt:hover { background: var(--bg-side); }
 </style>
 
 <script>
@@ -196,7 +213,7 @@ const base = import.meta.env.BASE_URL;
 
       allProcedures = data.procedures || [];
       document.getElementById('filters-bar')!.style.display = 'flex';
-      updateStats();
+      updateSubtitle();
       renderGrid();
     } catch (e: any) {
       document.getElementById('grid')!.innerHTML =
@@ -204,14 +221,11 @@ const base = import.meta.env.BASE_URL;
     }
   }
 
-  function updateStats(): void {
-    const valide: number = allProcedures.filter((p: any) => p.status === 'valide').length;
-    const alert: number = allProcedures.filter((p: any) => p.status_alert).length;
+  function updateSubtitle(): void {
     const n = allProcedures.length;
-    const el = document.getElementById('stats-summary');
-    if (el) {
-      el.textContent = `${n} procédure${n > 1 ? 's' : ''} attribuée${n > 1 ? 's' : ''} · ${valide} validée${valide > 1 ? 's' : ''} · ${alert} alerte${alert > 1 ? 's' : ''} active${alert > 1 ? 's' : ''}`;
-      el.style.display = 'block';
+    const sub = document.getElementById('page-subtitle');
+    if (sub) {
+      sub.innerHTML = `<strong>${n}</strong> procédures personnalisées à votre périmètre (PSP, services de paiement). Téléchargez les documents Word, suivez leur cycle de validation, et surveillez les textes réglementaires qui les impactent.`;
     }
   }
 
@@ -232,42 +246,41 @@ const base = import.meta.env.BASE_URL;
     }
     grid.innerHTML = procs.map(renderCard).join('');
     openArticles.forEach((ref: string) => {
-      const panel: HTMLElement | null = document.getElementById(`articles-${ref}`);
+      const panel = document.getElementById(`articles-${ref}`);
       if (panel) panel.classList.add('open');
     });
     bindCardEvents();
   }
 
   function renderCard(p: any): string {
+    const statusLabels: any = { a_valider: 'À valider', en_cours: 'En cours', valide: 'Validé', obsolete: 'Obsolète' };
     const isOpen: boolean = openArticles.has(p.reference);
-    const hasArticles: boolean = p.freshness !== 'ok';
 
-    let freshBdg: string = '';
-    if (p.freshness === 'hot') {
-      freshBdg = `<span class="freshness-badge hot" data-toggle-articles="${p.reference}">
-        <span class="freshness-dot"></span>${p.articles_count_7d} article${p.articles_count_7d > 1 ? 's' : ''} récent${p.articles_count_7d > 1 ? 's' : ''}
-      </span>`;
-    } else if (p.freshness === 'warm') {
-      freshBdg = `<span class="freshness-badge warm" data-toggle-articles="${p.reference}">
-        <span class="freshness-dot"></span>${p.articles_count_30d} ce mois
-      </span>`;
-    }
+    const articlesCount: number = p.freshness === 'hot'
+      ? (p.articles_count_7d || p.articles_count_30d || 0)
+      : p.freshness === 'warm'
+        ? (p.articles_count_30d || 0)
+        : 0;
+    const hasArticles: boolean = articlesCount > 0;
+
+    const statusBadgeCls = `status-badge${p.status === 'obsolete' ? ' status-badge-obsolete' : ''}`;
+    const statusBadge = `<span class="${statusBadgeCls}" id="status-badge-${p.reference}">${statusLabels[p.status] || '—'}</span>`;
+
+    const articlesBadge = hasArticles
+      ? `<span class="articles-count-badge" data-toggle-articles="${p.reference}" title="Articles de veille récents qui mentionnent cette procédure.">${articlesCount} articles liés</span>`
+      : '';
 
     const alertRibbon: string = p.status_alert
       ? `<div class="alert-ribbon">Nouveaux articles détectés — révision recommandée</div>`
       : '';
 
-    const statuses: string[] = ['a_valider', 'en_cours', 'valide', 'obsolete'];
-    const statusLabels: any = { a_valider: 'À valider', en_cours: 'En cours', valide: 'Validé', obsolete: 'Obsolète' };
-    const statusSelector: string = statuses.map((s: string) => {
-      let cls: string = 'status-opt';
-      if (s === p.status) {
-        if (s === 'valide') cls += ' active-valide';
-        else if (s === 'obsolete') cls += ' active-obsolete';
-        else cls += ' active';
-      }
-      return `<button class="${cls}" data-set-status="${p.reference}" data-new-status="${s}">${statusLabels[s]}</button>`;
-    }).join('');
+    const statusMenuOpts: string = ['a_valider', 'en_cours', 'valide', 'obsolete'].map((s: string) =>
+      `<button class="status-menu-opt" data-set-status="${p.reference}" data-new-status="${s}">${statusLabels[s]}</button>`
+    ).join('');
+
+    const articlesLink = hasArticles
+      ? `<a class="articles-link${isOpen ? ' open' : ''}" data-toggle-articles="${p.reference}" id="btn-${p.reference}" href="javascript:void(0)">Articles liés (${articlesCount}) →</a>`
+      : `<span></span>`;
 
     return `
     <div class="mp-card ${p.status_alert ? 'alert-border' : ''} ${p.status === 'obsolete' ? 'is-obsolete' : ''}" id="card-${p.reference}">
@@ -276,23 +289,35 @@ const base = import.meta.env.BASE_URL;
           <span class="card-ref">${p.reference}</span>
           <span class="card-meta-inline">${p.domain} · v${p.version}</span>
         </div>
-        ${freshBdg}
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          ${articlesBadge}
+          ${statusBadge}
+        </div>
       </div>
       ${alertRibbon}
       <div>
         <div class="card-title">${sanitizeTitle(p.title)}</div>
-        <div class="card-subtitle">${p.subtitle || ''}</div>
+        ${p.subtitle ? `<div class="card-subtitle">${p.subtitle}</div>` : ''}
       </div>
-      <div class="status-selector">${statusSelector}</div>
       <div class="linked-articles ${isOpen ? 'open' : ''}" id="articles-${p.reference}">
         <div class="linked-articles-title">Articles liés (30 jours)</div>
         <div id="articles-content-${p.reference}">
           <div class="loading" style="padding:12px 0;font-size:13px">Chargement...</div>
         </div>
       </div>
-      <div class="card-actions">
-        <a href="${p.file_url}" download class="btn-download">Télécharger .docx</a>
-        ${hasArticles ? `<button class="btn-toggle ${isOpen ? 'active' : ''}" id="btn-${p.reference}" data-toggle-articles="${p.reference}">Articles</button>` : ''}
+      <div class="card-footer">
+        <div class="card-actions">
+          <a href="${p.file_url}" download class="btn-download">Télécharger .docx</a>
+        </div>
+        <div class="card-sub-actions">
+          ${articlesLink}
+          <div class="status-change-wrap">
+            <button class="status-change-link" data-open-status="${p.reference}">Changer le statut ▾</button>
+            <div class="status-change-menu" id="status-menu-${p.reference}" style="display:none">
+              ${statusMenuOpts}
+            </div>
+          </div>
+        </div>
       </div>
     </div>`;
   }
@@ -300,12 +325,33 @@ const base = import.meta.env.BASE_URL;
   function bindCardEvents(): void {
     document.querySelectorAll('[data-set-status]').forEach((btn: any) => {
       btn.addEventListener('click', () => {
+        const menu = document.getElementById(`status-menu-${btn.dataset.setStatus}`);
+        if (menu) menu.style.display = 'none';
         setStatus(btn.dataset.setStatus, btn.dataset.newStatus);
       });
     });
+
     document.querySelectorAll('[data-toggle-articles]').forEach((btn: any) => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e: Event) => {
+        e.preventDefault();
         toggleArticles(btn.dataset.toggleArticles);
+      });
+    });
+
+    document.querySelectorAll('[data-open-status]').forEach((btn: any) => {
+      btn.addEventListener('click', (e: Event) => {
+        e.stopPropagation();
+        const ref: string = btn.dataset.openStatus;
+        const menu = document.getElementById(`status-menu-${ref}`);
+        if (!menu) return;
+        const isVisible = menu.style.display !== 'none';
+        document.querySelectorAll('.status-change-menu').forEach((m: any) => { m.style.display = 'none'; });
+        if (!isVisible) {
+          menu.style.display = 'block';
+          setTimeout(() => {
+            document.addEventListener('click', () => { menu.style.display = 'none'; }, { once: true });
+          }, 0);
+        }
       });
     });
   }
@@ -322,7 +368,6 @@ const base = import.meta.env.BASE_URL;
         proc.status_label = ({ a_valider: 'À valider', en_cours: 'En cours', valide: 'Validé', obsolete: 'Obsolète' } as any)[newStatus] || newStatus;
         if (newStatus === 'valide') proc.status_alert = null;
       }
-      updateStats();
       renderGrid();
       toast('Statut mis à jour', 'success');
     } catch (e: any) {
@@ -332,18 +377,18 @@ const base = import.meta.env.BASE_URL;
 
   async function toggleArticles(ref: string): Promise<void> {
     const panel: HTMLElement | null = document.getElementById(`articles-${ref}`);
-    const btn: HTMLElement | null = document.getElementById(`btn-${ref}`);
+    const link: HTMLElement | null = document.getElementById(`btn-${ref}`);
 
     if (openArticles.has(ref)) {
       openArticles.delete(ref);
       panel?.classList.remove('open');
-      btn?.classList.remove('active');
+      link?.classList.remove('open');
       return;
     }
 
     openArticles.add(ref);
     panel?.classList.add('open');
-    btn?.classList.add('active');
+    link?.classList.add('open');
 
     const contentEl: any = document.getElementById(`articles-content-${ref}`);
     if (contentEl.dataset.loaded) return;
