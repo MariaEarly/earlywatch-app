@@ -4,24 +4,46 @@ import AuthLayout from '../layouts/AuthLayout.astro';
 
 <AuthLayout title="Early Watch — Connexion">
   <form id="login-form">
-    <label for="email">Email</label>
-    <input type="email" id="email" autocomplete="email" required>
-    <label for="password">Mot de passe</label>
-    <div class="pwd-wrapper">
-      <input type="password" id="password" autocomplete="current-password" required>
-      <button type="button" class="pwd-toggle" id="pwd-eye" aria-label="Afficher le mot de passe">
-        <svg id="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        <svg id="eye-closed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-      </button>
+    <div class="ew-field">
+      <label class="ew-label" for="email">Email</label>
+      <input class="ew-input" type="email" id="email" autocomplete="email" required>
     </div>
-    <div class="auth-error" id="err">Email ou mot de passe incorrect.</div>
-    <button type="submit" class="auth-btn" id="btn">Se connecter</button>
+    <div class="ew-field">
+      <label class="ew-label" for="password">Mot de passe</label>
+      <div style="position:relative">
+        <input class="ew-input" type="password" id="password" autocomplete="current-password" required style="padding-right:44px">
+        <button type="button" class="pwd-toggle" id="pwd-eye" aria-label="Afficher le mot de passe">
+          <svg id="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg id="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="ew-login-error" id="err">Email ou mot de passe incorrect.</div>
+    <button type="submit" class="ew-login-btn" id="btn">Se connecter</button>
   </form>
-  <div class="auth-footer">
-    <a href={`${import.meta.env.BASE_URL}forgot-password`}>Mot de passe oublié ?</a>
+
+  <div style="margin-top:22px;text-align:center;font-size:12px;color:var(--mute)">
+    <a href={`${import.meta.env.BASE_URL}forgot-password`} style="color:var(--taupe);text-decoration:none">Mot de passe oublié ?</a>
     &nbsp;&middot;&nbsp;
-    <a href="mailto:maria@early.consulting">Besoin d'accès ?</a>
+    <a href="mailto:maria@early.consulting" style="color:var(--taupe);text-decoration:none">Besoin d'accès ?</a>
   </div>
+
+  <style>
+    .pwd-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      color: var(--mute);
+      line-height: 1;
+    }
+    .pwd-toggle:hover { color: var(--ink); }
+    .ew-input.error { border-color: var(--color-error); }
+  </style>
 
   <script>
     import { API, getToken } from '../scripts/api';
@@ -58,9 +80,9 @@ import AuthLayout from '../layouts/AuthLayout.astro';
 
       email.classList.remove('error');
       pwd.classList.remove('error');
-      err.classList.remove('show');
+      err.classList.remove('visible');
       btn.disabled = true;
-      btn.innerHTML = '<span class="auth-spinner"></span>Connexion\u2026';
+      btn.textContent = 'Connexion\u2026';
 
       try {
         const r = await fetch(`${API}/api/v1/auth/login`, {
@@ -83,7 +105,7 @@ import AuthLayout from '../layouts/AuthLayout.astro';
         email.classList.add('error');
         pwd.classList.add('error');
         err.textContent = ex.message || 'Erreur de connexion';
-        err.classList.add('show');
+        err.classList.add('visible');
         btn.disabled = false;
         btn.textContent = 'Se connecter';
       }

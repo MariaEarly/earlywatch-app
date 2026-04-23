@@ -242,7 +242,7 @@ const base = import.meta.env.BASE_URL;
 
     document.getElementById('article-list')!.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 4px">
-        <span style="font-size:12px;color:var(--text-secondary)">${filtered.length} article${filtered.length > 1 ? 's' : ''}</span>
+        <span style="font-size:12px;color:var(--taupe)">${filtered.length} article${filtered.length > 1 ? 's' : ''}</span>
       </div>
     ` + filtered.map((a: any) => `
       <div class="article-card" data-article-nav="${a.id}">
@@ -251,7 +251,7 @@ const base = import.meta.env.BASE_URL;
           <span>&middot;</span>
           <span>${a.published_at ? formatDate(a.published_at) : 'Date inconnue'}</span>
           <span style="margin-left:auto;display:flex;align-items:center;gap:6px">
-            ${a.score != null ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-secondary)">${a.score}</span>` : ''}
+            ${a.score != null ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--taupe)">${a.score}</span>` : ''}
             ${lifecycleBadge(a.lifecycle_status)}
           </span>
         </div>
@@ -359,7 +359,7 @@ const base = import.meta.env.BASE_URL;
     display: inline-flex;
     align-items: center;
     margin-left: 6px;
-    color: var(--ew-ink3);
+    color: var(--taupe);
     opacity: 0;
     transition: opacity 0.15s;
     vertical-align: middle;
@@ -368,14 +368,13 @@ const base = import.meta.env.BASE_URL;
   .article-card:hover .title-ext-icon {
     opacity: 1;
   }
-  .action-sep { color: var(--ew-ink3); margin: 0 4px; font-size: 12px; }
+  .action-sep { color: var(--taupe); margin: 0 4px; font-size: 12px; }
   .badge-tracker-added {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 10px;
     padding: 2px 8px;
     background: rgba(26,26,22,0.07);
-    color: var(--ew-ink);
-    border: 0.5px solid var(--ew-border2);
-    border-radius: var(--ew-radius-sm);
+    color: var(--ink);
+    border: 0.5px solid var(--line-strong);
   }
 </style>

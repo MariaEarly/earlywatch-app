@@ -47,16 +47,16 @@ const base = import.meta.env.BASE_URL;
         <div class="article-meta" style="margin-bottom:8px">
           <span>${a.source_name || 'Source inconnue'}</span>
           <span>&middot;</span>
-          <span>${a.published_at ? formatDate(a.published_at) : '<span style="color:var(--ew-ink3);font-style:italic">Date inconnue</span>'}</span>
+          <span>${a.published_at ? formatDate(a.published_at) : '<span style="color:var(--taupe);font-style:italic">Date inconnue</span>'}</span>
           ${statusBadge(a.status)}
         </div>
         <h1 style="font-size:18px; margin-bottom:8px">${escHtml(a.title || 'Sans titre')}</h1>
-        <p style="margin-top:12px; font-size:13px; color:var(--color-text-secondary); line-height:1.7">
+        <p style="margin-top:12px; font-size:13px; color:var(--taupe); line-height:1.7">
           ${escHtml(a.summary || a.content || 'Aucun contenu disponible.')}
         </p>
         ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="margin-top:12px">Voir la source &rarr;</a>` : ''}
 
-        <div style="margin-top:16px; padding-top:16px; border-top:0.5px solid var(--color-border-tertiary)">
+        <div style="margin-top:16px; padding-top:16px; border-top:0.5px solid var(--line)">
           <div class="flex gap-8">
             <button class="btn btn-sm btn-success" data-triage-action="reviewed">Valider</button>
             <button class="btn btn-sm btn-secondary" data-triage-action="pending_review">En revue</button>
@@ -90,8 +90,8 @@ const base = import.meta.env.BASE_URL;
       <div class="action-panel" style="margin-bottom:16px">
         <div class="flex items-center justify-between" style="margin-bottom:12px">
           <div>
-            <h3 style="color:var(--color-accent-text)">Action d\u00e9tect\u00e9e</h3>
-            <p class="text-sm" style="color:var(--color-accent); margin-top:2px">
+            <h3 style="color:var(--moutarde)">Action d\u00e9tect\u00e9e</h3>
+            <p class="text-sm" style="color:var(--moutarde); margin-top:2px">
               ${typeLabels[a.detected_action_type] || a.detected_action_type}
             </p>
           </div>
@@ -136,7 +136,7 @@ const base = import.meta.env.BASE_URL;
     if (output.obligations) {
       sections += expandableSection('Obligations extraites', `
         ${output.obligations.map((o: any) => `
-          <div style="padding:8px 0; border-bottom:0.5px solid var(--color-border-tertiary)">
+          <div style="padding:8px 0; border-bottom:0.5px solid var(--line)">
             <strong>Article ${escHtml(o.article_number || '?')}</strong>
             ${o.lien_legifrance ? `<a href="${o.lien_legifrance}" target="_blank" class="text-sm text-accent" style="margin-left:8px">Legifrance</a>` : ''}
             <ul style="margin-top:4px">${(o.relevant_paragraphs || []).map((p: string) => `<li class="text-sm">${escHtml(p)}</li>`).join('')}</ul>
@@ -152,7 +152,7 @@ const base = import.meta.env.BASE_URL;
             <span class="badge ${d.change_type === 'added' ? 'badge-success' : d.change_type === 'removed' ? 'badge-danger' : 'badge-warning'}">
               ${d.change_type}
             </span>
-            <pre style="font-size:12px; margin-top:4px; white-space:pre-wrap; background:var(--color-background-tertiary); padding:8px; border-radius:4px">${escHtml(d.content || '')}</pre>
+            <pre style="font-size:12px; margin-top:4px; white-space:pre-wrap; background:var(--bg-side); padding:8px; border-radius:4px">${escHtml(d.content || '')}</pre>
           </div>
         `).join('')}
       `);

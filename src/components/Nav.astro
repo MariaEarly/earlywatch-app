@@ -6,41 +6,62 @@ const { activePage = '' } = Astro.props;
 const base = import.meta.env.BASE_URL;
 ---
 
-<aside class="sidebar-nav">
-  <a href={`${base}dashboard`} class="sidebar-logo">Early <span>Watch</span></a>
+<aside class="ew-side">
+  <a href={`${base}dashboard`} class="ew-logo">Early <span>Watch</span></a>
 
-  <div class="sidebar-section">Veille</div>
-  <a href={`${base}dashboard`} class:list={['nav-item', { active: activePage === 'dashboard' }]}>Inbox</a>
-  <a href={`${base}archives`} class:list={['nav-item', { active: activePage === 'archives' }]}>Archives</a>
-  <a href={`${base}enforcement`} class:list={['nav-item', { active: activePage === 'enforcement' }]}>Sanctions</a>
-
-  <div class="sidebar-section">Conformite</div>
-  <a href={`${base}conformite`} class:list={['nav-item', { active: activePage === 'conformite' }]}>Tableau de bord</a>
-  <a href={`${base}controle`} class:list={['nav-item', { active: activePage === 'controle' }]}>
-    Controle
-    <span id="nav-badge-ctrl" class="nav-badge-urgent" style="display:none"></span>
+  <div class="ew-section">Veille</div>
+  <a href={`${base}dashboard`} class:list={['ew-nav', { active: activePage === 'dashboard' }]}>
+    <span>Inbox</span>
+    <span id="nav-count-inbox" class="ew-count" style="display:none"></span>
   </a>
-  <a href={`${base}gap-analysis`} class:list={['nav-item', { active: activePage === 'gap-analysis' }]}>Gap Analysis</a>
+  <a href={`${base}archives`} class:list={['ew-nav', { active: activePage === 'archives' }]}>
+    <span>Archives</span>
+  </a>
+  <a href={`${base}enforcement`} class:list={['ew-nav', { active: activePage === 'enforcement' }]}>
+    <span>Sanctions</span>
+  </a>
 
-  <div class="sidebar-section">Procedures</div>
-  <a href={`${base}procedure`} class:list={['nav-item', { active: activePage === 'procedure' }]}>Generateur</a>
-  <a href={`${base}mes-procedures`} class:list={['nav-item', { active: activePage === 'mes-procedures' }]}>Mes Procedures</a>
-  <a href={`${base}bibliotheque`} class:list={['nav-item', { active: activePage === 'bibliotheque' }]}>Bibliotheque</a>
+  <div class="ew-section">Conformité</div>
+  <a href={`${base}conformite`} class:list={['ew-nav', { active: activePage === 'conformite' }]}>
+    <span>Tableau de bord</span>
+  </a>
+  <a href={`${base}controle`} class:list={['ew-nav', { active: activePage === 'controle' }]}>
+    <span>Contrôle</span>
+    <span id="nav-badge-ctrl" class="ew-count" style="display:none"></span>
+  </a>
+  <a href={`${base}gap-analysis`} class:list={['ew-nav', { active: activePage === 'gap-analysis' }]}>
+    <span>Analyse d'écart</span>
+  </a>
 
-  <div class="sidebar-section">Referenciel</div>
-  <a href={`${base}situations`} class:list={['nav-item', { active: activePage === 'situations' }]}>Fiches Reflexes</a>
-  <a href={`${base}roadmap`} class:list={['nav-item', { active: activePage === 'roadmap' }]}>Roadmap</a>
-  <a href={`${base}pays-risque`} class:list={['nav-item', { active: activePage === 'pays-risque' }]}>Pays a risque</a>
+  <div class="ew-section">Procédures</div>
+  <a href={`${base}procedure`} class:list={['ew-nav', { active: activePage === 'procedure' }]}>
+    <span>Générateur</span>
+  </a>
+  <a href={`${base}mes-procedures`} class:list={['ew-nav', { active: activePage === 'mes-procedures' }]}>
+    <span>Mes procédures</span>
+  </a>
+  <a href={`${base}bibliotheque`} class:list={['ew-nav', { active: activePage === 'bibliotheque' }]}>
+    <span>Bibliothèque</span>
+  </a>
 
-  <div class="sidebar-footer">
-    <a href={`${base}settings`} class:list={['nav-item', { active: activePage === 'settings' }]} style="padding-left:0">
-      Parametres
-    </a>
-    <a id="nav-avatar" href={`${base}account`} class="nav-item" style="padding-left:0;margin-top:4px">
-      <span class="avatar" style="width:24px;height:24px;font-size:9px;margin-right:8px">?</span>
-      <span id="nav-user-name" style="font-size:12px;color:var(--ew-text-muted)">Mon compte</span>
-    </a>
+  <div class="ew-section">Référentiel</div>
+  <a href={`${base}situations`} class:list={['ew-nav', { active: activePage === 'situations' }]}>
+    <span>Fiches réflexes</span>
+  </a>
+  <a href={`${base}roadmap`} class:list={['ew-nav', { active: activePage === 'roadmap' }]}>
+    <span>Feuille de route</span>
+  </a>
+  <a href={`${base}pays-risque`} class:list={['ew-nav', { active: activePage === 'pays-risque' }]}>
+    <span>Pays à risque</span>
+  </a>
+
+  <div class="ew-user">
+    <div id="nav-avatar" class="ew-avatar">?</div>
+    <span id="nav-user-name" style="font-size:12px;color:var(--taupe)">Mon compte</span>
   </div>
+  <a href={`${base}settings`} class:list={['ew-settings-link', { active: activePage === 'settings' }]}>
+    Paramètres
+  </a>
 </aside>
 
 <script>
@@ -50,19 +71,38 @@ const base = import.meta.env.BASE_URL;
     const user = getUser();
     if (!user) return;
 
+    // Avatar initiales
     const initials = (user.first_name?.[0] || '') + (user.last_name?.[0] || '');
-    const avatarSpan = document.querySelector('#nav-avatar .avatar');
-    if (avatarSpan) avatarSpan.textContent = initials || '?';
+    const avatarEl = document.getElementById('nav-avatar');
+    if (avatarEl) avatarEl.textContent = initials || '?';
 
-    const nameSpan = document.getElementById('nav-user-name');
-    if (nameSpan) {
+    // Nom affiché
+    const nameEl = document.getElementById('nav-user-name');
+    if (nameEl) {
       const name = [user.first_name, user.last_name].filter(Boolean).join(' ');
-      nameSpan.textContent = name || 'Mon compte';
+      nameEl.textContent = name || 'Mon compte';
     }
 
+    // Badge rappels (Contrôle)
     loadReminderBadge();
   }
 
+  function initNavBadges() {
+    // Badge inbox — articles status=nouveau
+    const inboxCount = document.getElementById('nav-count-inbox');
+    if (inboxCount) {
+      const stored = sessionStorage.getItem('ew_inbox_count');
+      if (stored && stored !== '0') {
+        inboxCount.textContent = stored;
+        inboxCount.style.display = '';
+      }
+    }
+  }
+
   initNav();
-  document.addEventListener('astro:after-swap', initNav);
+  initNavBadges();
+  document.addEventListener('astro:after-swap', () => {
+    initNav();
+    initNavBadges();
+  });
 </script>

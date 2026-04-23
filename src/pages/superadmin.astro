@@ -77,8 +77,8 @@ const base = import.meta.env.BASE_URL;
 <style>
   .sa-layout { min-height: 100vh; display: flex; flex-direction: column; background: #EDEAE3; }
   .sa-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
-  .sa-title { font-size: 15px; font-weight: 500; color: var(--noir); }
-  .sa-subtitle { font-size: 13px; color: var(--color-text-tertiary); margin-bottom: 24px; }
+  .sa-title { font-size: 15px; font-weight: 500; color: var(--ink); }
+  .sa-subtitle { font-size: 13px; color: var(--mute); margin-bottom: 24px; }
   .sa-badge { display: inline-block; padding: 1px 6px; border-radius: 0; font-size: 10px; font-weight: 400; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.06em; background: transparent; color: #5C6347; border: 1px solid #5C6347; margin-left: 8px; vertical-align: middle; }
 
   .stats-bar {
@@ -86,33 +86,33 @@ const base = import.meta.env.BASE_URL;
     margin-bottom: 24px;
   }
   .stat-card {
-    padding: 1.25rem 1.5rem; background: var(--beige); border: 1px solid var(--border-light);
+    padding: 1.25rem 1.5rem; background: var(--bg); border: 1px solid var(--line);
     border-radius: 0; box-shadow: none;
   }
-  .stat-card-value { font-family: 'IBM Plex Mono', monospace; font-size: 32px; font-weight: 300; line-height: 1; color: var(--noir); }
-  .stat-card-label { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+  .stat-card-value { font-family: 'IBM Plex Mono', monospace; font-size: 32px; font-weight: 300; line-height: 1; color: var(--ink); }
+  .stat-card-label { font-size: 11px; color: var(--mute); margin-top: 2px; }
 
   .create-section {
-    margin-top: 24px; background: var(--beige); border: 1px solid var(--border-light);
+    margin-top: 24px; background: var(--bg); border: 1px solid var(--line);
     border-radius: 0; box-shadow: none; overflow: hidden;
   }
   .create-header {
-    padding: 14px 18px; font-size: 14px; font-weight: 500; color: var(--noir);
-    border-bottom: 1px solid var(--color-border); cursor: pointer;
+    padding: 14px 18px; font-size: 14px; font-weight: 500; color: var(--ink);
+    border-bottom: 1px solid var(--line); cursor: pointer;
     display: flex; justify-content: space-between; align-items: center;
   }
   .create-body { padding: 18px; display: none; }
   :global(.create-body.open) { display: block; }
   .form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
   .form-group { flex: 1; min-width: 180px; }
-  .form-group label { display: block; font-size: 11px; font-weight: 500; color: var(--noir); margin-bottom: 3px; text-transform: uppercase; }
+  .form-group label { display: block; font-size: 11px; font-weight: 500; color: var(--ink); margin-bottom: 3px; text-transform: uppercase; }
   .form-group input, .form-group select {
-    width: 100%; padding: 7px 10px; border: 1px solid var(--border-medium);
+    width: 100%; padding: 7px 10px; border: 1px solid var(--line-strong);
     border-radius: 4px; font-size: 13px; font-family: inherit; background: #EDEAE3;
   }
   .btn-create {
-    padding: 10px 24px; background: var(--kaki); color: var(--beige);
-    border: 1px solid var(--text-primary); border-radius: 4px; font-size: 13px;
+    padding: 10px 24px; background: var(--moutarde); color: var(--bg);
+    border: 0.5px solid var(--ink); font-size: 13px;
     font-weight: 500; cursor: pointer; font-family: inherit;
     box-shadow: none;
   }
@@ -121,25 +121,25 @@ const base = import.meta.env.BASE_URL;
     border: 1px solid #5C6347; border-radius: 0; font-size: 13px; display: none;
   }
   :global(.result-box.visible) { display: block; }
-  .loading { padding: 40px; text-align: center; color: var(--color-text-tertiary); font-size: 14px; }
+  .loading { padding: 40px; text-align: center; color: var(--mute); font-size: 14px; }
 </style>
 
 <style is:global>
   .tenant-table {
     width: 100%; border-collapse: collapse;
-    border: 1px solid var(--border-light); border-radius: 0; overflow: hidden;
-    box-shadow: none; background: var(--beige);
+    border: 1px solid var(--line); border-radius: 0; overflow: hidden;
+    box-shadow: none; background: var(--bg);
   }
   .tenant-table thead th {
-    background: var(--beige); color: var(--text-secondary); font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    background: var(--bg); color: var(--taupe); font-family: 'IBM Plex Mono', monospace; font-size: 10px;
     font-weight: 400; text-align: left; padding: 8px 14px;
     text-transform: uppercase; letter-spacing: 0.08em;
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--line);
   }
   .tenant-table tbody tr { transition: background 0.1s; }
   .tenant-table tbody tr:nth-child(even) { background: rgba(246,241,233,0.5); }
   .tenant-table tbody tr:hover { background: #F6F1E9; }
-  .tenant-table td { padding: 10px 12px; font-size: 13px; color: var(--noir); border-top: 1px solid var(--color-border); }
+  .tenant-table td { padding: 10px 12px; font-size: 13px; color: var(--ink); border-top: 1px solid var(--line); }
 
   .plan-badge { padding: 1px 6px; border-radius: 0; font-weight: 400; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; }
   .plan-demo { background: transparent; color: #5C6347; border: 1px solid #5C6347; }
@@ -147,16 +147,16 @@ const base = import.meta.env.BASE_URL;
   .plan-pro { background: transparent; color: #5C6347; border: 1px solid #5C6347; }
 
   .module-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 3px; }
-  .dot-on { background: var(--kaki); }
-  .dot-off { background: var(--color-border); }
+  .dot-on { background: var(--moutarde); }
+  .dot-off { background: var(--line); }
 
   .sa-btn-sm {
-    padding: 4px 10px; border-radius: 4px; border: 1px solid var(--noir);
+    padding: 4px 10px; border-radius: 4px; border: 1px solid var(--ink);
     font-size: 11px; cursor: pointer; font-family: inherit;
-    background: var(--beige); color: var(--noir); transition: all 0.15s;
+    background: var(--bg); color: var(--ink); transition: all 0.15s;
   }
-  .sa-btn-sm:hover { background: var(--beige2); }
-  .sa-btn-sm-kaki { background: var(--kaki); color: var(--beige); border-color: var(--kaki); }
+  .sa-btn-sm:hover { background: var(--bg-side); }
+  .sa-btn-sm-kaki { background: var(--moutarde); color: var(--bg); border-color: var(--moutarde); }
 </style>
 
 <script>
@@ -219,12 +219,12 @@ const base = import.meta.env.BASE_URL;
       html += `<tr>
         <td>
           <div style="font-weight:500">${t.name}</div>
-          <div style="font-size:11px;color:var(--color-text-tertiary)">${created}</div>
+          <div style="font-size:11px;color:var(--mute)">${created}</div>
         </td>
         <td>${t.entity_type || '\u2014'}</td>
         <td><span class="plan-badge ${planCls}">${t.plan}</span></td>
         <td>${t.users_count}</td>
-        <td>${t.procedures_validated}/${t.procedures_count} <span style="font-size:11px;color:var(--color-text-tertiary)">(${procPct}%)</span></td>
+        <td>${t.procedures_validated}/${t.procedures_count} <span style="font-size:11px;color:var(--mute)">(${procPct}%)</span></td>
         <td>${t.reminders_pending > 0 ? '<b style="color:#5C6347">' + t.reminders_pending + '</b>' : '0'}</td>
         <td>${moduleDots}</td>
         <td>

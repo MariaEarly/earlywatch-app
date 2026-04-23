@@ -3,225 +3,201 @@ import AppLayout from '../layouts/AppLayout.astro';
 const base = import.meta.env.BASE_URL;
 ---
 
-<AppLayout title="Early Watch — Dashboard" activePage="dashboard">
-  <div class="flex">
-    <main class="content-main" id="article-list" style="padding:0">
-      <div class="loading-overlay"><div class="spinner"></div> Chargement des articles...</div>
-    </main>
-    <aside class="sidebar sidebar-right" id="sidebar-right"></aside>
+<AppLayout title="Early Watch — Inbox" activePage="dashboard" layout="3col">
+
+  <!-- ── Col 2 : header + tabs + liste articles ── -->
+  <div class="ew-header">
+    <h1 class="ew-h-title">Inbox</h1>
+    <div class="ew-h-date" id="ew-today"></div>
+  </div>
+  <div id="article-list">
+    <div class="ew-loading"><div class="ew-spinner"></div></div>
   </div>
 
-  <!-- Aperçu Hebdo overlay -->
-  <div id="apercu-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,25,24,0.4);z-index:200;display:none;align-items:center;justify-content:center">
-    <div id="apercu-panel" style="background:var(--ew-bg);border:0.5px solid var(--ew-border2);border-radius:8px;width:680px;max-width:92vw;max-height:85vh;display:flex;flex-direction:column">
-      <div style="padding:18px 22px 14px;border-bottom:0.5px solid var(--ew-border2);display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div id="apercu-title" style="font-size:14px;font-weight:500;color:var(--ew-ink)">Aperçu Hebdo</div>
-          <div style="font-size:12px;color:var(--ew-ink2);margin-top:2px">Glissez pour réordonner les articles</div>
-        </div>
-        <button id="apercu-close" style="background:none;border:none;font-size:18px;color:var(--ew-ink2);cursor:pointer;padding:4px">&times;</button>
-      </div>
-      <div id="apercu-list" style="flex:1;overflow-y:auto;padding:14px 22px"></div>
-      <div style="padding:14px 22px;border-top:0.5px solid var(--ew-border2);display:flex;gap:10px;justify-content:flex-end">
-        <button id="apercu-cancel" class="btn btn-sm btn-secondary" style="border-radius:4px">Annuler</button>
-        <button id="apercu-export" class="btn btn-sm btn-primary" style="border-radius:4px">Exporter dans cet ordre</button>
-      </div>
-    </div>
-  </div>
+  <!-- ── Col 3 : panel droit (rempli dynamiquement par renderRightPanel) ── -->
+  <aside slot="right" class="ew-right" id="sidebar-right">
+    <div class="ew-loading"><div class="ew-spinner"></div></div>
+  </aside>
 
-  <!-- Pub drawer (slide-in panel from right — Autres Publications) -->
-  <div id="pub-overlay" style="display:none">
-    <div id="pub-drawer">
-      <header style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:0.5px solid var(--ew-border2)">
-        <h3 style="margin:0;font-size:16px">Ajouter aux Autres Publications</h3>
-        <button id="pub-close" class="btn btn-ghost" style="font-size:18px">&times;</button>
-      </header>
-      <div id="pub-form" style="padding:16px;display:flex;flex-direction:column;gap:12px">
-        <label class="tracker-field">
-          <span>Date</span>
-          <input type="date" id="pub-date" class="tracker-input" />
-        </label>
-        <label class="tracker-field">
-          <span>Source</span>
-          <input type="text" id="pub-source" class="tracker-input" />
-        </label>
-        <label class="tracker-field">
-          <span>Type</span>
-          <select id="pub-type" class="tracker-input">
-            <option value="Rapport">Rapport</option>
-            <option value="Intelligence">Intelligence</option>
-          </select>
-        </label>
-        <label class="tracker-field">
-          <span>Titre</span>
-          <input type="text" id="pub-titre" class="tracker-input" />
-        </label>
-        <label class="tracker-field">
-          <span>Synth&egrave;se</span>
-          <textarea id="pub-synthese" class="tracker-input" rows="3" placeholder="Description op&eacute;rationnelle courte"></textarea>
-        </label>
-        <label class="tracker-field">
-          <span>Lien</span>
-          <input type="url" id="pub-lien" class="tracker-input" />
-        </label>
-      </div>
-      <footer style="padding:16px;border-top:0.5px solid var(--ew-border2);display:flex;gap:8px;justify-content:flex-end">
-        <button id="pub-cancel" class="btn btn-secondary">Annuler</button>
-        <button id="pub-confirm" class="btn btn-primary">Confirmer</button>
-      </footer>
-    </div>
-  </div>
-
-  <!-- Modale confirmation clôture -->
-  <div id="cloturer-overlay" style="display:none">
-    <div id="cloturer-modal">
-      <div style="padding:20px 24px 16px">
-        <div style="font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:15px;color:var(--ew-ink);margin-bottom:10px">&#9888; Articles non ajoutés au tracker</div>
-        <p id="cloturer-msg" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:var(--ew-ink);margin:0 0 6px;line-height:1.5"></p>
-        <p style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:var(--ew-ink2);margin:0;line-height:1.4">Vous pourrez les retrouver dans les Archives.</p>
-      </div>
-      <div style="padding:14px 24px;border-top:0.5px solid var(--ew-border2);display:flex;gap:10px;justify-content:flex-end">
-        <button id="cloturer-cancel" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:7px 18px;border:0.5px solid var(--ew-border2);background:transparent;color:var(--ew-ink);border-radius:8px;cursor:pointer">Annuler</button>
-        <button id="cloturer-confirm" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:7px 18px;border:none;background:var(--ew-ink);color:var(--ew-bg);border-radius:8px;cursor:pointer">Clôturer quand même</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tracker drawer (slide-in panel from right) -->
-  <div id="tracker-overlay" style="display:none">
-    <div id="tracker-drawer">
-      <header style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:0.5px solid var(--ew-border2)">
-        <h3 style="margin:0;font-size:16px">Ajouter au Tracker</h3>
-        <button id="tracker-close" class="btn btn-ghost" style="font-size:18px">&times;</button>
-      </header>
-      <div id="tracker-form" style="padding:16px;display:flex;flex-direction:column;gap:12px">
-        <label class="tracker-field">
-          <span>Source</span>
-          <input type="text" id="tracker-source" class="tracker-input" />
-        </label>
-        <label class="tracker-field">
-          <span>Date</span>
-          <input type="date" id="tracker-date" class="tracker-input" />
-        </label>
-        <label class="tracker-field">
-          <span>Sujet</span>
-          <input type="text" id="tracker-sujet" class="tracker-input" />
-        </label>
-        <label class="tracker-field">
-          <span>Synthèse</span>
-          <textarea id="tracker-synthese" class="tracker-input" rows="4"></textarea>
-        </label>
-        <label class="tracker-field">
-          <span>Type</span>
-          <select id="tracker-type" class="tracker-input">
-            <option value="TEXTE">TEXTE</option>
-            <option value="DECISION">DECISION</option>
-            <option value="CONSULTATION">CONSULTATION</option>
-          </select>
-        </label>
-        <label class="tracker-field">
-          <span>Lien</span>
-          <input type="url" id="tracker-lien" class="tracker-input" />
-        </label>
-        <label class="tracker-field">
-          <span>Statut</span>
-          <input type="text" id="tracker-statut" class="tracker-input" value="Publié" />
-        </label>
-      </div>
-      <footer style="padding:16px;border-top:0.5px solid var(--ew-border2);display:flex;gap:8px;justify-content:flex-end">
-        <button id="tracker-cancel" class="btn btn-secondary">Annuler</button>
-        <button id="tracker-confirm" class="btn btn-primary">Confirmer</button>
-      </footer>
-    </div>
-  </div>
 </AppLayout>
 
+<!-- ── Aperçu Newsletter overlay ── -->
+<div id="apercu-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,24,20,0.45);z-index:200;align-items:center;justify-content:center">
+  <div id="apercu-panel" style="background:var(--bg);border:0.5px solid var(--line-strong);border-radius:8px;width:680px;max-width:92vw;max-height:85vh;display:flex;flex-direction:column">
+    <div style="padding:18px 22px 14px;border-bottom:0.5px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div id="apercu-title" style="font-size:14px;font-weight:500;color:var(--ink)">Aperçu Hebdo</div>
+        <div style="font-size:12px;color:var(--taupe);margin-top:2px">Glissez pour réordonner les articles</div>
+      </div>
+      <button id="apercu-close" style="background:none;border:none;font-size:20px;color:var(--taupe);cursor:pointer;padding:4px;line-height:1">&times;</button>
+    </div>
+    <div id="apercu-list" style="flex:1;overflow-y:auto;padding:14px 22px"></div>
+    <div style="padding:14px 22px;border-top:0.5px solid var(--line);display:flex;gap:10px;justify-content:flex-end">
+      <button id="apercu-cancel" class="ew-btn">Annuler</button>
+      <button id="apercu-export" class="ew-btn ew-btn-primary">Exporter dans cet ordre</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Pub drawer ── -->
+<div id="pub-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,24,20,0.35);z-index:1000;justify-content:flex-end">
+  <div id="pub-drawer" style="width:420px;max-width:90vw;height:100vh;background:var(--bg);display:flex;flex-direction:column;animation:ew-slide-in 0.2s ease-out">
+    <header style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:0.5px solid var(--line)">
+      <div style="font-size:14px;font-weight:500;color:var(--ink)">Ajouter aux Autres Publications</div>
+      <button id="pub-close" style="background:none;border:none;font-size:20px;color:var(--taupe);cursor:pointer;padding:4px;line-height:1">&times;</button>
+    </header>
+    <div id="pub-form" style="flex:1;overflow-y:auto;padding:16px 22px;display:flex;flex-direction:column;gap:14px">
+      <div class="ew-field"><label class="ew-label">Date</label><input type="date" id="pub-date" class="ew-input" /></div>
+      <div class="ew-field"><label class="ew-label">Source</label><input type="text" id="pub-source" class="ew-input" /></div>
+      <div class="ew-field"><label class="ew-label">Type</label>
+        <select id="pub-type" class="ew-input">
+          <option value="Rapport">Rapport</option>
+          <option value="Intelligence">Intelligence</option>
+        </select>
+      </div>
+      <div class="ew-field"><label class="ew-label">Titre</label><input type="text" id="pub-titre" class="ew-input" /></div>
+      <div class="ew-field"><label class="ew-label">Synthèse</label><textarea id="pub-synthese" class="ew-input ew-textarea" rows="3" placeholder="Description opérationnelle courte"></textarea></div>
+      <div class="ew-field"><label class="ew-label">Lien</label><input type="url" id="pub-lien" class="ew-input" /></div>
+    </div>
+    <footer style="padding:14px 22px;border-top:0.5px solid var(--line);display:flex;gap:8px;justify-content:flex-end">
+      <button id="pub-cancel" class="ew-btn">Annuler</button>
+      <button id="pub-confirm" class="ew-btn ew-btn-primary">Confirmer</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ── Modale confirmation clôture ── -->
+<div id="cloturer-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,24,20,0.45);z-index:1100;align-items:center;justify-content:center">
+  <div id="cloturer-modal" style="background:var(--bg);border:0.5px solid var(--line-strong);border-radius:8px;width:440px;max-width:90vw">
+    <div style="padding:20px 24px 16px">
+      <div style="font-weight:500;font-size:15px;color:var(--ink);margin-bottom:10px">Articles non ajoutés au tracker</div>
+      <p id="cloturer-msg" style="font-size:13px;color:var(--ink-soft);margin:0 0 6px;line-height:1.5"></p>
+      <p style="font-size:12px;color:var(--taupe);margin:0;line-height:1.4">Vous pourrez les retrouver dans les Archives.</p>
+    </div>
+    <div style="padding:14px 24px;border-top:0.5px solid var(--line);display:flex;gap:10px;justify-content:flex-end">
+      <button id="cloturer-cancel" class="ew-btn">Annuler</button>
+      <button id="cloturer-confirm" style="font-size:13px;padding:7px 18px;border:none;background:var(--ink);color:var(--bg);border-radius:6px;cursor:pointer;font-family:var(--font)">Clôturer quand même</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Tracker drawer ── -->
+<div id="tracker-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,24,20,0.35);z-index:1000;justify-content:flex-end">
+  <div id="tracker-drawer" style="width:420px;max-width:90vw;height:100vh;background:var(--bg);display:flex;flex-direction:column;animation:ew-slide-in 0.2s ease-out">
+    <header style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:0.5px solid var(--line)">
+      <div style="font-size:14px;font-weight:500;color:var(--ink)">Ajouter au Tracker</div>
+      <button id="tracker-close" style="background:none;border:none;font-size:20px;color:var(--taupe);cursor:pointer;padding:4px;line-height:1">&times;</button>
+    </header>
+    <div id="tracker-form" style="flex:1;overflow-y:auto;padding:16px 22px;display:flex;flex-direction:column;gap:14px">
+      <div class="ew-field"><label class="ew-label">Source</label><input type="text" id="tracker-source" class="ew-input" /></div>
+      <div class="ew-field"><label class="ew-label">Date</label><input type="date" id="tracker-date" class="ew-input" /></div>
+      <div class="ew-field"><label class="ew-label">Sujet</label><input type="text" id="tracker-sujet" class="ew-input" /></div>
+      <div class="ew-field"><label class="ew-label">Synthèse</label><textarea id="tracker-synthese" class="ew-input ew-textarea" rows="4"></textarea></div>
+      <div class="ew-field"><label class="ew-label">Type</label>
+        <select id="tracker-type" class="ew-input">
+          <option value="TEXTE">TEXTE</option>
+          <option value="DECISION">DECISION</option>
+          <option value="CONSULTATION">CONSULTATION</option>
+        </select>
+      </div>
+      <div class="ew-field"><label class="ew-label">Lien</label><input type="url" id="tracker-lien" class="ew-input" /></div>
+      <div class="ew-field"><label class="ew-label">Statut</label><input type="text" id="tracker-statut" class="ew-input" value="Publié" /></div>
+    </div>
+    <footer style="padding:14px 22px;border-top:0.5px solid var(--line);display:flex;gap:8px;justify-content:flex-end">
+      <button id="tracker-cancel" class="ew-btn">Annuler</button>
+      <button id="tracker-confirm" class="ew-btn ew-btn-primary">Confirmer</button>
+    </footer>
+  </div>
+</div>
+
 <script>
-  import { api, formatDate, statusBadge, actionBadge, toast, getUser } from '../scripts/api';
+  import { api, formatDate, toast, getUser } from '../scripts/api';
+  import { sourceAvatarHTML } from '../scripts/sigles.js';
 
   const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
 
-  /** Date effective pour le tri : toujours published_at quand disponible, sinon created_at.
-   *  Les articles backfillés (published_at ancien) se trient naturellement en bas
-   *  de la vue "Plus récent" grâce à leur vraie date de publication.
-   */
+  // ── Date helpers ─────────────────────────────────────────────────────────
+
   function sortDate(a: any): number {
-    if (a.published_at) return new Date(a.published_at).getTime();
-    return new Date(a.created_at).getTime();
+    return a.published_at
+      ? new Date(a.published_at).getTime()
+      : new Date(a.created_at).getTime();
   }
 
-  /** Date d'affichage intelligente pour une card article.
-   *  - Si published_at est précise (pas le 1er du mois à minuit) → formatDate(published_at)
-   *  - Si published_at est imprécise (1er du mois) → affiche "janv. 2025" (mois + année)
-   *  - Si published_at est NULL → created_at
-   *  - Si aucune date → badge "Date inconnue"
-   */
   function displayDate(a: any): string {
     const pub = a.published_at;
     if (pub) {
       const d = new Date(pub);
-      const isImprecise = d.getUTCDate() === 1 && d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0;
-      if (!isImprecise) return formatDate(pub);
-      // Date imprécise → afficher mois + année uniquement
-      const monthNames = ['janv.', 'fév.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
-      return `${monthNames[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+      const imprecise = d.getUTCDate() === 1 && d.getUTCHours() === 0 && d.getUTCMinutes() === 0;
+      if (!imprecise) return formatDate(pub);
+      const months = ['janv.','fév.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+      return `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
     }
     if (a.created_at) return formatDate(a.created_at);
-    return `<span class="date-unknown-badge" style="background:var(--ew-accent);color:#fff;font-size:10px;padding:1px 6px;border-radius:3px;font-style:normal">Date inconnue</span><a href="#" class="fix-date-link" data-fix-date="${a.id}" onclick="event.stopPropagation();event.preventDefault()" style="font-size:10px;color:var(--ew-ink3);margin-left:4px;text-decoration:underline">Corriger</a>`;
+    return `<span class="ew-badge ew-badge-error" style="font-size:9px">Date inconnue</span>`
+      + `<a href="#" class="fix-date-link" data-fix-date="${a.id}" onclick="event.stopPropagation();event.preventDefault()" style="font-size:10px;color:var(--mute);margin-left:4px;text-decoration:underline">Corriger</a>`;
   }
 
-  // Mapping proc\u00e9dures : code → nom complet
+  function todayFR(): string {
+    return new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  // ── Labels ───────────────────────────────────────────────────────────────
+
   const PROC_LABELS: Record<string, string> = {
-    'EB-POL-001': 'Politique g\u00e9n\u00e9rale LCB-FT',
+    'EB-POL-001': 'Politique générale LCB-FT',
     'EB-RISK-001': 'Classification des risques',
-    'EB-KYC-001': 'Entr\u00e9e en relation \u2014 Personne physique',
-    'EB-KYC-002': 'Entr\u00e9e en relation \u2014 Personne morale',
+    'EB-KYC-001': 'Entrée en relation — Personne physique',
+    'EB-KYC-002': 'Entrée en relation — Personne morale',
     'EB-SCR-001': 'Criblage sanctions et PPE',
     'EB-MON-001': 'Monitoring transactionnel',
-    'EB-TRC-001': 'D\u00e9claration de soup\u00e7on Tracfin',
-    'EB-CASP-001': 'LCB-FT sp\u00e9cifique CASP/PSAN',
-    'EB-CTRL-001': 'Contr\u00f4le permanent LCB-FT',
+    'EB-TRC-001': 'Déclaration de soupçon Tracfin',
+    'EB-CASP-001': 'LCB-FT spécifique CASP/PSAN',
+    'EB-CTRL-001': 'Contrôle permanent LCB-FT',
     'EB-AGT-001': 'Agents et distributeurs',
-    'EB-UBO-001': 'B\u00e9n\u00e9ficiaires effectifs',
-    'EB-EDD-001': 'Vigilance renforc\u00e9e',
-    'EB-PEP-001': 'Personnes politiquement expos\u00e9es',
-    'EB-SCR-002': 'Criblage sanctions avanc\u00e9',
+    'EB-UBO-001': 'Bénéficiaires effectifs',
+    'EB-EDD-001': 'Vigilance renforcée',
+    'EB-PEP-001': 'Personnes politiquement exposées',
+    'EB-SCR-002': 'Criblage sanctions avancé',
     'EB-GEL-001': 'Gel des avoirs',
     'EB-ARCH-001': 'Archivage',
     'EB-TRV-001': 'Transfert de fonds',
     'EB-CBK-001': 'Correspondance bancaire',
     'EB-FORM-001': 'Formation LCB-FT',
   };
-
-  function procLabel(code: string): string {
-    return PROC_LABELS[code] || code;
-  }
+  function procLabel(code: string): string { return PROC_LABELS[code] || code; }
 
   const IMPACT_LABELS: Record<string, string> = {
-    sanction: 'Sanction',
-    nouvelle_regle: 'Nouvelle r\u00e8gle',
-    mise_a_jour: 'Mise \u00e0 jour',
-    appel_vigilance: 'Appel vigilance',
+    sanction: 'Sanction', nouvelle_regle: 'Nouvelle règle',
+    mise_a_jour: 'Mise à jour', appel_vigilance: 'Appel vigilance',
   };
-  function impactLabel(type: string): string {
-    return IMPACT_LABELS[type] || type;
-  }
+  function impactLabel(t: string): string { return IMPACT_LABELS[t] || t; }
 
-  const LINK_ICON = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><path d="M10 6.5V10a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1h3.5M7.5 1H11v3.5M11 1L5 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const LINK_ICON = '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;margin-left:4px;vertical-align:middle;color:var(--mute)"><path d="M10 6.5V10a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1h3.5M7.5 1H11v3.5M11 1L5 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  // ── State ────────────────────────────────────────────────────────────────
 
   let articles: any[] = [];
-  let activeFilter: string = 'all';
-  let scoreFilter: string = 'all';
-  let sourceFilter: string = 'all';
-  let sortMode: string = 'recent';
+  let activeFilter = 'all';
+  let scoreFilter = 'all';
+  let sortMode = 'recent';
   let newsletterCounts: any = null;
-  let trackerPendingCount: number = 0;
+  let trackerPendingCount = 0;
 
   function newsletterEnabled(): boolean {
     return !!getUser()?.tenant_newsletter_enabled;
   }
 
+  // ── Init ─────────────────────────────────────────────────────────────────
+
   async function init(): Promise<void> {
+    // Date dans le header
+    const todayEl = document.getElementById('ew-today');
+    if (todayEl) {
+      todayEl.textContent = todayFR();
+      todayEl.style.textTransform = 'capitalize';
+    }
+
     try {
       const [articlesData, countsData, trackerData]: any[] = await Promise.all([
         api('/api/v1/articles?page_size=200&score_min=11'),
@@ -231,193 +207,148 @@ const base = import.meta.env.BASE_URL;
       articles = Array.isArray(articlesData) ? articlesData : (articlesData?.items || []);
       newsletterCounts = countsData;
       trackerPendingCount = trackerData?.pending || 0;
+
+      // Expose inbox count pour le badge nav
+      const inbox = articles.filter((a: any) =>
+        a.lifecycle_status === 'inbox' || a.lifecycle_status === 'triaged'
+      );
+      sessionStorage.setItem('ew_inbox_count', String(inbox.length));
+
     } catch (e: any) {
       document.getElementById('article-list')!.innerHTML =
-        `<div class="empty-state"><div class="icon">!</div><p>${e.message}</p></div>`;
+        `<div class="ew-empty"><div class="ew-empty-title">Erreur de chargement</div><div class="ew-empty-sub">${e.message}</div></div>`;
       return;
     }
 
-    renderToolbar();
+    renderTabs();
     renderArticles();
     renderRightPanel();
   }
 
-  function renderToolbar(): void {
+  // ── Tabs ─────────────────────────────────────────────────────────────────
+
+  function renderTabs(): void {
     const visible: any[] = articles.filter((a: any) =>
       a.lifecycle_status === 'inbox' || a.lifecycle_status === 'triaged'
     );
-    const counts: any = { all: visible.length, nouveau: 0, quotidien: 0, hebdo: 0, ignorer: 0 };
-    visible.forEach((a: any) => { if (counts[a.status] !== undefined) counts[a.status]++; });
+    const cnt: any = { all: visible.length, nouveau: 0, quotidien: 0, hebdo: 0, ignorer: 0 };
+    visible.forEach((a: any) => { if (cnt[a.status] !== undefined) cnt[a.status]++; });
 
-    const scoreCounts: any = { all: visible.length, high: 0, med: 0 };
+    const sco: any = { all: visible.length, high: 0, med: 0 };
     visible.forEach((a: any) => {
-      if ((a.score || 0) >= 45) scoreCounts.high++;
-      else if ((a.score || 0) >= 25) scoreCounts.med++;
+      if ((a.score || 0) >= 45) sco.high++;
+      else if ((a.score || 0) >= 25) sco.med++;
     });
 
-    const toolbarHtml = `
-      <div class="toolbar-filters">
-        ${pill('all', 'Tous', counts.all, activeFilter)}
-        ${pill('nouveau', 'Nouveaux', counts.nouveau, activeFilter)}
-        ${pill('quotidien', 'Quotidien', counts.quotidien, activeFilter)}
-        ${pill('hebdo', 'Hebdo', counts.hebdo, activeFilter)}
-        ${pill('ignorer', 'Ignor\u00e9s', counts.ignorer, activeFilter)}
-        <div class="toolbar-sep"></div>
-        ${scorePill('all', 'Tous scores', scoreCounts.all, scoreFilter)}
-        ${scorePill('high', 'Prioritaire', scoreCounts.high, scoreFilter)}
-        ${scorePill('med', 'Moyen', scoreCounts.med, scoreFilter)}
-        <span class="toolbar-sort">
-          <select id="sort-select" style="font-family:var(--ew-font);font-size:12px;padding:3px 8px;border:0.5px solid var(--ew-border2);border-radius:var(--ew-radius-pill);background:var(--ew-bg);color:var(--ew-ink2);cursor:pointer;outline:none">
-            <option value="recent"${sortMode === 'recent' ? ' selected' : ''}>Plus r\u00e9cent</option>
-            <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien</option>
-            <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine</option>
-            <option value="7days"${sortMode === '7days' ? ' selected' : ''}>7 derniers jours</option>
-          </select>
-        </span>
+    const tabHtml = `
+      <div class="ew-tabs" id="ew-tabs">
+        ${tab('all', 'Tous', cnt.all, activeFilter)}
+        ${tab('nouveau', 'Nouveaux', cnt.nouveau, activeFilter)}
+        ${tab('quotidien', 'Quotidien', cnt.quotidien, activeFilter)}
+        ${tab('hebdo', 'Hebdo', cnt.hebdo, activeFilter)}
+        ${tab('ignorer', 'Ignorés', cnt.ignorer, activeFilter)}
+        <span class="ew-tab-sep"></span>
+        ${scoreTab('all', 'Tous scores', sco.all, scoreFilter)}
+        ${scoreTab('high', 'Prioritaire', sco.high, scoreFilter)}
+        ${scoreTab('med', 'Moyen', sco.med, scoreFilter)}
+        <select class="ew-sort" id="sort-select">
+          <option value="recent"${sortMode === 'recent' ? ' selected' : ''}>Plus récent ▾</option>
+          <option value="oldest"${sortMode === 'oldest' ? ' selected' : ''}>Plus ancien ▾</option>
+          <option value="week"${sortMode === 'week' ? ' selected' : ''}>Cette semaine ▾</option>
+          <option value="7days"${sortMode === '7days' ? ' selected' : ''}>7 derniers jours ▾</option>
+        </select>
       </div>`;
 
-    // Insert toolbar at top of article-list, before articles
     const container = document.getElementById('article-list')!;
-    const existingToolbar = container.querySelector('.toolbar-filters');
-    if (existingToolbar) existingToolbar.remove();
-    container.insertAdjacentHTML('afterbegin', toolbarHtml);
+    const existing = container.querySelector('#ew-tabs');
+    if (existing) {
+      existing.outerHTML = tabHtml;
+    } else {
+      container.insertAdjacentHTML('afterbegin', tabHtml);
+    }
 
-    // Bind filter events
     container.querySelectorAll('[data-filter]').forEach((el: any) => {
       el.addEventListener('click', () => {
         activeFilter = el.dataset.filter;
-        renderToolbar();
+        renderTabs();
         renderArticles();
       });
     });
     container.querySelectorAll('[data-score-filter]').forEach((el: any) => {
       el.addEventListener('click', () => {
         const clicked = el.dataset.scoreFilter;
-        // Toggle : re-clic sur le filtre actif → retour à "Tous scores"
         scoreFilter = (clicked === scoreFilter && clicked !== 'all') ? 'all' : clicked;
-        renderToolbar();
+        renderTabs();
         renderArticles();
       });
     });
-    bindSortSelect();
+    const sortEl = document.getElementById('sort-select') as HTMLSelectElement;
+    if (sortEl) {
+      sortEl.addEventListener('change', () => { sortMode = sortEl.value; renderArticles(); });
+    }
   }
 
-  function pill(key: string, label: string, count: number, current: string): string {
-    const active = current === key ? ' active' : '';
-    return `<button class="pill${active}" data-filter="${key}">${label} <span>${count}</span></button>`;
+  function tab(key: string, label: string, count: number, current: string): string {
+    return `<button class="ew-tab${current === key ? ' active' : ''}" data-filter="${key}">${label} <span class="ew-tab-num">${count}</span></button>`;
   }
-  function scorePill(key: string, label: string, count: number, current: string): string {
-    const active = current === key ? ' active' : '';
-    return `<button class="pill${active}" data-score-filter="${key}">${label} <span>${count}</span></button>`;
+  function scoreTab(key: string, label: string, count: number, current: string): string {
+    return `<button class="ew-tab${current === key ? ' active' : ''}" data-score-filter="${key}">${label} <span class="ew-tab-num">${count}</span></button>`;
   }
+
+  // ── Articles ─────────────────────────────────────────────────────────────
 
   function renderArticles(): void {
-    // Inbox shows only inbox + triaged — hide ignored/published immediately
     let filtered: any[] = articles.filter((a: any) =>
       a.lifecycle_status === 'inbox' || a.lifecycle_status === 'triaged'
     );
-    if (activeFilter !== 'all') {
-      filtered = filtered.filter((a: any) => a.status === activeFilter);
-    }
+    if (activeFilter !== 'all') filtered = filtered.filter((a: any) => a.status === activeFilter);
     if (scoreFilter === 'high') filtered = filtered.filter((a: any) => (a.score || 0) >= 45);
     else if (scoreFilter === 'med') filtered = filtered.filter((a: any) => (a.score || 0) >= 25 && (a.score || 0) < 45);
 
-    // Filtre temporel — basé sur sortDate() (published_at si cohérente, sinon created_at)
     const now = new Date();
     if (sortMode === 'week') {
-      const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay() + 1);
-      startOfWeek.setHours(0, 0, 0, 0);
-      const startTs = startOfWeek.getTime();
-      filtered = filtered.filter((a: any) => sortDate(a) >= startTs);
+      const start = new Date(now); start.setDate(now.getDate() - now.getDay() + 1); start.setHours(0,0,0,0);
+      filtered = filtered.filter((a: any) => sortDate(a) >= start.getTime());
     } else if (sortMode === '7days') {
-      const cutoff = now.getTime() - 7 * 86400000;
-      filtered = filtered.filter((a: any) => sortDate(a) >= cutoff);
+      filtered = filtered.filter((a: any) => sortDate(a) >= now.getTime() - 7 * 86400000);
     }
 
-    // Tri : score DESC puis date DESC quand Prioritaire est actif
-    // Date = published_at si dispo et cohérente, sinon created_at (cf. sortDate())
     filtered.sort((a: any, b: any) => {
       if (scoreFilter === 'high') {
-        const sa = (a.score || 0), sb = (b.score || 0);
-        if (sa !== sb) return sb - sa;
+        const diff = (b.score || 0) - (a.score || 0);
+        if (diff !== 0) return diff;
       }
-      const da = sortDate(a);
-      const db2 = sortDate(b);
-      return sortMode === 'oldest' ? da - db2 : db2 - da;
+      return sortMode === 'oldest' ? sortDate(a) - sortDate(b) : sortDate(b) - sortDate(a);
     });
 
+    const container = document.getElementById('article-list')!;
+    const tabs = container.querySelector('#ew-tabs');
+
     if (filtered.length === 0) {
-      const container = document.getElementById('article-list')!;
-      // Keep toolbar, replace rest
-      const toolbar = container.querySelector('.toolbar-filters');
-      container.innerHTML = `
-        <div class="empty-state">
-          <div class="icon">&#128196;</div>
-          <p>Aucun article dans cette vue</p>
-        </div>`;
-      if (toolbar) container.insertAdjacentElement('afterbegin', toolbar);
+      container.innerHTML = `<div class="ew-empty">
+        <div class="ew-empty-title">Aucun article dans cette vue</div>
+        <div class="ew-empty-sub">Modifie le filtre ou reviens plus tard.</div>
+        <div class="ew-empty-hint">Dernière ingestion automatique · 4×/jour</div>
+      </div>`;
+      if (tabs) container.insertAdjacentElement('afterbegin', tabs);
       return;
     }
 
-    const container = document.getElementById('article-list')!;
-    const toolbar = container.querySelector('.toolbar-filters');
-    container.innerHTML = filtered.map((a: any) => `
-      <div class="article-card${a.impact_type === 'sanction' ? ' card-sanction' : ''}" data-article-nav="${a.id}">
-        <div class="article-meta">
-          ${a.impact_type ? `<span class="impact-tag impact-${a.impact_type}">${impactLabel(a.impact_type)}</span>` : ''}
-          <span>${a.source_name || 'Source inconnue'}</span>
-          <span>&middot;</span>
-          <span>${displayDate(a)}</span>
-          ${a.detected_action_type ? actionBadge(a.detected_action_type) : ''}
-          <span style="margin-left:auto">${statusBadge(a.status)}</span>
-        </div>
-        <div class="article-title-row">
-          ${a.original_url
-            ? `<a href="${escHtml(a.original_url)}" target="_blank" rel="noopener" class="article-title" onclick="event.stopPropagation()">${escHtml(a.title || 'Sans titre')}<span class="title-ext-icon">${LINK_ICON}</span></a>`
-            : `<div class="article-title">${escHtml(a.title || 'Sans titre')}</div>`
-          }
-        </div>
-        ${a.has_impact && a.impacted_procedures && a.impacted_procedures.length > 0 ? `
-          <div class="article-impact-row" onclick="event.stopPropagation()">
-            <span class="impact-badge">${a.severity === 'critical' ? '<span class="impact-dot-critical"></span>' : ''}Impacte \u2192 ${a.impacted_procedures.map((p: string) => `<span class="impact-ref" title="${escHtml(p)}">${escHtml(procLabel(p))}</span>`).join(' \u00b7 ')}</span>
-            <a href="${BASE}controle" class="impact-link">Voir reminder</a>
-          </div>` : ''}
-        <div class="article-actions">
-          <button class="btn-triage${a.status === 'quotidien' ? (a.lifecycle_status === 'published' ? ' btn-triage-published' : ' btn-triage-active') : ''}" data-triage="${a.id}" data-triage-status="quotidien">Quotidien${a.status === 'quotidien' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
-          <button class="btn-triage${a.status === 'hebdo' ? (a.lifecycle_status === 'published' ? ' btn-triage-published' : ' btn-triage-active') : ''}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo${a.status === 'hebdo' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
-          <button class="btn-triage${a.status === 'ignorer' ? (a.lifecycle_status === 'published' ? ' btn-triage-published' : ' btn-triage-active') : ''}" data-triage="${a.id}" data-triage-status="ignorer">Ignorer${a.status === 'ignorer' ? ' <span class="triage-reset" data-reset="' + a.id + '">\u00d7</span>' : ''}</button>
-          ${newsletterEnabled() && (a.status === 'quotidien' || a.status === 'hebdo') ? `
-            <button class="btn btn-sm ${a.published_to_newsletter ? 'btn-primary' : 'btn-secondary'}"
-                    data-publish="${a.id}"
-                    ${a.published_to_newsletter ? 'disabled title="Publi\u00e9 le ' + formatDate(a.published_to_newsletter_at) + '"' : ''}>
-              ${a.published_to_newsletter ? '\u2713 Publi\u00e9' : 'Publier'}
-            </button>` : ''}
-          ${a.tracker_added
-            ? `<span class="badge-tracker-added">\u2713 Tracker</span>`
-            : `<button class="btn-triage btn-tracker${(!a.tracker_added && (a.severity === 'high' || a.severity === 'critical') && a.lifecycle_status !== 'ignored') ? ' btn-tracker-pending' : ''}" data-tracker="${a.id}" data-source="${escHtml(a.source_name || '')}" data-date="${a.published_at || ''}" data-title="${escHtml(a.title || '')}" data-synthese="${escHtml(a.reminder_text || '')}" data-type="${a.impact_type || 'info'}" data-url="${escHtml(a.original_url || '')}">+ Tracker</button>`
-          }
-          ${a.pub_added
-            ? `<span class="badge-tracker-added">\u2713 Pub</span>`
-            : `<button class="btn-triage btn-tracker" data-pub="${a.id}" data-source="${escHtml(a.source_name || '')}" data-date="${a.published_at || ''}" data-title="${escHtml(a.title || '')}" data-type="${a.impact_type || 'info'}" data-url="${escHtml(a.original_url || '')}">+ Pub</button>`
-          }
-        </div>
-      </div>
-    `).join('');
+    // Rendre la liste V9
+    const listHtml = `<div class="ew-list" id="ew-list">${filtered.map((a: any) => articleCard(a)).join('')}</div>`;
+    container.innerHTML = listHtml;
+    if (tabs) container.insertAdjacentElement('afterbegin', tabs);
 
-    if (toolbar) container.insertAdjacentElement('afterbegin', toolbar);
-
-    // Bind events
-    document.querySelectorAll('[data-article-nav]').forEach((el: any) => {
+    // Bind événements
+    container.querySelectorAll('[data-article-nav]').forEach((el: any) => {
       el.addEventListener('click', (e: any) => {
-        if (e.target.closest('button') || e.target.closest('a')) return;
+        if (e.target.closest('button,a,select')) return;
         window.location.href = `${BASE}article?id=${el.dataset.articleNav}`;
       });
     });
-    document.querySelectorAll('[data-triage]').forEach((el: any) => {
+    container.querySelectorAll('[data-triage]').forEach((el: any) => {
       el.addEventListener('click', (e: any) => {
         e.stopPropagation();
-        // If clicking the reset ✕, reset to nouveau instead
         if ((e.target as HTMLElement).closest('.triage-reset')) {
           triage(el.dataset.triage, 'nouveau');
           return;
@@ -425,28 +356,23 @@ const base = import.meta.env.BASE_URL;
         triage(el.dataset.triage, el.dataset.triageStatus);
       });
     });
-    document.querySelectorAll('[data-publish]').forEach((el: any) => {
-      el.addEventListener('click', (e: any) => {
-        e.stopPropagation();
-        publishArticle(el.dataset.publish);
-      });
+    container.querySelectorAll('[data-publish]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => { e.stopPropagation(); publishArticle(el.dataset.publish); });
     });
-    // Bind "Corriger la date" links
-    document.querySelectorAll('.fix-date-link').forEach((el: any) => {
+    container.querySelectorAll('.fix-date-link').forEach((el: any) => {
       el.addEventListener('click', (e: any) => {
-        e.stopPropagation();
-        e.preventDefault();
-        const articleId = el.dataset.fixDate;
+        e.stopPropagation(); e.preventDefault();
+        const id = el.dataset.fixDate;
         const parent = el.parentElement;
         if (!parent) return;
-        parent.innerHTML = `<input type="date" class="date-fix-input" data-date-article="${articleId}" style="font-size:11px;padding:1px 4px;border:0.5px solid var(--ew-border2);border-radius:8px;font-family:'IBM Plex Sans',sans-serif;background:var(--ew-bg)"><button class="date-fix-ok" data-date-ok="${articleId}" style="font-size:10px;margin-left:3px;padding:1px 6px;border:1px solid var(--ew-ink);border-radius:8px;background:var(--ew-ink);color:#fff;cursor:pointer">OK</button>`;
-        parent.querySelector('.date-fix-ok')!.addEventListener('click', async (ev: any) => {
+        parent.innerHTML = `<input type="date" class="ew-input" style="font-size:11px;padding:2px 6px;width:auto;display:inline" data-date-article="${id}"><button style="font-size:10px;margin-left:4px;padding:2px 8px;border:none;background:var(--ink);color:var(--bg);border-radius:4px;cursor:pointer" data-date-ok="${id}">OK</button>`;
+        parent.querySelector('[data-date-ok]')!.addEventListener('click', async (ev: any) => {
           ev.stopPropagation();
-          const input = parent.querySelector('.date-fix-input') as HTMLInputElement;
+          const input = parent.querySelector('[data-date-article]') as HTMLInputElement;
           if (!input.value) return;
           try {
-            await api(`/api/v1/articles/${articleId}/date`, { method: 'PATCH', body: { published_at: input.value } });
-            const idx = articles.findIndex((a: any) => a.id === articleId);
+            await api(`/api/v1/articles/${id}/date`, { method: 'PATCH', body: { published_at: input.value } });
+            const idx = articles.findIndex((a: any) => a.id === id);
             if (idx !== -1) articles[idx].published_at = input.value + 'T00:00:00Z';
             renderArticles();
           } catch (err) { console.error('Date fix failed:', err); }
@@ -455,35 +381,70 @@ const base = import.meta.env.BASE_URL;
     });
   }
 
-  function bindSortSelect(): void {
-    const sortEl = document.getElementById('sort-select') as HTMLSelectElement;
-    if (sortEl) {
-      sortEl.addEventListener('change', () => {
-        sortMode = sortEl.value;
-        renderArticles();
-      });
-    }
+  function articleCard(a: any): string {
+    const isIgnored = a.status === 'ignorer';
+    const isActive = (status: string) => a.status === status && a.lifecycle_status !== 'published';
+    const isPublished = (status: string) => a.status === status && a.lifecycle_status === 'published';
+
+    const qClass = isActive('quotidien') ? ' ew-btn-active' : isPublished('quotidien') ? ' ew-btn-ghost' : '';
+    const hClass = isActive('hebdo') ? ' ew-btn-active' : isPublished('hebdo') ? ' ew-btn-ghost' : '';
+
+    const trackerBtn = a.tracker_added
+      ? `<span class="ew-badge ew-badge-ok" style="font-family:var(--font-mono);font-size:9px">✓ Tracker</span>`
+      : `<button class="ew-btn ew-btn-ghost" data-tracker="${a.id}" data-source="${escHtml(a.source_name||'')}" data-date="${a.published_at||''}" data-title="${escHtml(a.title||'')}" data-synthese="${escHtml(a.reminder_text||'')}" data-type="${a.impact_type||'info'}" data-url="${escHtml(a.original_url||'')}">+ Tracker</button>`;
+
+    const pubBtn = a.pub_added
+      ? `<span class="ew-badge ew-badge-ok" style="font-family:var(--font-mono);font-size:9px">✓ Pub</span>`
+      : `<button class="ew-btn ew-btn-ghost" data-pub="${a.id}" data-source="${escHtml(a.source_name||'')}" data-date="${a.published_at||''}" data-title="${escHtml(a.title||'')}" data-type="${a.impact_type||'info'}" data-url="${escHtml(a.original_url||'')}">+ Pub</button>`;
+
+    const publishBtn = (newsletterEnabled() && (a.status === 'quotidien' || a.status === 'hebdo'))
+      ? `<button class="ew-btn${a.published_to_newsletter ? ' ew-btn-ghost' : ' ew-btn-primary'}" data-publish="${a.id}" ${a.published_to_newsletter ? `disabled title="Publié le ${formatDate(a.published_to_newsletter_at)}"` : ''}>
+          ${a.published_to_newsletter ? '✓ Publié' : 'Publier'}
+        </button>` : '';
+
+    const impactRow = (a.has_impact && a.impacted_procedures?.length)
+      ? `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap" onclick="event.stopPropagation()">
+          <span style="font-size:11px;color:var(--taupe)">Impacte →</span>
+          ${a.impacted_procedures.map((p: string) => `<span style="font-size:11px;font-weight:500;color:var(--ink-soft)" title="${escHtml(p)}">${escHtml(procLabel(p))}</span>`).join(' · ')}
+          <a href="${BASE}controle" style="font-size:11px;color:var(--mute);text-decoration:underline" onclick="event.stopPropagation()">Voir reminder</a>
+        </div>` : '';
+
+    const newBadge = a.status === 'nouveau'
+      ? `<span class="tag-new-right">Nouveau</span>` : '';
+
+    return `
+      <div class="ew-item${isIgnored ? ' is-ignored' : ''}" data-article-nav="${a.id}" style="cursor:pointer">
+        ${sourceAvatarHTML(a.source_name)}
+        <div class="ew-item-body">
+          <div class="ew-meta">
+            <span class="src">${escHtml(a.source_name || 'Source inconnue')}</span>
+            <span class="dot">·</span>
+            <span class="date">${displayDate(a)}</span>
+            ${a.impact_type ? `<span class="dot">·</span><span style="font-size:9px;font-weight:500;letter-spacing:0.12em;color:var(--taupe)">${escHtml(impactLabel(a.impact_type)).toUpperCase()}</span>` : ''}
+          </div>
+          <h3 class="ew-title">
+            ${a.original_url
+              ? `<a href="${escHtml(a.original_url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none" onclick="event.stopPropagation()">${escHtml(a.title || 'Sans titre')}${LINK_ICON}</a>`
+              : escHtml(a.title || 'Sans titre')
+            }
+          </h3>
+          ${impactRow}
+          <div class="ew-actions">
+            <button class="ew-btn ew-btn-primary${qClass}" data-triage="${a.id}" data-triage-status="quotidien">Quotidien${a.status === 'quotidien' ? ` <span class="triage-reset" data-reset="${a.id}">×</span>` : ''}</button>
+            <button class="ew-btn${hClass}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo${a.status === 'hebdo' ? ` <span class="triage-reset" data-reset="${a.id}">×</span>` : ''}</button>
+            <div class="ew-act-sep"></div>
+            ${trackerBtn}
+            ${pubBtn}
+            ${publishBtn}
+            <div class="ew-act-sep"></div>
+            <button class="ew-btn ew-btn-ghost${a.status === 'ignorer' ? ' ew-btn-active' : ''}" data-triage="${a.id}" data-triage-status="ignorer">Ignorer</button>
+          </div>
+        </div>
+        <div class="ew-item-side">${newBadge}</div>
+      </div>`;
   }
 
-  async function publishArticle(id: string): Promise<void> {
-    try {
-      const res: any = await api(`/api/v1/articles/${id}/published`, { method: 'POST', body: {} });
-      const idx: number = articles.findIndex((a: any) => a.id === id);
-      if (idx !== -1) {
-        articles[idx].published_to_newsletter = true;
-        articles[idx].published_to_newsletter_at = res.published_to_newsletter_at;
-        articles[idx].lifecycle_status = 'published';
-      }
-      if (newsletterEnabled()) {
-        newsletterCounts = await api('/api/v1/articles/newsletter/counts').catch(() => newsletterCounts);
-      }
-      renderArticles();
-      renderRightPanel();
-      toast('Article publi\u00e9 dans la newsletter');
-    } catch (e: any) {
-      toast(e.message, 'error');
-    }
-  }
+  // ── Triage ───────────────────────────────────────────────────────────────
 
   const LIFECYCLE_MAP: Record<string, string> = {
     nouveau: 'inbox', important: 'inbox', relu: 'inbox',
@@ -494,167 +455,122 @@ const base = import.meta.env.BASE_URL;
   async function triage(id: string, status: string): Promise<void> {
     try {
       await api(`/api/v1/articles/${id}/triage`, { method: 'PATCH', body: { status } });
-      const idx: number = articles.findIndex((a: any) => a.id === id);
+      const idx = articles.findIndex((a: any) => a.id === id);
       if (idx !== -1) {
         articles[idx].status = status;
         articles[idx].lifecycle_status = LIFECYCLE_MAP[status] || articles[idx].lifecycle_status;
       }
-      renderToolbar();
-      renderArticles();
-      toast(status === 'quotidien' ? 'Article — Quotidien' : status === 'hebdo' ? 'Article — Hebdo' : 'Article ignor\u00e9');
-    } catch (e: any) {
-      toast(e.message, 'error');
-    }
+      renderTabs(); renderArticles();
+      const label = status === 'quotidien' ? 'Article — Quotidien' : status === 'hebdo' ? 'Article — Hebdo' : 'Article ignoré';
+      toast(label);
+    } catch (e: any) { toast(e.message, 'error'); }
   }
 
-  async function executePublishAll(): Promise<void> {
-    const publishAllBtn = document.getElementById('btn-publish-all') as HTMLButtonElement | null;
-    const triaged = articles.filter((a: any) => a.lifecycle_status === 'triaged' && (a.status === 'quotidien' || a.status === 'hebdo'));
-    if (triaged.length === 0) return;
-    if (publishAllBtn) {
-      publishAllBtn.disabled = true;
-      publishAllBtn.textContent = 'Publication...';
-    }
+  async function publishArticle(id: string): Promise<void> {
     try {
-      const res: any = await api('/api/v1/articles/publish-all', { method: 'POST', body: {} });
-      for (const a of triaged) {
-        const idx = articles.findIndex((x: any) => x.id === a.id);
-        if (idx !== -1) {
-          articles[idx].published_to_newsletter = true;
-          articles[idx].lifecycle_status = 'published';
-        }
+      const res: any = await api(`/api/v1/articles/${id}/published`, { method: 'POST', body: {} });
+      const idx = articles.findIndex((a: any) => a.id === id);
+      if (idx !== -1) {
+        articles[idx].published_to_newsletter = true;
+        articles[idx].published_to_newsletter_at = res.published_to_newsletter_at;
+        articles[idx].lifecycle_status = 'published';
       }
-      newsletterCounts = await api('/api/v1/articles/newsletter/counts').catch(() => newsletterCounts);
-      const tc: any = await api('/api/v1/tracker/pending-count').catch(() => ({ pending: 0 }));
-      trackerPendingCount = tc?.pending || 0;
-      renderArticles();
-      renderRightPanel();
-      toast(`${res.published || triaged.length} article${(res.published || triaged.length) > 1 ? 's' : ''} publiés — session clôturée`);
-    } catch (e: any) {
-      toast('Erreur: ' + (e.message || 'publication échouée'), 'error');
-      if (publishAllBtn) {
-        publishAllBtn.disabled = false;
-        publishAllBtn.textContent = 'Clôturer la session';
+      if (newsletterEnabled()) {
+        newsletterCounts = await api('/api/v1/articles/newsletter/counts').catch(() => newsletterCounts);
       }
-    }
+      renderArticles(); renderRightPanel();
+      toast('Article publié dans la newsletter');
+    } catch (e: any) { toast(e.message, 'error'); }
   }
+
+  // ── Right panel ──────────────────────────────────────────────────────────
 
   function renderRightPanel(): void {
     const nc: any = newsletterCounts;
-    const quotidienCount: number = nc ? nc.quotidien_total : 0;
-    const hebdoCount: number = nc ? nc.hebdo_total : 0;
-    const qDisabled: string = quotidienCount === 0 ? ';opacity:0.4;cursor:not-allowed;pointer-events:none' : '';
-    const hDisabled: string = hebdoCount === 0 ? ';opacity:0.4;cursor:not-allowed;pointer-events:none' : '';
-    // Tracker eligible — uses backend count (includes archives)
-    const trackerBlock: string = trackerPendingCount > 0 ? `
-      <div class="sidebar-section">
-        <h3>Tracker</h3>
-        <div style="font-size:11px;color:var(--ew-ink2)">
-          <span style="color:var(--ew-accent);font-weight:600">${trackerPendingCount}</span> article${trackerPendingCount > 1 ? 's' : ''} éligible${trackerPendingCount > 1 ? 's' : ''} non ajouté${trackerPendingCount > 1 ? 's' : ''}
-        </div>
-      </div>` : '';
+    const qTotal = nc?.quotidien_total || 0;
+    const qPub   = nc?.quotidien_published || 0;
+    const hTotal = nc?.hebdo_total || 0;
+    const hPub   = nc?.hebdo_published || 0;
+    const canClose = (qTotal + hTotal) > 0;
 
-    // Flash articles: triaged quotidien, not yet published
-    const flashArticles = articles.filter((a: any) => a.lifecycle_status === 'triaged' && a.status === 'quotidien' && !a.published_to_newsletter);
-    const flashBlock: string = (newsletterEnabled() && flashArticles.length > 0) ? `
-      <div class="sidebar-section">
-        <h3 style="display:flex;align-items:center;gap:6px"><span style="color:var(--ew-accent);font-size:10px">&#9679;</span> Flash</h3>
-        <div style="display:flex;flex-direction:column;gap:4px">
-          ${flashArticles.map((a: any) => `
-            <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:0.5px solid var(--ew-border2)">
-              <span style="flex:1;font-size:11px;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(a.title)}">${escHtml(a.title.slice(0, 50))}${a.title.length > 50 ? '...' : ''}</span>
-              <button class="btn btn-sm btn-secondary" data-flash-publish="${a.id}" style="padding:1px 6px;font-size:9px;white-space:nowrap">Publier</button>
-            </div>`).join('')}
+    const digestSection = nc ? `
+      <div>
+        <div class="ew-r-title">Digest</div>
+        <div class="ew-digest-block">
+          <div class="ew-digest-label">Quotidien</div>
+          <div class="ew-digest-num"><span class="accent">${qPub}</span><span class="total"> / ${qTotal}</span></div>
+          <div class="ew-digest-actions">
+            <button class="ew-digest-btn" data-copy-md="quotidien">Copier</button>
+            <button class="ew-digest-btn" id="btn-apercu-quotidien" ${qTotal === 0 ? 'disabled style="opacity:.4"' : ''}>Aperçu</button>
+          </div>
         </div>
-      </div>` : '';
+        <div class="ew-digest-block">
+          <div class="ew-digest-label">Hebdo</div>
+          <div class="ew-digest-num"><span class="accent">${hPub}</span><span class="total"> / ${hTotal}</span></div>
+          <div class="ew-digest-actions">
+            <button class="ew-digest-btn" data-copy-md="hebdo">Copier</button>
+            <button class="ew-digest-btn" id="btn-apercu-hebdo" ${hTotal === 0 ? 'disabled style="opacity:.4"' : ''}>Aperçu</button>
+          </div>
+        </div>
+        <button class="ew-close" id="btn-publish-all" ${!canClose ? 'disabled style="opacity:.4"' : ''}>Clôturer la session</button>
+        <div class="ew-close-note">Marque tous les triagés comme publiés.</div>
+      </div>` : `
+      <div>
+        <div class="ew-r-title">Digest</div>
+        <div style="font-size:12px;color:var(--mute)">Newsletter non activée.</div>
+      </div>`;
 
-    const newsletterBlock: string = (newsletterEnabled() && nc) ? `
-      <div class="sidebar-section">
-        <h3>Digest</h3>
-        <div style="padding:6px 0;border-bottom:0.5px solid var(--ew-border2)">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <span style="font-size:12px;font-weight:500;color:var(--text-primary)">Quotidien</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ew-ink2);white-space:nowrap">${nc.quotidien_published}/${nc.quotidien_total} publi\u00e9</span>
-          </div>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-secondary" data-copy-md="quotidien" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1">Copier</button>
-            <button class="btn btn-sm btn-secondary" id="btn-apercu-quotidien" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1${qDisabled}" ${quotidienCount === 0 ? 'disabled' : ''}>Aper\u00e7u</button>
-          </div>
-        </div>
-        <div style="padding:6px 0">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <span style="font-size:12px;font-weight:500;color:var(--text-primary)">Hebdo</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ew-ink2);white-space:nowrap">${nc.hebdo_published}/${nc.hebdo_total} publi\u00e9</span>
-          </div>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-secondary" data-copy-md="hebdo" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1">Copier</button>
-            <button class="btn btn-sm btn-secondary" id="btn-apercu-hebdo" style="padding:2px 8px;font-size:10px;border-radius:4px;flex:1${hDisabled}" ${hebdoCount === 0 ? 'disabled' : ''}>Aper\u00e7u</button>
-          </div>
-        </div>
-        <div style="padding:8px 0 0;border-top:0.5px solid var(--ew-border2);margin-top:6px">
-          <button class="btn btn-sm btn-primary" id="btn-publish-all" style="width:100%;font-size:11px;padding:6px 0"
-            ${(nc.quotidien_total + nc.hebdo_total) === 0 ? 'disabled style="width:100%;font-size:11px;padding:6px 0;opacity:0.4;cursor:not-allowed"' : ''}>
-            Clôturer la session
-          </button>
-          <div style="font-size:10px;color:var(--ew-ink3);text-align:center;margin-top:4px">Marque tous les triagés comme publiés</div>
-        </div>
-      </div>` : '';
+    const trackerSection = trackerPendingCount > 0 ? `
+      <div>
+        <div class="ew-r-title">Tracker</div>
+        <div class="ew-tracker-num">${trackerPendingCount}</div>
+        <div class="ew-tracker-desc">article${trackerPendingCount > 1 ? 's' : ''} éligible${trackerPendingCount > 1 ? 's' : ''} non ajouté${trackerPendingCount > 1 ? 's' : ''} au tracker réglementaire.</div>
+      </div>` : `
+      <div>
+        <div class="ew-r-title">Tracker</div>
+        <div style="font-size:12px;color:var(--mute)">Aucun article en attente.</div>
+      </div>`;
 
     document.getElementById('sidebar-right')!.innerHTML = `
-      ${flashBlock}
-      ${newsletterBlock}
-      ${trackerBlock}
-      <div class="sidebar-section">
-        <h3>Export</h3>
-        <div class="flex flex-col gap-4" style="gap:6px">
-          <button class="btn btn-secondary btn-sm" data-export="markdown" data-export-type="quotidien">Export Quotidien .md</button>
-          <button class="btn btn-secondary btn-sm" data-export="markdown" data-export-type="hebdo">Export Hebdo .md</button>
-          <button class="btn btn-secondary btn-sm" id="btn-export-monthly">Export mensuel</button>
+      ${digestSection}
+      <div class="ew-divider"></div>
+      ${trackerSection}
+      <div class="ew-divider"></div>
+      <div>
+        <div class="ew-r-title">Export</div>
+        <div class="ew-export-list">
+          <div class="ew-export-item" data-export="markdown" data-export-type="quotidien" style="cursor:pointer"><span>Quotidien</span><span class="ext">.md</span></div>
+          <div class="ew-export-item" data-export="markdown" data-export-type="hebdo" style="cursor:pointer"><span>Hebdo</span><span class="ext">.md</span></div>
+          <div class="ew-export-item" id="btn-export-monthly" style="cursor:pointer"><span>Mensuel</span><span class="ext">.md</span></div>
         </div>
       </div>`;
 
-    document.querySelectorAll('[data-export]').forEach((el: any) => {
-      el.addEventListener('click', () => {
-        exportArticles(el.dataset.export, el.dataset.exportType);
-      });
-    });
-
-    // Bind copy-to-clipboard buttons in newsletter section
+    // Bind
     document.querySelectorAll('[data-copy-md]').forEach((el: any) => {
-      el.addEventListener('click', () => {
-        copyMarkdownToClipboard(el.dataset.copyMd, el);
-      });
+      el.addEventListener('click', () => copyMarkdownToClipboard(el.dataset.copyMd, el));
     });
+    document.querySelectorAll('[data-export]').forEach((el: any) => {
+      el.addEventListener('click', () => exportArticles(el.dataset.export, el.dataset.exportType));
+    });
+    document.getElementById('btn-apercu-quotidien')?.addEventListener('click', () => openApercu('quotidien'));
+    document.getElementById('btn-apercu-hebdo')?.addEventListener('click', () => openApercu('hebdo'));
 
-    // Bind aper\u00e7u buttons
-    const apercuHebdo = document.getElementById('btn-apercu-hebdo');
-    if (apercuHebdo) {
-      apercuHebdo.addEventListener('click', () => openApercu('hebdo'));
-    }
-    const apercuQuotidien = document.getElementById('btn-apercu-quotidien');
-    if (apercuQuotidien) {
-      apercuQuotidien.addEventListener('click', () => openApercu('quotidien'));
-    }
-
-    // Bind bulk publish button — with tracker warning modal
     const publishAllBtn = document.getElementById('btn-publish-all');
     if (publishAllBtn) {
       publishAllBtn.addEventListener('click', () => {
-        const triaged = articles.filter((a: any) => a.lifecycle_status === 'triaged' && (a.status === 'quotidien' || a.status === 'hebdo'));
-        if (triaged.length === 0) return;
-
+        const triaged = articles.filter((a: any) => a.lifecycle_status === 'triaged');
+        if (!triaged.length) return;
         if (trackerPendingCount > 0) {
-          // Show confirmation modal
           document.getElementById('cloturer-msg')!.textContent =
             `${trackerPendingCount} article${trackerPendingCount > 1 ? 's' : ''} éligible${trackerPendingCount > 1 ? 's' : ''} n'${trackerPendingCount > 1 ? 'ont' : 'a'} pas été ajouté${trackerPendingCount > 1 ? 's' : ''} au tracker.`;
-          document.getElementById('cloturer-overlay')!.style.display = 'flex';
+          const ov = document.getElementById('cloturer-overlay')!;
+          ov.style.display = 'flex';
         } else {
           executePublishAll();
         }
       });
     }
 
-    // Bind clôturer modal buttons
     document.getElementById('cloturer-cancel')?.addEventListener('click', () => {
       document.getElementById('cloturer-overlay')!.style.display = 'none';
     });
@@ -666,83 +582,63 @@ const base = import.meta.env.BASE_URL;
       executePublishAll();
     });
 
-    // Bind Flash publish buttons — individual article publish
-    document.querySelectorAll('[data-flash-publish]').forEach((el: any) => {
-      el.addEventListener('click', async () => {
-        const id = el.dataset.flashPublish;
-        el.disabled = true;
-        el.textContent = '...';
-        try {
-          await api(`/api/v1/articles/${id}/published`, { method: 'POST', body: {} });
-          const idx = articles.findIndex((a: any) => a.id === id);
-          if (idx !== -1) {
-            articles[idx].published_to_newsletter = true;
-            articles[idx].lifecycle_status = 'published';
-          }
-          newsletterCounts = await api('/api/v1/articles/newsletter/counts').catch(() => newsletterCounts);
-          renderArticles();
-          renderRightPanel();
-          toast('Article publié — édition Flash');
-        } catch (e: any) {
-          toast('Erreur: ' + (e.message || 'publication échouée'), 'error');
-          el.disabled = false;
-          el.textContent = 'Publier';
-        }
-      });
-    });
-
-    // Bind Export mensuel button
     const exportMonthlyBtn = document.getElementById('btn-export-monthly');
     if (exportMonthlyBtn) {
       exportMonthlyBtn.addEventListener('click', async () => {
-        // Use current month, or previous month if before the 5th
         const now = new Date();
-        let year = now.getFullYear();
-        let month = now.getMonth() + 1; // 1-indexed
-        if (now.getDate() < 5) {
-          month--;
-          if (month === 0) { month = 12; year--; }
-        }
+        let year = now.getFullYear(), month = now.getMonth() + 1;
+        if (now.getDate() < 5) { month--; if (month === 0) { month = 12; year--; } }
         const monthStr = `${year}-${String(month).padStart(2, '0')}`;
-        (exportMonthlyBtn as HTMLButtonElement).disabled = true;
-        exportMonthlyBtn.textContent = `Export ${monthStr}...`;
+        (exportMonthlyBtn as any).style.opacity = '.5';
         try {
           const md = await api(`/api/v1/articles/monthly-recap/markdown?month=${monthStr}`);
-          // md is returned as text (not JSON) because of content-type check in api()
           const blob = new Blob([md as string], { type: 'text/markdown;charset=utf-8' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
-          a.href = url;
-          a.download = `early-brief-recap-${monthStr}.md`;
-          a.click();
+          a.href = url; a.download = `early-brief-recap-${monthStr}.md`; a.click();
           URL.revokeObjectURL(url);
           toast(`Récap ${monthStr} exporté`);
-        } catch (e: any) {
-          toast('Erreur: ' + (e.message || 'export échoué'), 'error');
-        }
-        (exportMonthlyBtn as HTMLButtonElement).disabled = false;
-        exportMonthlyBtn.textContent = 'Export mensuel';
+        } catch (e: any) { toast(e.message || 'Erreur export', 'error'); }
+        (exportMonthlyBtn as any).style.opacity = '1';
       });
     }
   }
 
-  // ---- Aper\u00e7u Newsletter (drag & drop) ----
+  async function executePublishAll(): Promise<void> {
+    const btn = document.getElementById('btn-publish-all') as HTMLButtonElement | null;
+    if (btn) { btn.disabled = true; btn.textContent = 'Publication...'; }
+    try {
+      const res: any = await api('/api/v1/articles/publish-all', { method: 'POST', body: {} });
+      articles.filter((a: any) => a.lifecycle_status === 'triaged').forEach((a: any) => {
+        const idx = articles.findIndex((x: any) => x.id === a.id);
+        if (idx !== -1) { articles[idx].published_to_newsletter = true; articles[idx].lifecycle_status = 'published'; }
+      });
+      newsletterCounts = await api('/api/v1/articles/newsletter/counts').catch(() => newsletterCounts);
+      const tc: any = await api('/api/v1/tracker/pending-count').catch(() => ({ pending: 0 }));
+      trackerPendingCount = tc?.pending || 0;
+      renderArticles(); renderRightPanel();
+      toast(`${res.published || 0} article${(res.published||0) > 1 ? 's' : ''} publiés — session clôturée`);
+    } catch (e: any) {
+      toast('Erreur: ' + (e.message || 'publication échouée'), 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Clôturer la session'; }
+    }
+  }
+
+  // ── Aperçu drag & drop ───────────────────────────────────────────────────
+
   let apercuOrder: any[] = [];
-  let apercuType: string = 'hebdo';
+  let apercuType = 'hebdo';
+  let dragIdx = -1;
 
   function openApercu(type: string): void {
     apercuType = type;
-    const statusFilter = type === 'quotidien'
-      ? (a: any) => a.status === 'quotidien'
-      : (a: any) => a.status === 'hebdo' || a.status === 'quotidien';
-    apercuOrder = articles.filter(statusFilter)
+    apercuOrder = articles
+      .filter((a: any) => type === 'quotidien' ? a.status === 'quotidien' : (a.status === 'hebdo' || a.status === 'quotidien'))
       .sort((a: any, b: any) => sortDate(b) - sortDate(a));
-
     const overlay = document.getElementById('apercu-overlay')!;
     overlay.style.display = 'flex';
-    document.getElementById('apercu-title')!.textContent = `Aper\u00e7u ${type === 'quotidien' ? 'Quotidien' : 'Hebdo'}`;
+    document.getElementById('apercu-title')!.textContent = `Aperçu ${type === 'quotidien' ? 'Quotidien' : 'Hebdo'}`;
     renderApercuList();
-
     document.getElementById('apercu-close')!.onclick = closeApercu;
     document.getElementById('apercu-cancel')!.onclick = closeApercu;
     document.getElementById('apercu-export')!.onclick = exportApercuOrder;
@@ -752,49 +648,30 @@ const base = import.meta.env.BASE_URL;
     document.getElementById('apercu-overlay')!.style.display = 'none';
   }
 
-  let dragIdx: number = -1;
-
   function renderApercuList(): void {
     const list = document.getElementById('apercu-list')!;
     if (!apercuOrder.length) {
-      list.innerHTML = '<div style="padding:30px;text-align:center;color:var(--ew-ink2);font-size:13px">Aucun article hebdo</div>';
+      list.innerHTML = '<div style="padding:30px;text-align:center;color:var(--taupe);font-size:13px">Aucun article</div>';
       return;
     }
     list.innerHTML = apercuOrder.map((a: any, i: number) => `
-      <div class="apercu-item" draggable="true" data-apercu-idx="${i}" style="display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:6px;background:var(--ew-bg);border:0.5px solid var(--ew-border2);border-radius:8px;cursor:grab;transition:opacity .15s,border .15s">
-        <span style="color:var(--ew-ink3);font-size:16px;cursor:grab;user-select:none;flex-shrink:0">\u2807</span>
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ew-ink2);flex-shrink:0;width:20px;text-align:center">${i + 1}</span>
+      <div class="apercu-item" draggable="true" data-apercu-idx="${i}" style="display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:6px;background:var(--bg);border:0.5px solid var(--line-strong);border-radius:6px;cursor:grab">
+        <span style="color:var(--mute);font-size:16px;user-select:none">⠇</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--mute);width:18px;flex-shrink:0">${i + 1}</span>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:500;color:var(--ew-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.title || 'Sans titre')}</div>
-          <div style="font-size:11px;color:var(--ew-ink2);margin-top:2px">${a.source_name || ''} &middot; ${displayDate(a)}</div>
+          <div style="font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.title||'Sans titre')}</div>
+          <div style="font-size:11px;color:var(--taupe);margin-top:2px">${escHtml(a.source_name||'')} · ${displayDate(a)}</div>
         </div>
-      </div>
-    `).join('');
+      </div>`).join('');
 
-    // Bind drag events
     list.querySelectorAll('.apercu-item').forEach((el: any) => {
-      el.addEventListener('dragstart', (e: DragEvent) => {
-        dragIdx = parseInt(el.dataset.apercuIdx);
-        el.style.opacity = '0.5';
-        e.dataTransfer!.effectAllowed = 'move';
-      });
-      el.addEventListener('dragend', () => {
-        el.style.opacity = '1';
-        list.querySelectorAll('.apercu-item').forEach((x: any) => {
-          x.style.border = '0.5px solid var(--ew-border2)';
-        });
-      });
-      el.addEventListener('dragover', (e: DragEvent) => {
-        e.preventDefault();
-        e.dataTransfer!.dropEffect = 'move';
-        el.style.border = '1px dashed var(--ew-ink)';
-      });
-      el.addEventListener('dragleave', () => {
-        el.style.border = '0.5px solid var(--ew-border2)';
-      });
+      el.addEventListener('dragstart', (e: DragEvent) => { dragIdx = +el.dataset.apercuIdx; el.style.opacity = '.5'; e.dataTransfer!.effectAllowed = 'move'; });
+      el.addEventListener('dragend', () => { el.style.opacity = '1'; list.querySelectorAll('.apercu-item').forEach((x: any) => x.style.border = '0.5px solid var(--line-strong)'); });
+      el.addEventListener('dragover', (e: DragEvent) => { e.preventDefault(); el.style.border = '1px dashed var(--moutarde)'; });
+      el.addEventListener('dragleave', () => { el.style.border = '0.5px solid var(--line-strong)'; });
       el.addEventListener('drop', (e: DragEvent) => {
         e.preventDefault();
-        const dropIdx = parseInt(el.dataset.apercuIdx);
+        const dropIdx = +el.dataset.apercuIdx;
         if (dragIdx !== dropIdx && dragIdx >= 0) {
           const item = apercuOrder.splice(dragIdx, 1)[0];
           apercuOrder.splice(dropIdx, 0, item);
@@ -807,444 +684,189 @@ const base = import.meta.env.BASE_URL;
   async function exportApercuOrder(): Promise<void> {
     const label = apercuType === 'quotidien' ? 'Quotidien' : 'Hebdo';
     const today = new Date().toLocaleDateString('fr-FR');
-    const lines = [`# Early Watch ${label} \u2014 ${today}`, ''];
+    const lines = [`# Early Watch ${label} — ${today}`, ''];
     apercuOrder.forEach((a: any, i: number) => {
       const pub = a.published_at ? new Date(a.published_at).toLocaleDateString('fr-FR') : 'Date inconnue';
-      lines.push(`## ${i + 1}. ${a.title}`);
-      lines.push('');
-      if (a.summary) { lines.push(a.summary); lines.push(''); }
-      lines.push(`**Source :** ${a.source_name || 'Source inconnue'} \u2014 ${pub}${!a.published_at ? ' (date non confirm\u00e9e)' : ''}`);
-      lines.push(`**Lien :** ${a.original_url || 'N/A'}`);
-      lines.push('');
-      lines.push('---');
-      lines.push('');
+      lines.push(`## ${i + 1}. ${a.title}`, '');
+      if (a.summary) { lines.push(a.summary, ''); }
+      lines.push(`**Source :** ${a.source_name||'Source inconnue'} — ${pub}`);
+      lines.push(`**Lien :** ${a.original_url||'N/A'}`, '', '---', '');
     });
     const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = url;
-    link.download = `earlywatch-${apercuType}-${new Date().toISOString().slice(0,10)}.md`;
-    link.click();
+    link.href = url; link.download = `earlywatch-${apercuType}-${new Date().toISOString().slice(0,10)}.md`; link.click();
     URL.revokeObjectURL(url);
-    closeApercu();
-    toast('Export hebdo t\u00e9l\u00e9charg\u00e9');
+    closeApercu(); toast('Export téléchargé');
   }
+
+  // ── Copy & Export ─────────────────────────────────────────────────────────
 
   async function copyMarkdownToClipboard(type: string, btn: HTMLButtonElement): Promise<void> {
     try {
       const data: any = await api(`/api/v1/articles/export/markdown?type=${type}`);
-      const text: string = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-      await navigator.clipboard.writeText(text);
-      const original = btn.textContent;
-      btn.textContent = '\u2713 Copi\u00e9 !';
-      btn.style.color = 'var(--ew-ink)';
-      btn.style.fontWeight = '500';
-      setTimeout(() => {
-        btn.textContent = original;
-        btn.style.color = '';
-        btn.style.fontWeight = '';
-      }, 2000);
-    } catch (e: any) {
-      toast(e.message || 'Erreur de copie', 'error');
-    }
+      await navigator.clipboard.writeText(typeof data === 'string' ? data : JSON.stringify(data, null, 2));
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copié !';
+      setTimeout(() => { btn.textContent = orig; }, 2000);
+    } catch (e: any) { toast(e.message || 'Erreur de copie', 'error'); }
   }
 
   async function exportArticles(format: string, type?: string): Promise<void> {
     try {
-      let path: string = format === 'markdown' ? '/api/v1/articles/export/markdown' : '/api/v1/articles/export';
+      let path = format === 'markdown' ? '/api/v1/articles/export/markdown' : '/api/v1/articles/export';
       if (type) path += `?type=${type}`;
       const data: any = await api(path);
-      const blob: Blob = new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], { type: 'text/plain' });
-      const url: string = URL.createObjectURL(blob);
-      const a: HTMLAnchorElement = document.createElement('a');
-      a.href = url;
-      const suffix: string = type ? `-${type}` : '';
-      a.download = `earlywatch-export${suffix}.${format === 'markdown' ? 'md' : 'json'}`;
-      a.click();
+      const blob = new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `earlywatch-export${type ? '-' + type : ''}.${format === 'markdown' ? 'md' : 'json'}`; a.click();
       URL.revokeObjectURL(url);
-      toast('Export t\u00e9l\u00e9charg\u00e9');
-    } catch (e: any) {
-      toast(e.message || JSON.stringify(e) || 'Erreur export', 'error');
-    }
+      toast('Export téléchargé');
+    } catch (e: any) { toast(e.message || 'Erreur export', 'error'); }
   }
 
-  function escHtml(s: string): string {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
+  // ── Tracker drawer ────────────────────────────────────────────────────────
 
-  // --- Tracker drawer ---
   let trackerArticleId: string | null = null;
 
   document.addEventListener('click', (e: Event) => {
     const btn = (e.target as HTMLElement).closest('[data-tracker]') as HTMLElement | null;
     if (!btn) return;
-
     trackerArticleId = btn.dataset.tracker!;
-
-    // Pre-fill form from data attributes
     (document.getElementById('tracker-source') as HTMLInputElement).value = btn.dataset.source || '';
-    (document.getElementById('tracker-date') as HTMLInputElement).value = btn.dataset.date ? btn.dataset.date.slice(0, 10) : '';
+    (document.getElementById('tracker-date') as HTMLInputElement).value = btn.dataset.date ? btn.dataset.date.slice(0,10) : '';
     (document.getElementById('tracker-sujet') as HTMLInputElement).value = btn.dataset.title || '';
     (document.getElementById('tracker-synthese') as HTMLTextAreaElement).value = btn.dataset.synthese || '';
     (document.getElementById('tracker-lien') as HTMLInputElement).value = btn.dataset.url || '';
-    (document.getElementById('tracker-statut') as HTMLInputElement).value = 'Publi\u00e9';
-
-    // Map impact_type to tracker type
-    const typeMap: Record<string, string> = { nouvelle_regle: 'TEXTE', mise_a_jour: 'TEXTE', sanction: 'DECISION', appel_vigilance: 'CONSULTATION', consultation: 'CONSULTATION', info: 'TEXTE' };
-    (document.getElementById('tracker-type') as HTMLSelectElement).value = typeMap[btn.dataset.type || ''] || 'TEXTE';
-
+    (document.getElementById('tracker-statut') as HTMLInputElement).value = 'Publié';
+    const typeMap: Record<string, string> = { nouvelle_regle: 'TEXTE', mise_a_jour: 'TEXTE', sanction: 'DECISION', appel_vigilance: 'CONSULTATION', info: 'TEXTE' };
+    (document.getElementById('tracker-type') as HTMLSelectElement).value = typeMap[btn.dataset.type||''] || 'TEXTE';
     document.getElementById('tracker-overlay')!.style.display = 'flex';
   });
 
-  document.getElementById('tracker-close')?.addEventListener('click', () => {
-    document.getElementById('tracker-overlay')!.style.display = 'none';
-  });
-  document.getElementById('tracker-cancel')?.addEventListener('click', () => {
-    document.getElementById('tracker-overlay')!.style.display = 'none';
-  });
+  document.getElementById('tracker-close')?.addEventListener('click', () => { document.getElementById('tracker-overlay')!.style.display = 'none'; });
+  document.getElementById('tracker-cancel')?.addEventListener('click', () => { document.getElementById('tracker-overlay')!.style.display = 'none'; });
   document.getElementById('tracker-overlay')?.addEventListener('click', (e: Event) => {
     if (e.target === e.currentTarget) (e.currentTarget as HTMLElement).style.display = 'none';
   });
 
   document.getElementById('tracker-confirm')?.addEventListener('click', async () => {
     const body = {
-      source: (document.getElementById('tracker-source') as HTMLInputElement).value,
-      date: (document.getElementById('tracker-date') as HTMLInputElement).value,
-      sujet: (document.getElementById('tracker-sujet') as HTMLInputElement).value,
+      source:   (document.getElementById('tracker-source') as HTMLInputElement).value,
+      date:     (document.getElementById('tracker-date') as HTMLInputElement).value,
+      sujet:    (document.getElementById('tracker-sujet') as HTMLInputElement).value,
       synthese: (document.getElementById('tracker-synthese') as HTMLTextAreaElement).value,
-      type: (document.getElementById('tracker-type') as HTMLSelectElement).value,
-      lien: (document.getElementById('tracker-lien') as HTMLInputElement).value,
-      statut: (document.getElementById('tracker-statut') as HTMLInputElement).value,
+      type:     (document.getElementById('tracker-type') as HTMLSelectElement).value,
+      lien:     (document.getElementById('tracker-lien') as HTMLInputElement).value,
+      statut:   (document.getElementById('tracker-statut') as HTMLInputElement).value,
     };
-
     try {
-      const res: any = await api(`/api/v1/tracker/propose?article_id=${trackerArticleId}`, {
-        method: 'POST',
-        body: body,
-      });
-
+      const res: any = await api(`/api/v1/tracker/propose?article_id=${trackerArticleId}`, { method: 'POST', body });
       if (res.success) {
-        // Update local data
         const idx = articles.findIndex((a: any) => a.id === trackerArticleId);
         if (idx !== -1) articles[idx].tracker_added = true;
-
-        // Replace button with badge
-        const btn = document.querySelector(`[data-tracker="${trackerArticleId}"]`) as HTMLElement | null;
-        if (btn) {
-          const badge = document.createElement('span');
-          badge.className = 'badge-tracker-added';
-          badge.textContent = '\u2713 Tracker';
-          btn.parentNode!.replaceChild(badge, btn);
-          // Also remove the separator before it
-          const sep = badge.previousElementSibling as HTMLElement | null;
-          if (sep && sep.classList.contains('action-sep')) sep.remove();
-        }
         document.getElementById('tracker-overlay')!.style.display = 'none';
-        // Refresh tracker pending count from backend
         const tc: any = await api('/api/v1/tracker/pending-count').catch(() => ({ pending: 0 }));
         trackerPendingCount = tc?.pending || 0;
-        renderRightPanel();
-        toast('Article ajout\u00e9 au Tracker');
-      } else {
-        toast('Erreur tracker', 'error');
-      }
-    } catch (err: any) {
-      toast('Erreur: ' + err.message, 'error');
-    }
+        renderArticles(); renderRightPanel();
+        toast('Article ajouté au Tracker');
+      } else { toast('Erreur tracker', 'error'); }
+    } catch (err: any) { toast('Erreur: ' + err.message, 'error'); }
   });
 
-  // --- Pub drawer (Autres Publications) ---
-  let pubArticleId: string | null = null;
+  // ── Pub drawer ────────────────────────────────────────────────────────────
 
-  const PUB_TYPE_MAP: Record<string, string> = {
-    rapport: 'Rapport', etude: 'Rapport', evaluation: 'Rapport',
-  };
+  let pubArticleId: string | null = null;
+  const PUB_TYPE_MAP: Record<string, string> = { rapport: 'Rapport', etude: 'Rapport', evaluation: 'Rapport' };
 
   document.addEventListener('click', (e: Event) => {
     const btn = (e.target as HTMLElement).closest('[data-pub]') as HTMLElement | null;
     if (!btn) return;
-
     pubArticleId = btn.dataset.pub!;
-
-    // Pre-fill form from data attributes + article data
     const pubArticle = articles.find((a: any) => a.id === pubArticleId);
-    (document.getElementById('pub-date') as HTMLInputElement).value = btn.dataset.date ? btn.dataset.date.slice(0, 10) : '';
+    (document.getElementById('pub-date') as HTMLInputElement).value = btn.dataset.date ? btn.dataset.date.slice(0,10) : '';
     (document.getElementById('pub-source') as HTMLInputElement).value = btn.dataset.source || '';
     (document.getElementById('pub-titre') as HTMLInputElement).value = btn.dataset.title || '';
     (document.getElementById('pub-synthese') as HTMLTextAreaElement).value = pubArticle?.summary || '';
     (document.getElementById('pub-lien') as HTMLInputElement).value = btn.dataset.url || '';
-
-    // Map impact_type to Rapport/Intelligence
-    const impactType = btn.dataset.type || 'info';
-    (document.getElementById('pub-type') as HTMLSelectElement).value = PUB_TYPE_MAP[impactType] || 'Intelligence';
-
+    (document.getElementById('pub-type') as HTMLSelectElement).value = PUB_TYPE_MAP[btn.dataset.type||''] || 'Intelligence';
     document.getElementById('pub-overlay')!.style.display = 'flex';
   });
 
-  document.getElementById('pub-close')?.addEventListener('click', () => {
-    document.getElementById('pub-overlay')!.style.display = 'none';
-  });
-  document.getElementById('pub-cancel')?.addEventListener('click', () => {
-    document.getElementById('pub-overlay')!.style.display = 'none';
-  });
+  document.getElementById('pub-close')?.addEventListener('click', () => { document.getElementById('pub-overlay')!.style.display = 'none'; });
+  document.getElementById('pub-cancel')?.addEventListener('click', () => { document.getElementById('pub-overlay')!.style.display = 'none'; });
   document.getElementById('pub-overlay')?.addEventListener('click', (e: Event) => {
     if (e.target === e.currentTarget) (e.currentTarget as HTMLElement).style.display = 'none';
   });
 
   document.getElementById('pub-confirm')?.addEventListener('click', async () => {
     const body = {
-      date: (document.getElementById('pub-date') as HTMLInputElement).value,
-      source: (document.getElementById('pub-source') as HTMLInputElement).value,
-      type: (document.getElementById('pub-type') as HTMLSelectElement).value,
-      titre: (document.getElementById('pub-titre') as HTMLInputElement).value,
+      date:     (document.getElementById('pub-date') as HTMLInputElement).value,
+      source:   (document.getElementById('pub-source') as HTMLInputElement).value,
+      type:     (document.getElementById('pub-type') as HTMLSelectElement).value,
+      titre:    (document.getElementById('pub-titre') as HTMLInputElement).value,
       synthese: (document.getElementById('pub-synthese') as HTMLTextAreaElement).value,
-      lien: (document.getElementById('pub-lien') as HTMLInputElement).value,
+      lien:     (document.getElementById('pub-lien') as HTMLInputElement).value,
     };
-
     try {
-      const res: any = await api(`/api/v1/tracker/pub/propose?article_id=${pubArticleId}`, {
-        method: 'POST',
-        body: body,
-      });
-
+      const res: any = await api(`/api/v1/tracker/pub/propose?article_id=${pubArticleId}`, { method: 'POST', body });
       if (res.success) {
-        // Update local data
         const idx = articles.findIndex((a: any) => a.id === pubArticleId);
         if (idx !== -1) articles[idx].pub_added = true;
-
-        // Replace button with badge
-        const btn = document.querySelector(`[data-pub="${pubArticleId}"]`) as HTMLElement | null;
-        if (btn) {
-          const badge = document.createElement('span');
-          badge.className = 'badge-tracker-added';
-          badge.textContent = '\u2713 Pub';
-          btn.parentNode!.replaceChild(badge, btn);
-        }
         document.getElementById('pub-overlay')!.style.display = 'none';
+        renderArticles();
         toast('Ajouté aux autres publications');
-      } else {
-        toast('Erreur publication', 'error');
-      }
-    } catch (err: any) {
-      toast('Erreur: ' + err.message, 'error');
-    }
+      } else { toast('Erreur publication', 'error'); }
+    } catch (err: any) { toast('Erreur: ' + err.message, 'error'); }
   });
+
+  // ── Utils ─────────────────────────────────────────────────────────────────
+
+  function escHtml(s: string): string {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
   init();
 </script>
 
 <style is:global>
-  .article-title-row {
-    display: flex;
-    align-items: baseline;
+  /* Slide-in animation pour les drawers */
+  @keyframes ew-slide-in {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
   }
-  .title-ext-icon {
-    display: inline-flex;
-    align-items: center;
-    margin-left: 6px;
-    color: var(--ew-ink3);
-    opacity: 0;
-    transition: opacity 0.15s;
-    vertical-align: middle;
-    flex-shrink: 0;
-  }
-  .article-card:hover .title-ext-icon {
-    opacity: 1;
-  }
-  .article-impact-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 4px;
-    flex-wrap: wrap;
-  }
-  .impact-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: var(--ew-accent-bg);
-    color: var(--ew-accent-text);
-    font-size: 11px;
-    padding: 2px 10px;
-    border-radius: var(--ew-radius-sm);
-    flex-wrap: wrap;
-  }
+
+  /* Reset triage — ✕ dans le bouton actif */
   .triage-reset {
-    color: var(--ew-ink3);
+    color: var(--mute);
     font-size: 10px;
-    margin-left: 2px;
+    margin-left: 3px;
     cursor: pointer;
     transition: color 0.1s;
   }
-  .triage-reset:hover {
-    color: var(--ew-ink);
-  }
+  .triage-reset:hover { color: var(--ink); }
 
-  /* Tracker button & drawer */
-  .btn-tracker {
-    color: var(--ew-text-secondary);
-  }
-  .btn-tracker:hover { background: var(--ew-surface); color: var(--ew-text); }
-  .btn-tracker-pending::after {
-    content: '';
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    background-color: var(--ew-accent);
-    border-radius: 50%;
-    margin-left: 6px;
-    vertical-align: middle;
-  }
-
-  .badge-tracker-added {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
+  /* Badge tracker/pub confirmé */
+  .ew-badge-ok {
+    background: var(--bg-hover);
+    color: var(--taupe);
+    border: 0.5px solid var(--line-strong);
     padding: 2px 8px;
-    background: rgba(26,26,22,0.07);
-    color: var(--ew-ink);
-    border: 0.5px solid var(--ew-border2);
-    border-radius: var(--ew-radius-sm);
+    border-radius: 2px;
+    font-size: 9px;
+    letter-spacing: 0.1em;
   }
 
-  #tracker-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.3);
-    z-index: 1000;
-    display: flex;
-    justify-content: flex-end;
-  }
+  /* Textarea dans les drawers */
+  .ew-textarea { resize: vertical; min-height: 72px; }
 
-  #tracker-drawer {
-    width: 420px;
-    max-width: 90vw;
-    height: 100vh;
-    background: var(--ew-bg);
-    display: flex;
-    flex-direction: column;
-    animation: slideInRight 0.2s ease-out;
-  }
+  /* Scrollbar gutter pour les listes longues */
+  #ew-list { scrollbar-gutter: stable; }
 
-  @keyframes slideInRight {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
-  }
-
-  .tracker-field { display: flex; flex-direction: column; gap: 4px; }
-  .tracker-field span { font-size: 11px; font-weight: 600; color: var(--ew-ink2); text-transform: uppercase; letter-spacing: 0.5px; }
-  .tracker-input {
-    padding: 8px 10px;
-    border: 0.5px solid var(--ew-border2);
-    border-radius: 8px;
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 13px;
-    background: var(--ew-bg);
-    color: var(--ew-ink);
-  }
-  .tracker-input:focus { outline: none; border-color: var(--ew-ink); }
-
-  /* Clôturer confirmation modal */
-  #cloturer-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(26,25,24,0.4);
-    z-index: 1100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  #cloturer-modal {
-    background: var(--ew-bg);
-    border: 0.5px solid var(--ew-border2);
-    border-radius: 8px;
-    width: 440px;
-    max-width: 90vw;
-  }
-
-  /* Pub drawer — same pattern as tracker */
-  #pub-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.3);
-    z-index: 1000;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  #pub-drawer {
-    width: 420px;
-    max-width: 90vw;
-    height: 100vh;
-    background: var(--ew-bg);
-    display: flex;
-    flex-direction: column;
-    animation: slideInRight 0.2s ease-out;
-  }
-
-  /* Toolbar filters */
-  .toolbar-filters {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 20px;
-    border-bottom: 0.5px solid var(--ew-border);
-    flex-shrink: 0;
-    background: var(--ew-bg);
-    flex-wrap: wrap;
-    position: sticky;
-    top: 0;
-    z-index: 5;
-  }
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    border-radius: var(--ew-radius-pill);
-    font-size: 12px;
-    border: 0.5px solid var(--ew-border2);
-    background: transparent;
-    color: var(--ew-ink2);
-    cursor: pointer;
-    white-space: nowrap;
-    font-family: var(--ew-font);
-  }
-  .pill:hover { background: rgba(26,26,22,0.05); color: var(--ew-ink); }
-  .pill.active {
-    background: var(--ew-ink);
-    color: var(--ew-bg);
-    border-color: var(--ew-ink);
-    font-weight: 500;
-  }
-  .pill span { font-size: 11px; opacity: 0.7; }
-  .pill.active span { opacity: 1; }
-  .toolbar-sep { width: 1px; height: 16px; background: var(--ew-border); margin: 0 4px; flex-shrink: 0; }
-  .toolbar-sort { margin-left: auto; }
-
-  /* Impact tags */
-  .impact-tag {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 3px 9px;
-    border-radius: 4px;
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-  }
-  .impact-sanction,
-  .impact-appel_vigilance {
-    background: var(--ew-accent-bg2);
-    color: var(--ew-accent-text);
-    border: 0.5px solid var(--ew-accent-border);
-  }
-  .impact-nouvelle_regle,
-  .impact-mise_a_jour {
-    background: rgba(26,26,22,0.07);
-    color: var(--ew-ink2);
-    border: 0.5px solid var(--ew-border2);
-  }
-
-  .card-sanction {
-    border-left: 2px solid var(--ew-accent);
-  }
+  /* Les overlays sont contrôlés uniquement par JS (style.display = 'flex'/'none') */
+  #apercu-overlay { display: none; }
+  #cloturer-overlay { display: none; }
+  #pub-overlay { display: none; }
+  #tracker-overlay { display: none; }
 </style>

@@ -34,78 +34,78 @@ const base = import.meta.env.BASE_URL;
 <style>
   .proc-layout { display: flex; height: calc(100vh - 85px); }
   .proc-left {
-    width: 420px; min-width: 420px; border-right: 0.5px solid var(--ew-border2);
-    overflow-y: auto; padding: 0; background: var(--ew-bg);
+    width: 420px; min-width: 420px; border-right: 0.5px solid var(--line-strong);
+    overflow-y: auto; padding: 0; background: var(--bg);
   }
-  .proc-right { flex: 1; overflow-y: auto; background: var(--ew-bg); }
+  .proc-right { flex: 1; overflow-y: auto; background: var(--bg); }
 
   .prof-banner {
-    padding: 10px 16px; background: var(--ew-surface); border-bottom: 0.5px solid var(--ew-border2);
-    font-size: 12px; color: var(--ew-ink3); line-height: 1.4; border-radius: 8px;
+    padding: 10px 16px; background: var(--bg-side); border-bottom: 0.5px solid var(--line-strong);
+    font-size: 12px; color: var(--taupe); line-height: 1.4; border-radius: var(--radius);
   }
   .prof-link {
     display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600;
-    color: var(--ew-text); text-decoration: underline;
+    color: var(--ink); text-decoration: underline;
   }
 
   .left-header { padding: 16px 20px 0; }
-  .left-title { font-size: 15px; font-weight: 500; color: var(--ew-ink); }
-  .left-subtitle { font-size: 12px; color: var(--ew-ink3); margin-top: 2px; }
+  .left-title { font-size: 15px; font-weight: 500; color: var(--ink); }
+  .left-subtitle { font-size: 12px; color: var(--taupe); margin-top: 2px; }
 
   .proc-section { padding: 0 16px; }
 
   .section-toggle {
     display: flex; align-items: center; gap: 6px;
-    width: 100%; padding: 10px 4px; background: none; border: none; border-top: 0.5px solid var(--ew-border2);
+    width: 100%; padding: 10px 4px; background: none; border: none; border-top: 0.5px solid var(--line-strong);
     font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--ew-ink3); cursor: pointer; font-family: 'IBM Plex Sans', sans-serif; margin-top: 8px;
+    color: var(--taupe); cursor: pointer; font-family: 'IBM Plex Sans', sans-serif; margin-top: 8px;
   }
-  .section-toggle:hover { color: var(--ew-ink3); }
+  .section-toggle:hover { color: var(--taupe); }
   .toggle-arrow { font-size: 8px; transition: transform 0.2s; }
   .section-toggle.open .toggle-arrow { transform: rotate(90deg); }
 
   .proc-empty {
     display: flex; align-items: center; justify-content: center; height: 100%;
   }
-  .proc-empty-text { font-size: 14px; color: var(--ew-ink3); }
+  .proc-empty-text { font-size: 14px; color: var(--taupe); }
 </style>
 
 <style is:global>
   /* Procedure items in left column */
   .proc-item {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 12px; border: 0.5px solid var(--ew-border2); border-radius: 8px;
-    cursor: pointer; transition: all 0.12s; background: var(--ew-bg); margin-bottom: 6px;
+    padding: 10px 12px; border: 0.5px solid var(--line-strong); border-radius: var(--radius);
+    cursor: pointer; transition: all 0.12s; background: var(--bg); margin-bottom: 6px;
   }
-  .proc-item:hover { border-color: var(--ew-text); background: var(--ew-surface); }
-  .proc-item.active { background: var(--ew-surface); border-color: var(--ew-text); }
-  .proc-item.active .pi-ref, .proc-item.active .pi-title { color: var(--ew-text); }
-  .proc-item.active .pi-badge { background: var(--ew-surface); color: var(--ew-text); border-color: var(--ew-border); }
-  .proc-item.generated { border-left: 3px solid var(--ew-ink2); }
+  .proc-item:hover { border-color: var(--ink); background: var(--bg-side); }
+  .proc-item.active { background: var(--bg-side); border-color: var(--ink); }
+  .proc-item.active .pi-ref, .proc-item.active .pi-title { color: var(--ink); }
+  .proc-item.active .pi-badge { background: var(--bg-side); color: var(--ink); border-color: var(--line); }
+  .proc-item.generated { border-left: 3px solid var(--ink-soft); }
 
   .pi-left { flex: 1; min-width: 0; }
   .pi-ref {
-    font-size: 10px; font-weight: 600; color: var(--ew-ink3);
-    font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em;
+    font-size: 10px; font-weight: 600; color: var(--taupe);
+    font-family: var(--font-mono); letter-spacing: 0.04em;
   }
   .pi-title {
-    font-size: 12px; color: var(--ew-ink); font-weight: 500; margin-top: 1px;
+    font-size: 12px; color: var(--ink); font-weight: 500; margin-top: 1px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .pi-badge {
     font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
-    padding: 2px 7px; border-radius: 4px; flex-shrink: 0; margin-left: 8px;
-    border: 0.5px solid var(--ew-border2); background: var(--ew-bg); color: var(--ew-ink3);
-    font-family: 'IBM Plex Mono', monospace;
+    padding: 2px 7px; border-radius: var(--radius-sm); flex-shrink: 0; margin-left: 8px;
+    border: 0.5px solid var(--line-strong); background: var(--bg); color: var(--taupe);
+    font-family: var(--font-mono);
   }
-  .pi-badge-psp { background: var(--ew-surface); color: var(--ew-text); border-color: var(--ew-text); }
-  .pi-badge-banque { background: var(--ew-bg); color: var(--ew-ink2); border-color: var(--ew-ink2); }
-  .pi-badge-casp { background: var(--ew-bg); color: var(--ew-ink2); border-color: var(--ew-ink2); }
-  .pi-badge-tous { background: var(--ew-bg); color: var(--ew-ink3); border-color: var(--ew-ink3); }
+  .pi-badge-psp { background: var(--bg-side); color: var(--ink); border-color: var(--ink); }
+  .pi-badge-banque { background: var(--bg); color: var(--ink-soft); border-color: var(--ink-soft); }
+  .pi-badge-casp { background: var(--bg); color: var(--ink-soft); border-color: var(--ink-soft); }
+  .pi-badge-tous { background: var(--bg); color: var(--taupe); border-color: var(--taupe); }
 
   .section-label-oblig {
     font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--ew-ink3); font-weight: 700; margin: 14px 0 8px; padding: 0 4px;
+    color: var(--taupe); font-weight: 700; margin: 14px 0 8px; padding: 0 4px;
   }
 
   /* Result area */
@@ -113,30 +113,30 @@ const base = import.meta.env.BASE_URL;
     display: flex; justify-content: space-between; align-items: flex-start;
     margin-bottom: 20px;
   }
-  .result-title { font-size: 18px; font-weight: 600; color: var(--ew-ink); }
-  .result-meta { font-size: 12px; color: var(--ew-ink3); margin-top: 4px; }
+  .result-title { font-size: 18px; font-weight: 600; color: var(--ink); }
+  .result-meta { font-size: 12px; color: var(--taupe); margin-top: 4px; }
   .result-badge {
-    font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 8px;
+    font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: var(--radius);
     letter-spacing: 0.04em;
   }
-  .badge-perso { background: var(--ew-ink); color: var(--ew-ink2); }
-  .badge-generic { background: var(--ew-bg); color: var(--ew-ink3); }
+  .badge-perso { background: var(--ink); color: var(--ink-soft); }
+  .badge-generic { background: var(--bg); color: var(--taupe); }
 
   .result-actions { display: flex; gap: 8px; margin-top: 16px; }
   .btn-docx, .btn-validate {
     flex: 1; padding: 9px 12px; font-size: 12px; font-weight: 600; border: none;
-    border-radius: 8px; cursor: pointer; font-family: 'IBM Plex Sans', sans-serif;
+    border-radius: var(--radius); cursor: pointer; font-family: 'IBM Plex Sans', sans-serif;
     transition: opacity 0.15s;
   }
-  .btn-docx { background: var(--ew-ink); color: var(--ew-bg); }
-  .btn-validate { background: var(--ew-text); color: var(--ew-bg); }
+  .btn-docx { background: var(--ink); color: var(--bg); }
+  .btn-validate { background: var(--ink); color: var(--bg); }
   .btn-docx:hover, .btn-validate:hover { opacity: 0.9; }
-  .btn-docx:disabled, .btn-validate:disabled { background: var(--ew-ink3); cursor: not-allowed; }
+  .btn-docx:disabled, .btn-validate:disabled { background: var(--taupe); cursor: not-allowed; }
 
   .warning-box {
-    display: flex; gap: 10px; padding: 12px; background: var(--ew-surface);
-    border: 0.5px solid var(--ew-border2); border-radius: 8px; font-size: 12px;
-    color: var(--ew-ink3); margin-top: 20px;
+    display: flex; gap: 10px; padding: 12px; background: var(--bg-side);
+    border: 0.5px solid var(--line-strong); border-radius: var(--radius); font-size: 12px;
+    color: var(--taupe); margin-top: 20px;
   }
 </style>
 
@@ -332,7 +332,7 @@ const base = import.meta.env.BASE_URL;
       <div style="display:flex; align-items:center; justify-content:center; height:100%; flex-direction:column; gap:12px">
         <div class="spinner"></div>
         <p style="font-size:13px; color:#3D3B38">Generation de ${ref} en cours...</p>
-        <p style="font-size:11px; color:var(--ew-ink3)">Cela peut prendre 30 a 60 secondes</p>
+        <p style="font-size:11px; color:var(--taupe)">Cela peut prendre 30 a 60 secondes</p>
       </div>`;
 
     const profileMap: Record<string,string> = { 'PSP': 'psp', 'Banque': 'banque', 'CASP': 'casp', 'EME': 'psp', 'EC': 'banque' };
@@ -386,11 +386,11 @@ const base = import.meta.env.BASE_URL;
 
         ${srcsCited.length ? `
         <div style="margin-bottom:16px">
-          <div style="font-size:11px; color:var(--ew-ink3); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; font-weight:600">Articles cites</div>
+          <div style="font-size:11px; color:var(--taupe); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; font-weight:600">Articles cites</div>
           <div style="display:flex; gap:4px; flex-wrap:wrap">
             ${srcsCited.map((s: any) => `
               <a href="${s.lien_legifrance || '#'}" target="_blank" rel="noopener"
-                 style="font-size:10px; padding:2px 8px; background:var(--ew-surface); border-radius:4px; color:var(--ew-text); text-decoration:none; border:0.5px solid var(--ew-text); font-family:'IBM Plex Mono',monospace">
+                 style="font-size:10px; padding:2px 8px; background:var(--bg-side); border-radius:var(--radius-sm); color:var(--ink); text-decoration:none; border:0.5px solid var(--ink); font-family:var(--font-mono)">
                 Art. ${escHtml(s.article_number || '')}
               </a>
             `).join('')}

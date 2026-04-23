@@ -3,151 +3,154 @@ import AppLayout from '../layouts/AppLayout.astro';
 const base = import.meta.env.BASE_URL;
 ---
 
-<AppLayout title="Bibliotheque — Early Watch" activePage="bibliotheque">
-  <div class="bib-layout">
-    <div class="bib-main">
-      <div class="page-title">Bibliotheque de procedures LCB-FT</div>
-      <div class="page-subtitle">19 templates mis a jour — lies en temps reel a votre veille reglementaire</div>
+<AppLayout title="Bibliothèque — Early Watch" activePage="bibliotheque">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div class="bib-page-title">Bibliothèque de procédures LCB-FT</div>
+    <div class="bib-page-sub">19 templates mis à jour — liés en temps réel à votre veille réglementaire</div>
 
-      <div id="stats-bar" class="stats-bar">
-        <div class="stat-item">
-          <div class="stat-value" id="stat-total">--</div>
-          <div class="stat-label">Templates</div>
-        </div>
-        <div class="stat-item stat-hot">
-          <div class="stat-value" id="stat-hot">--</div>
-          <div class="stat-label">Potentiellement impactes (7 j)</div>
-        </div>
-        <div class="stat-item stat-warm">
-          <div class="stat-value" id="stat-warm">--</div>
-          <div class="stat-label">Articles lies (30 j)</div>
-        </div>
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-value" id="stat-total">--</div>
+        <div class="stat-label">Templates</div>
       </div>
-
-      <div class="filters">
-        <span class="filter-label">Profil :</span>
-        <button class="filter-btn active" data-filter="profile" data-value="">Tous</button>
-        <button class="filter-btn" data-filter="profile" data-value="Banque">Banque</button>
-        <button class="filter-btn" data-filter="profile" data-value="PSP">PSP</button>
-        <button class="filter-btn" data-filter="profile" data-value="CASP">CASP</button>
-
-        <span class="filter-label" style="margin-left:8px">Domaine :</span>
-        <button class="filter-btn active" data-filter="domain" data-value="">Tous</button>
-        <button class="filter-btn" data-filter="domain" data-value="KYC">KYC</button>
-        <button class="filter-btn" data-filter="domain" data-value="Sanctions">Sanctions</button>
-        <button class="filter-btn" data-filter="domain" data-value="Monitoring">Monitoring</button>
-        <button class="filter-btn" data-filter="domain" data-value="Tracfin">Tracfin</button>
-        <button class="filter-btn" data-filter="domain" data-value="Crypto">Crypto</button>
-
-        <input type="text" class="search-input" id="search-input" placeholder="Rechercher un template...">
+      <div class="stat-item">
+        <div class="stat-value" id="stat-hot">--</div>
+        <div class="stat-label">Potentiellement impactés (7 j)</div>
       </div>
-
-      <div id="grid" class="grid">
-        <div class="loading">Chargement des procedures...</div>
+      <div class="stat-item">
+        <div class="stat-value" id="stat-warm">--</div>
+        <div class="stat-label">Articles liés (30 j)</div>
       </div>
+    </div>
+
+    <div class="filters">
+      <span class="filter-label">Profil :</span>
+      <button class="filter-btn active" data-filter="profile" data-value="">Tous</button>
+      <button class="filter-btn" data-filter="profile" data-value="Banque">Banque</button>
+      <button class="filter-btn" data-filter="profile" data-value="PSP">PSP</button>
+      <button class="filter-btn" data-filter="profile" data-value="CASP">CASP</button>
+
+      <span class="filter-label" style="margin-left:8px">Domaine :</span>
+      <button class="filter-btn active" data-filter="domain" data-value="">Tous</button>
+      <button class="filter-btn" data-filter="domain" data-value="KYC">KYC</button>
+      <button class="filter-btn" data-filter="domain" data-value="Sanctions">Sanctions</button>
+      <button class="filter-btn" data-filter="domain" data-value="Monitoring">Monitoring</button>
+      <button class="filter-btn" data-filter="domain" data-value="Tracfin">Tracfin</button>
+      <button class="filter-btn" data-filter="domain" data-value="Crypto">Crypto</button>
+
+      <input type="text" class="search-input" id="search-input" placeholder="Rechercher un template...">
+    </div>
+
+    <div id="grid" class="grid">
+      <div class="bib-loading">Chargement des procédures...</div>
     </div>
   </div>
 </AppLayout>
 
 <style>
-  .bib-layout { min-height: 100vh; display: flex; flex-direction: column; }
-  .bib-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
-  .page-title { font-size: 15px; font-weight: 500; color: var(--noir); margin-bottom: 4px; }
-  .page-subtitle { font-size: 14px; color: var(--color-text-tertiary); margin-bottom: 28px; }
+  .bib-page-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+  .bib-page-sub   { font-size: 13px; color: var(--mute); margin-bottom: 28px; }
 
   .stats-bar {
-    display: grid; grid-template-columns: repeat(3, 1fr); border: 0.5px solid var(--ew-border2); gap: 0; margin-bottom: 24px; padding: 0;
-    background: var(--ew-bg);
-    border-radius: 8px; box-shadow: none;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    border: 0.5px solid var(--line); margin-bottom: 24px;
+    background: var(--bg);
   }
-  .stat-item { display: flex; flex-direction: column; gap: 2px; padding: 1.25rem 1.5rem; border-right: 0.5px solid var(--ew-border2); }
+  .stat-item {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 20px 24px; border-right: 0.5px solid var(--line);
+  }
   .stat-item:last-child { border-right: none; }
-  .stat-value { font-family: 'IBM Plex Mono', monospace; font-size: 32px; font-weight: 300; line-height: 1; color: var(--noir); }
-  .stat-label { font-size: 12px; color: var(--color-text-tertiary); }
-  .stat-hot .stat-value { color: var(--noir); }
-  .stat-warm .stat-value { color: var(--noir); }
+  .stat-value { font-family: var(--font-mono); font-size: 32px; font-weight: 300; line-height: 1; color: var(--ink); }
+  .stat-label { font-size: 12px; color: var(--mute); }
 
-  .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
-  .filter-label { font-size: 13px; color: var(--color-text-tertiary); font-weight: 500; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
+  .filter-label { font-size: 12px; color: var(--mute); font-family: var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; }
   .filter-btn {
-    padding: 6px 14px; border-radius: 8px; border: 0.5px solid var(--ew-border2);
-    background: var(--ew-bg); font-size: 13px; color: var(--ew-ink);
-    cursor: pointer; font-family: inherit; transition: all 0.15s;
+    padding: 5px 12px; border: 0.5px solid var(--line-strong);
+    background: transparent; font-size: 12px; color: var(--taupe);
+    cursor: pointer; font-family: inherit; transition: all 0.12s;
   }
-  .filter-btn:hover { background: var(--ew-bg); }
-  .filter-btn.active { background: var(--ew-text); border-color: var(--ew-text); color: var(--ew-bg); }
+  .filter-btn:hover { background: var(--bg-side); color: var(--ink); }
+  .filter-btn.active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 
   .search-input {
-    padding: 8px 14px; border: 0.5px solid var(--ew-border2);
-    border-radius: 8px; font-size: 14px; font-family: inherit;
-    width: 260px; color: var(--ew-ink); background: var(--ew-bg);
+    padding: 6px 12px; border: 0.5px solid var(--line-strong);
+    font-size: 13px; font-family: inherit;
+    width: 240px; color: var(--ink); background: var(--bg); outline: none;
+    transition: border-color 0.15s;
   }
-  .search-input:focus { outline: none; border-color: var(--ew-ink); }
-  .search-input::placeholder { color: var(--color-text-tertiary); }
+  .search-input:focus { border-color: var(--ink); }
+  .search-input::placeholder { color: var(--ghost); }
 
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
-  .loading { text-align: center; padding: 60px; color: var(--color-text-tertiary); font-size: 14px; }
+  .bib-loading { text-align: center; padding: 60px; color: var(--mute); font-size: 13px; }
 </style>
 
 <style is:global>
   .bib-card {
-    background: var(--ew-bg); border: 0.5px solid var(--ew-border2); border-radius: 8px;
+    background: var(--bg); border: 0.5px solid var(--line);
     padding: 20px; display: flex; flex-direction: column; gap: 14px;
-    transition: border-color 0.15s; box-shadow: none;
+    transition: border-color 0.12s;
   }
-  .bib-card:hover { border-color: var(--ew-border-strong); }
+  .bib-card:hover { border-color: var(--line-strong); }
 
   .bib-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
   .bib-card-ref {
-    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ew-text-secondary);
-    background: var(--ew-surface); padding: 3px 8px; border-radius: 8px; border: 0.5px solid var(--ew-border2); white-space: nowrap;
+    font-family: var(--font-mono); font-size: 10px; color: var(--mute);
+    background: var(--bg-side); padding: 3px 8px;
+    border: 0.5px solid var(--line); white-space: nowrap;
   }
 
   .bib-freshness-badge {
-    display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500;
-    padding: 4px 10px; border-radius: 8px; white-space: nowrap; cursor: pointer; border: 1px solid transparent;
+    display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500;
+    padding: 3px 9px; white-space: nowrap; cursor: pointer;
+    font-family: var(--font-mono); letter-spacing: 0.06em;
+    border: 0.5px solid transparent;
   }
-  .bib-freshness-badge.hot { background: var(--ew-accent-bg); color: var(--ew-accent-text); border-color: var(--ew-accent-text); }
-  .bib-freshness-badge.warm { background: var(--ew-bg); color: var(--ew-ink2); border-color: var(--ew-ink2); }
-  .bib-freshness-badge.ok { background: var(--ew-bg); color: var(--ew-ink2); border-color: var(--ew-ink2); }
-  .bib-freshness-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .bib-freshness-badge.hot  { color: var(--moutarde); border-color: var(--moutarde); }
+  .bib-freshness-badge.warm { color: var(--ink-soft); border-color: var(--ink-soft); }
+  .bib-freshness-badge.ok   { color: var(--taupe); border-color: var(--line-strong); }
+  .bib-freshness-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
-  .bib-card-title { font-size: 15px; font-weight: 500; color: var(--noir); line-height: 1.4; }
-  .bib-card-subtitle { font-size: 13px; color: var(--color-text-tertiary); margin-top: 2px; }
-  .bib-card-meta { display: flex; gap: 12px; align-items: center; }
-  .bib-card-domain { font-size: 12px; color: var(--ew-ink3); background: var(--ew-bg); padding: 3px 8px; border-radius: 8px; }
-  .bib-card-version { font-size: 12px; color: var(--color-text-tertiary); }
+  .bib-card-title    { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.4; }
+  .bib-card-subtitle { font-size: 13px; color: var(--mute); margin-top: 2px; }
+  .bib-card-meta     { display: flex; gap: 12px; align-items: center; }
+  .bib-card-domain   { font-size: 11px; color: var(--taupe); font-family: var(--font-mono); }
+  .bib-card-version  { font-size: 11px; color: var(--mute); }
   .bib-card-profiles { display: flex; gap: 6px; flex-wrap: wrap; }
-  .bib-profile-tag { font-size: 11px; padding: 2px 7px; border-radius: 8px; border: 0.5px solid var(--ew-border2); color: var(--ew-ink3); }
+  .bib-profile-tag {
+    font-size: 10px; padding: 2px 7px; border: 0.5px solid var(--line);
+    color: var(--taupe); font-family: var(--font-mono);
+  }
 
-  .bib-linked-articles { border-top: 0.5px solid var(--ew-border2); padding-top: 14px; display: none; }
+  .bib-linked-articles { border-top: 0.5px solid var(--line); padding-top: 14px; display: none; }
   .bib-linked-articles.open { display: block; }
-  .bib-linked-articles-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 10px; }
-  .bib-article-item { padding: 8px 10px; border-radius: 8px; background: var(--ew-bg); margin-bottom: 6px; display: flex; flex-direction: column; gap: 3px; }
-  .bib-article-item-title { font-size: 13px; color: var(--noir); font-weight: 500; text-decoration: none; line-height: 1.3; }
-  .bib-article-item-title:hover { color: var(--ew-text); }
-  .bib-article-item-meta { font-size: 11px; color: var(--color-text-tertiary); display: flex; gap: 8px; flex-wrap: wrap; }
-  .bib-article-theme-tag { font-size: 10px; padding: 1px 5px; border-radius: 8px; background: var(--ew-surface); color: var(--ew-text-secondary); border: 0.5px solid var(--ew-border2); }
-  .bib-no-articles { font-size: 13px; color: var(--color-text-tertiary); font-style: italic; }
+  .bib-linked-articles-title { font-size: 11px; font-weight: 500; color: var(--mute); margin-bottom: 10px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; }
+  .bib-article-item { padding: 8px 10px; background: var(--bg-side); margin-bottom: 6px; display: flex; flex-direction: column; gap: 3px; }
+  .bib-article-item-title { font-size: 13px; color: var(--ink); font-weight: 500; text-decoration: none; line-height: 1.3; }
+  .bib-article-item-title:hover { color: var(--taupe); }
+  .bib-article-item-meta { font-size: 11px; color: var(--mute); display: flex; gap: 8px; flex-wrap: wrap; }
+  .bib-article-theme-tag { font-size: 10px; padding: 1px 5px; background: var(--bg-hover); color: var(--taupe); border: 0.5px solid var(--line); }
+  .bib-no-articles { font-size: 13px; color: var(--mute); }
 
   .bib-card-actions { display: flex; gap: 10px; align-items: center; margin-top: auto; }
   .bib-btn-download {
-    flex: 1; padding: 9px 16px; background: var(--ew-text); color: var(--ew-bg);
-    border: 1px solid var(--ew-text); border-radius: 8px; font-size: 13px; font-weight: 500;
+    flex: 1; padding: 8px 14px; background: var(--ink); color: var(--bg);
+    border: 0.5px solid var(--ink); font-size: 12px; font-weight: 500;
     cursor: pointer; text-decoration: none; text-align: center; font-family: inherit;
     display: flex; align-items: center; justify-content: center; gap: 6px;
-    transition: background 0.15s; box-shadow: none;
+    transition: background 0.12s;
   }
-  .bib-btn-download:hover { background: #333331; }
+  .bib-btn-download:hover { background: var(--ink-soft); border-color: var(--ink-soft); }
   .bib-btn-articles-toggle {
-    padding: 9px 14px; background: var(--ew-bg); color: var(--ew-ink);
-    border: 0.5px solid var(--ew-border2); border-radius: 8px; font-size: 13px;
-    cursor: pointer; font-family: inherit; transition: all 0.15s;
+    padding: 8px 12px; background: transparent; color: var(--taupe);
+    border: 0.5px solid var(--line-strong); font-size: 12px;
+    cursor: pointer; font-family: inherit; transition: all 0.12s;
     display: flex; align-items: center; gap: 5px; white-space: nowrap;
-    box-shadow: none;
   }
-  .bib-btn-articles-toggle:hover { background: var(--ew-bg); }
-  .bib-btn-articles-toggle.active { background: var(--ew-text); color: var(--ew-bg); }
+  .bib-btn-articles-toggle:hover { background: var(--bg-side); color: var(--ink); }
+  .bib-btn-articles-toggle.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 </style>
 
 <script>
@@ -166,7 +169,7 @@ const base = import.meta.env.BASE_URL;
       renderGrid();
     } catch (e: any) {
       document.getElementById('grid')!.innerHTML =
-        '<div class="loading">Erreur de chargement. Verifiez votre connexion.</div>';
+        '<div class="bib-loading">Erreur de chargement. Vérifiez votre connexion.</div>';
     }
   }
 
@@ -195,7 +198,7 @@ const base = import.meta.env.BASE_URL;
     const procs: any[] = getFiltered();
     const grid: HTMLElement = document.getElementById('grid')!;
     if (!procs.length) {
-      grid.innerHTML = '<div class="loading">Aucun template trouve pour ces filtres.</div>';
+      grid.innerHTML = '<div class="bib-loading">Aucun template trouvé pour ces filtres.</div>';
       return;
     }
     grid.innerHTML = procs.map((p: any) => renderCard(p)).join('');
@@ -210,7 +213,7 @@ const base = import.meta.env.BASE_URL;
     if (p.freshness === 'hot') {
       return `<span class="bib-freshness-badge hot" data-toggle-articles="${p.reference}">
         <span class="bib-freshness-dot"></span>
-        ${p.articles_count_7d} article${p.articles_count_7d > 1 ? 's' : ''} recent${p.articles_count_7d > 1 ? 's' : ''}
+        ${p.articles_count_7d} article${p.articles_count_7d > 1 ? 's' : ''} récent${p.articles_count_7d > 1 ? 's' : ''}
       </span>`;
     }
     if (p.freshness === 'warm') {
@@ -220,7 +223,7 @@ const base = import.meta.env.BASE_URL;
       </span>`;
     }
     return `<span class="bib-freshness-badge ok">
-      <span class="bib-freshness-dot"></span> A jour
+      <span class="bib-freshness-dot"></span> À jour
     </span>`;
   }
 
@@ -247,16 +250,16 @@ const base = import.meta.env.BASE_URL;
       </div>
       <div class="bib-card-profiles">${profiles}</div>
       <div class="bib-linked-articles ${isOpen ? 'open' : ''}" id="bib-articles-${p.reference}">
-        <div class="bib-linked-articles-title">Articles reglementaires lies (30 derniers jours)</div>
+        <div class="bib-linked-articles-title">Articles réglementaires liés (30 derniers jours)</div>
         <div id="bib-articles-content-${p.reference}">
-          <div class="loading" style="padding:12px 0; font-size:13px">Chargement...</div>
+          <div class="bib-loading" style="padding:12px 0; font-size:13px">Chargement...</div>
         </div>
       </div>
       <div class="bib-card-actions">
-        <a href="${p.file_url}" download class="bib-btn-download">Telecharger .docx</a>
+        <a href="${p.file_url}" download class="bib-btn-download">Télécharger .docx</a>
         ${p.freshness !== 'ok' ? `
         <button class="${btnClass}" id="bib-btn-${p.reference}" data-toggle-articles="${p.reference}">
-          Articles lies
+          Articles liés
         </button>` : ''}
       </div>
     </div>`;
@@ -291,7 +294,7 @@ const base = import.meta.env.BASE_URL;
     try {
       const data: any = await api(`/api/v1/procedures-library/${ref}/articles`);
       if (!data.articles || !data.articles.length) {
-        contentEl.innerHTML = '<div class="bib-no-articles">Aucun article lie sur les 30 derniers jours.</div>';
+        contentEl.innerHTML = '<div class="bib-no-articles">Aucun article lié sur les 30 derniers jours.</div>';
       } else {
         contentEl.innerHTML = data.articles.map((a: any) => {
           const date: string = a.published_at

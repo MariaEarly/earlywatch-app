@@ -3,187 +3,182 @@ import AppLayout from '../layouts/AppLayout.astro';
 const base = import.meta.env.BASE_URL;
 ---
 
-<AppLayout title="Pays a risque — Early Watch" activePage="pays-risque">
-  <div class="cr-layout">
-    <div class="cr-main">
-      <div class="page-title">Pays a risque LCB-FT</div>
-      <div class="page-subtitle">FATF (noire/grise) + EU high-risk + ACPR — croisement automatique avec la veille</div>
+<AppLayout title="Pays à risque — Early Watch" activePage="pays-risque">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div class="cr-page-title">Pays à risque LCB-FT</div>
+    <div class="cr-page-sub">FATF (noire/grise) + EU high-risk + ACPR — croisement automatique avec la veille</div>
 
-      <div id="stats-bar" class="stats-bar" style="display:none">
-        <div class="stat-item stat-black">
-          <div class="stat-value" id="stat-black">--</div>
-          <div class="stat-label">Liste noire FATF</div>
-        </div>
-        <div class="stat-item stat-grey">
-          <div class="stat-value" id="stat-grey">--</div>
-          <div class="stat-label">Liste grise FATF</div>
-        </div>
-        <div class="stat-item stat-eu">
-          <div class="stat-value" id="stat-eu">--</div>
-          <div class="stat-label">EU high-risk seul</div>
-        </div>
-        <div class="stat-item stat-edd">
-          <div class="stat-value" id="stat-edd">--</div>
-          <div class="stat-label">EDD obligatoire</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value" id="stat-total">--</div>
-          <div class="stat-label">Pays total</div>
-        </div>
+    <div id="stats-bar" class="stats-bar" style="display:none">
+      <div class="stat-item stat-black">
+        <div class="stat-value" id="stat-black">--</div>
+        <div class="stat-label">Liste noire FATF</div>
       </div>
+      <div class="stat-item stat-grey">
+        <div class="stat-value" id="stat-grey">--</div>
+        <div class="stat-label">Liste grise FATF</div>
+      </div>
+      <div class="stat-item stat-eu">
+        <div class="stat-value" id="stat-eu">--</div>
+        <div class="stat-label">EU high-risk seul</div>
+      </div>
+      <div class="stat-item stat-edd">
+        <div class="stat-value" id="stat-edd">--</div>
+        <div class="stat-label">EDD obligatoire</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="stat-total">--</div>
+        <div class="stat-label">Pays total</div>
+      </div>
+    </div>
 
-      <div class="filters">
-        <span class="filter-label">Filtrer :</span>
-        <button class="filter-btn active" data-filter="all">Tous</button>
-        <button class="filter-btn" data-filter="black_list">Liste noire</button>
-        <button class="filter-btn" data-filter="grey_list">Liste grise</button>
-        <button class="filter-btn" data-filter="eu">EU high-risk</button>
-        <button class="filter-btn" data-filter="acpr">ACPR vigilance</button>
-        <button class="filter-btn" data-filter="hot">Articles recents</button>
-      </div>
+    <div class="filters">
+      <span class="filter-label">Filtrer :</span>
+      <button class="filter-btn active" data-filter="all">Tous</button>
+      <button class="filter-btn" data-filter="black_list">Liste noire</button>
+      <button class="filter-btn" data-filter="grey_list">Liste grise</button>
+      <button class="filter-btn" data-filter="eu">EU high-risk</button>
+      <button class="filter-btn" data-filter="acpr">ACPR vigilance</button>
+      <button class="filter-btn" data-filter="hot">Articles récents</button>
+    </div>
 
-      <div class="legend">
-        <div class="legend-item"><span class="legend-dot dot-black"></span> Liste noire FATF</div>
-        <div class="legend-item"><span class="legend-dot dot-grey"></span> Liste grise FATF</div>
-        <div class="legend-item"><span class="legend-dot dot-eu"></span> EU high-risk</div>
-        <div class="legend-item"><span class="legend-dot dot-hot"></span> Articles &lt;7j</div>
-        <div class="legend-item"><span class="legend-dot dot-warm"></span> Articles &lt;30j</div>
-      </div>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-dot dot-black"></span> Liste noire FATF</div>
+      <div class="legend-item"><span class="legend-dot dot-grey"></span> Liste grise FATF</div>
+      <div class="legend-item"><span class="legend-dot dot-eu"></span> EU high-risk</div>
+      <div class="legend-item"><span class="legend-dot dot-hot"></span> Articles &lt;7j</div>
+      <div class="legend-item"><span class="legend-dot dot-warm"></span> Articles &lt;30j</div>
+    </div>
 
-      <div id="table-container">
-        <div class="loading">Chargement des pays a risque...</div>
-      </div>
+    <div id="table-container">
+      <div class="cr-loading">Chargement des pays à risque...</div>
+    </div>
 
-      <div id="detail-panel" class="detail-panel">
-        <div class="detail-title" id="detail-title"></div>
-        <div class="detail-articles" id="detail-articles"></div>
-      </div>
+    <div id="detail-panel" class="detail-panel">
+      <div class="detail-title" id="detail-title"></div>
+      <div class="detail-articles" id="detail-articles"></div>
+    </div>
 
-      <div class="update-info">
-        Sources : FATF (fatf-gafi.org) — Plenaire fev. 2026 | Commission europeenne — Regl. delegue 2016/1675 modifie dec. 2025 | ACPR<br>
-        Prochaine mise a jour : apres le Plenaire FATF de juin 2026
-      </div>
+    <div class="update-info">
+      Sources : FATF (fatf-gafi.org) — Plénaire fév. 2026 | Commission européenne — Règl. délégué 2016/1675 modifié déc. 2025 | ACPR<br>
+      Prochaine mise à jour : après le Plénaire FATF de juin 2026
     </div>
   </div>
 </AppLayout>
 
 <style>
-  .cr-layout { min-height: 100vh; display: flex; flex-direction: column; }
-  .cr-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
-  .page-title { font-size: 15px; font-weight: 500; color: var(--noir); margin-bottom: 4px; }
-  .page-subtitle { font-size: 14px; color: var(--color-text-tertiary); margin-bottom: 28px; }
+  .cr-page-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+  .cr-page-sub   { font-size: 13px; color: var(--mute); margin-bottom: 28px; }
 
   .stats-bar {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-bottom: 24px; padding: 0;
-    background: var(--ew-bg); border: 0.5px solid var(--ew-border2);
-    border-radius: 8px; box-shadow: none;
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    border: 0.5px solid var(--line); margin-bottom: 24px;
+    background: var(--bg);
   }
-  .stat-item { display: flex; flex-direction: column; gap: 2px; padding: 1.25rem 1.5rem; border-right: 0.5px solid var(--ew-border2); }
+  .stat-item {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 20px 24px; border-right: 0.5px solid var(--line);
+  }
   .stat-item:last-child { border-right: none; }
-  .stat-value { font-family: 'IBM Plex Mono', monospace; font-size: 32px; font-weight: 300; line-height: 1; color: var(--noir); }
-  .stat-label { font-size: 12px; color: var(--color-text-tertiary); }
+  .stat-value { font-family: var(--font-mono); font-size: 32px; font-weight: 300; line-height: 1; color: var(--ink); }
+  .stat-label { font-size: 12px; color: var(--mute); }
 
-  .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
-  .filter-label { font-size: 13px; color: var(--color-text-tertiary); font-weight: 500; }
-  .filter-btn {
-    padding: 6px 14px; border-radius: 8px; border: 0.5px solid var(--ew-border2);
-    background: var(--ew-bg); font-size: 13px; color: var(--ew-ink);
-    cursor: pointer; font-family: inherit; transition: all 0.15s;
+  .filters {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center;
   }
-  .filter-btn:hover { background: var(--ew-bg); }
-  .filter-btn.active { background: var(--ew-text); border-color: var(--ew-text); color: var(--ew-bg); }
+  .filter-label { font-size: 12px; color: var(--mute); font-family: var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; }
+  .filter-btn {
+    padding: 5px 12px; border: 0.5px solid var(--line-strong);
+    background: transparent; font-size: 12px; color: var(--taupe);
+    cursor: pointer; font-family: inherit; transition: all 0.12s;
+  }
+  .filter-btn:hover { background: var(--bg-side); color: var(--ink); }
+  .filter-btn.active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 
   .legend {
     display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
-    font-size: 12px; color: var(--color-text-tertiary);
+    font-size: 12px; color: var(--mute);
   }
-  .legend-item { display: flex; align-items: center; gap: 5px; }
-  .legend-dot { width: 10px; height: 10px; border-radius: 50%; border: 0.5px solid var(--ew-border); }
-  .dot-black { background: var(--ew-ink); }
-  .dot-grey { background: var(--ew-ink3); }
-  .dot-eu { background: var(--ew-ink2); }
-  .dot-hot { background: var(--ew-accent-text); }
-  .dot-warm { background: var(--ew-ink2); }
+  .legend-item  { display: flex; align-items: center; gap: 5px; }
+  .legend-dot   { width: 8px; height: 8px; border-radius: 50%; border: 0.5px solid var(--line); display: inline-block; }
+  .dot-black    { background: var(--ink); }
+  .dot-grey     { background: var(--taupe); }
+  .dot-eu       { background: var(--ink-soft); }
+  .dot-hot      { background: var(--moutarde); }
+  .dot-warm     { background: var(--ink-soft); }
 
   .detail-panel {
     display: none; margin-top: 20px; padding: 20px;
-    background: var(--ew-bg); border: 0.5px solid var(--ew-border2);
-    border-radius: 8px; box-shadow: none;
+    background: var(--bg); border: 0.5px solid var(--line);
   }
   :global(.detail-panel.open) { display: block; }
-  .detail-title { font-size: 16px; font-weight: 500; color: var(--noir); margin-bottom: 12px; }
+  .detail-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 12px; }
   .detail-articles { display: flex; flex-direction: column; gap: 8px; }
 
   .update-info {
     margin-top: 20px; padding: 12px 16px; font-size: 12px;
-    color: var(--ew-ink3); background: var(--ew-bg);
-    border: 0.5px solid var(--ew-border2); border-radius: 8px;
+    color: var(--mute); background: var(--bg-side);
+    border: 0.5px solid var(--line);
   }
-  .loading { padding: 40px; text-align: center; color: var(--color-text-tertiary); font-size: 14px; }
+  .cr-loading { padding: 40px; text-align: center; color: var(--mute); font-size: 13px; }
 </style>
 
 <style is:global>
   .cr-table {
     width: 100%; border-collapse: collapse;
-    border: 0.5px solid var(--ew-border2); border-radius: 8px; overflow: hidden;
-    box-shadow: none;
+    border: 0.5px solid var(--line); overflow: hidden;
   }
   .cr-table thead th {
-    background: var(--ew-bg); color: var(--ew-ink3); font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-    font-weight: 400; text-align: left; padding: 10px 14px;
-    text-transform: uppercase; letter-spacing: 0.08em;
-    border-bottom: 0.5px solid var(--ew-border2);
+    background: var(--bg-side); color: var(--mute);
+    font-family: var(--font-mono); font-size: 10px;
+    font-weight: 500; text-align: left; padding: 10px 14px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    border-bottom: 0.5px solid var(--line-strong);
   }
   .cr-table tbody tr { transition: background 0.1s; }
-  .cr-table tbody tr:nth-child(even) { background: var(--ew-bg); }
-  .cr-table tbody tr:hover { background: var(--ew-bg); }
-  .cr-table td { padding: 10px 14px; font-size: 13px; color: var(--ew-ink); border-top: 0.5px solid var(--ew-border2); }
+  .cr-table tbody tr:hover { background: var(--bg-side); }
+  .cr-table td { padding: 10px 14px; font-size: 13px; color: var(--ink); border-top: 0.5px solid var(--line); }
   .cr-table td:first-child { font-weight: 500; }
 
-  .country-cell { display: flex; align-items: center; gap: 8px; }
-  .country-flag { font-size: 18px; }
-  .country-name { font-weight: 500; }
+  .country-cell  { display: flex; align-items: center; gap: 8px; }
+  .country-flag  { font-size: 18px; }
+  .country-name  { font-weight: 500; }
 
-  .fatf-badge { display: inline-block; padding: 2px 10px; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400; letter-spacing: 0.06em; border: 1px solid; }
-  .fatf-black { background: var(--ew-ink); color: var(--ew-bg); border-color: var(--ew-ink); }
-  .fatf-grey { background: var(--ew-bg); color: var(--ew-ink3); border-color: var(--ew-ink3); }
-  .fatf-clean { background: var(--ew-bg); color: var(--ew-ink2); border-color: var(--ew-ink2); }
+  .fatf-badge { display: inline-block; padding: 2px 9px; font-family: var(--font-mono); font-size: 10px; font-weight: 400; letter-spacing: 0.06em; border: 0.5px solid; }
+  .fatf-black { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .fatf-grey  { color: var(--taupe); border-color: var(--taupe); }
+  .fatf-clean { color: var(--taupe); border-color: var(--line-strong); }
 
-  .eu-badge { display: inline-block; padding: 2px 8px; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400; }
-  .eu-yes { background: var(--ew-bg); color: var(--ew-ink2); border: 1px solid var(--ew-ink2); }
-  .eu-no { color: #aaa; font-size: 11px; }
+  .eu-badge { display: inline-block; padding: 2px 8px; font-family: var(--font-mono); font-size: 10px; font-weight: 400; border: 0.5px solid; }
+  .eu-yes   { color: var(--ink-soft); border-color: var(--ink-soft); }
+  .eu-no    { color: var(--ghost); font-size: 11px; }
 
   .edd-badge {
     display: inline-flex; align-items: center; gap: 3px;
-    padding: 2px 8px; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400;
-    background: var(--ew-accent-bg); color: var(--ew-accent-text); border: 1px solid var(--ew-accent-text);
+    padding: 2px 8px; font-family: var(--font-mono); font-size: 10px; font-weight: 400;
+    color: var(--moutarde); border: 0.5px solid var(--moutarde);
   }
 
   .cr-freshness-badge {
     display: inline-flex; align-items: center; gap: 4px;
-    padding: 2px 10px; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400; cursor: pointer;
+    padding: 2px 9px; font-family: var(--font-mono); font-size: 10px; font-weight: 400;
+    cursor: pointer; border: 0.5px solid;
   }
-  .cr-freshness-hot { background: var(--ew-accent-bg); color: var(--ew-accent-text); border: 1px solid var(--ew-accent-text); }
-  .cr-freshness-warm { background: var(--ew-bg); color: var(--ew-ink2); border: 1px solid var(--ew-ink2); }
-  .cr-freshness-dot { width: 6px; height: 6px; border-radius: 50%; }
-  .cr-freshness-hot .cr-freshness-dot { background: var(--ew-accent-text); }
-  .cr-freshness-warm .cr-freshness-dot { background: var(--ew-ink2); }
+  .cr-freshness-hot  { color: var(--moutarde); border-color: var(--moutarde); }
+  .cr-freshness-warm { color: var(--ink-soft); border-color: var(--ink-soft); }
+  .cr-freshness-dot  { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
-  .acpr-badge {
-    display: inline-block; font-size: 11px; padding: 2px 8px;
-    border-radius: 8px; background: var(--ew-bg); color: var(--ew-ink2); border: 1px solid var(--ew-ink2);
-  }
+  .acpr-badge { display: inline-block; font-size: 11px; padding: 2px 8px; color: var(--ink-soft); border: 0.5px solid var(--ink-soft); }
 
-  .legal-cell { font-size: 11px; color: var(--color-text-tertiary); max-width: 200px; }
-  .notes-row td { padding: 6px 14px 12px; font-size: 12px; color: var(--ew-ink3); background: var(--ew-bg); }
+  .legal-cell { font-size: 11px; color: var(--mute); max-width: 200px; }
+  .notes-row td { padding: 6px 14px 12px; font-size: 12px; color: var(--taupe); background: var(--bg-side); }
 
   .cr-detail-article {
-    padding: 10px 14px; background: var(--ew-bg); border: 0.5px solid var(--ew-border2);
-    border-radius: 8px; font-size: 13px;
+    padding: 10px 14px; background: var(--bg); border: 0.5px solid var(--line);
+    font-size: 13px;
   }
-  .cr-detail-article a { color: var(--ew-text-secondary); font-weight: 500; text-decoration: none; }
+  .cr-detail-article a { color: var(--ink); font-weight: 500; text-decoration: none; }
   .cr-detail-article a:hover { text-decoration: underline; }
-  .cr-detail-meta { font-size: 11px; color: var(--color-text-tertiary); margin-top: 3px; }
+  .cr-detail-meta { font-size: 11px; color: var(--mute); margin-top: 3px; }
 </style>
 
 <script>
@@ -208,7 +203,7 @@ const base = import.meta.env.BASE_URL;
       renderTable();
     } catch (e: any) {
       document.getElementById('table-container')!.innerHTML =
-        `<div class="loading">Erreur : ${e.message}</div>`;
+        `<div class="cr-loading">Erreur : ${e.message}</div>`;
     }
   }
 
@@ -228,13 +223,13 @@ const base = import.meta.env.BASE_URL;
     const countries: any[] = getFiltered();
     if (!countries.length) {
       document.getElementById('table-container')!.innerHTML =
-        '<div class="loading">Aucun pays pour ce filtre.</div>';
+        '<div class="cr-loading">Aucun pays pour ce filtre.</div>';
       return;
     }
 
     let html: string = `<table class="cr-table">
       <thead><tr>
-        <th>Pays</th><th>FATF</th><th>EU</th><th>ACPR</th><th>EDD</th><th>Base legale</th><th>Veille</th>
+        <th>Pays</th><th>FATF</th><th>EU</th><th>ACPR</th><th>EDD</th><th>Base légale</th><th>Veille</th>
       </tr></thead><tbody>`;
 
     for (const c of countries) {
@@ -303,7 +298,7 @@ const base = import.meta.env.BASE_URL;
     if (!c) return;
 
     titleEl.textContent = `${c.flag_emoji || ''} ${c.country_name} \u2014 articles de veille (90 jours)`;
-    articlesEl.innerHTML = '<div class="loading" style="padding:12px 0;font-size:13px">Chargement...</div>';
+    articlesEl.innerHTML = '<div class="cr-loading" style="padding:12px 0;font-size:13px">Chargement...</div>';
     panel.classList.add('open');
     panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
@@ -312,7 +307,7 @@ const base = import.meta.env.BASE_URL;
       const articles: any[] = data.articles || [];
 
       if (!articles.length) {
-        articlesEl.innerHTML = '<div style="font-size:13px;color:var(--color-text-tertiary)">Aucun article mentionne ce pays sur les 90 derniers jours.</div>';
+        articlesEl.innerHTML = '<div style="font-size:13px;color:var(--mute)">Aucun article mentionne ce pays sur les 90 derniers jours.</div>';
         return;
       }
 
@@ -321,7 +316,7 @@ const base = import.meta.env.BASE_URL;
           ? new Date(a.published_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
           : '';
         const themes: string = (a.themes || []).slice(0, 3).map((t: string) =>
-          `<span style="background:var(--beige2);padding:1px 6px;border-radius:8px;font-size:10px;border:1px solid var(--color-border)">${t}</span>`
+          `<span style="background:var(--bg-hover);padding:1px 6px;font-size:10px;border:0.5px solid var(--line);color:var(--taupe)">${t}</span>`
         ).join(' ');
         return `<div class="cr-detail-article">
           <a href="${a.original_url || '#'}" target="_blank">${a.title}</a>
@@ -329,7 +324,7 @@ const base = import.meta.env.BASE_URL;
         </div>`;
       }).join('');
     } catch (e: any) {
-      articlesEl.innerHTML = '<div style="color:var(--ew-accent-text);font-size:13px">Erreur de chargement.</div>';
+      articlesEl.innerHTML = '<div style="color:var(--moutarde);font-size:13px">Erreur de chargement.</div>';
     }
   }
 

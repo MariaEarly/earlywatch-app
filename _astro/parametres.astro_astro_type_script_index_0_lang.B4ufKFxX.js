@@ -1,0 +1,1 @@
+import{g as s}from"./api.CcTKbNwm.js";const m="/earlywatch-app/",t=s();if(t){const e=document.getElementById("org-name"),n=document.getElementById("org-type");e&&(e.textContent=t.tenant_name||"—"),n&&(n.textContent="Tenant · "+(t.role||"—"))}const o=document.getElementById("link-settings");o&&o.setAttribute("href",m+"settings");
