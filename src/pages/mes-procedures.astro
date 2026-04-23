@@ -10,29 +10,11 @@ const base = import.meta.env.BASE_URL;
         <div>
           <div class="page-title">Mes procédures LCB-FT</div>
           <div class="page-subtitle">Vos procédures réglementaires — statut, articles liés et téléchargement</div>
+          <div id="stats-summary" class="stats-summary" style="display:none"></div>
         </div>
         <button id="btn-export-pdf" class="btn-export-audit">
           Exporter piste d'audit PDF
         </button>
-      </div>
-
-      <div id="stats-bar" class="stats-bar" style="display:none">
-        <div class="stat-item">
-          <div class="stat-value" id="stat-total">--</div>
-          <div class="stat-label">Procédures</div>
-        </div>
-        <div class="stat-item stat-ok">
-          <div class="stat-value" id="stat-valide">--</div>
-          <div class="stat-label">Validées</div>
-        </div>
-        <div class="stat-item stat-warn">
-          <div class="stat-value" id="stat-pending">--</div>
-          <div class="stat-label">À valider</div>
-        </div>
-        <div class="stat-item stat-hot">
-          <div class="stat-value" id="stat-alert">--</div>
-          <div class="stat-label">Alertes articles</div>
-        </div>
       </div>
 
       <div class="filters" id="filters-bar" style="display:none">
@@ -62,30 +44,19 @@ const base = import.meta.env.BASE_URL;
   .mp-layout { min-height: 100vh; display: flex; flex-direction: column; }
   .mp-main { flex: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; width: 100%; }
   .page-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
-  .page-subtitle { font-size: 14px; color: var(--mute); margin-bottom: 28px; }
+  .page-subtitle { font-size: 14px; color: var(--mute); margin-bottom: 4px; }
+  .stats-summary { font-size: 13px; color: var(--mute); margin-bottom: 24px; }
 
-  .stats-bar {
-    display: grid; grid-template-columns: repeat(4, 1fr); border: 0.5px solid var(--line-strong); gap: 0; margin-bottom: 24px; padding: 0;
-    background: var(--bg);
-    border-radius: var(--radius); box-shadow: none;
-  }
-  .stat-item { display: flex; flex-direction: column; gap: 2px; padding: 1.25rem 1.5rem; border-right: 0.5px solid var(--line-strong); }
-  .stat-item:last-child { border-right: none; }
-  .stat-value { font-family: var(--font-mono); font-size: 32px; font-weight: 300; line-height: 1; color: var(--ink); }
-  .stat-label { font-size: 12px; color: var(--mute); }
-  .stat-hot .stat-value { color: var(--ink); }
-  .stat-warn .stat-value { color: var(--ink); }
-  .stat-ok .stat-value { color: var(--ink); }
-
-  .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
-  .filter-label { font-size: 13px; color: var(--mute); font-weight: 500; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
+  .filter-label { font-size: 12px; color: var(--mute); font-weight: 500; }
   .filter-btn {
-    padding: 6px 14px; border-radius: var(--radius); border: 0.5px solid var(--line-strong);
-    background: var(--bg); font-size: 13px; color: var(--ink);
+    padding: 5px 12px; border-radius: var(--radius); border: 0.5px solid #D5D2CB;
+    background: transparent; font-size: 12px; color: #666;
     cursor: pointer; font-family: inherit; transition: all 0.15s;
   }
-  .filter-btn:hover { background: var(--bg-side); }
-  .filter-btn.active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .filter-btn:hover { background: var(--bg-side); color: var(--ink); }
+  .filter-btn.active { background: rgba(92,99,71,0.12); border-color: #5C6347; color: #5C6347; }
+
   .btn-export-audit {
     background: var(--ink); color: var(--bg); font-weight: 500;
     padding: 8px 18px; margin-top: 4px; border-radius: var(--radius);
@@ -110,15 +81,18 @@ const base = import.meta.env.BASE_URL;
   .mp-card:hover { border-color: var(--line-strong); }
   .mp-card.alert-border { border-color: var(--moutarde); }
 
-  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .card-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .card-top-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
   .card-ref {
     font-family: var(--font-mono); font-size: 11px; color: var(--taupe);
-    background: var(--bg-side); padding: 3px 8px; border-radius: var(--radius); border: 0.5px solid var(--line-strong);
-    white-space: nowrap;
+    background: var(--bg-side); padding: 3px 8px; border-radius: var(--radius);
+    border: 0.5px solid var(--line-strong); white-space: nowrap;
+  }
+  .card-meta-inline {
+    font-family: var(--font-mono); font-size: 10px; color: var(--taupe);
+    white-space: nowrap; letter-spacing: .02em;
   }
 
-  /* Status badges — V3 global classes used directly (defined in global.css) */
-  /* Obsolete card — title dims per DS §10 row rule */
   .mp-card.is-obsolete .card-title { color: var(--taupe); }
 
   .alert-ribbon {
@@ -139,23 +113,20 @@ const base = import.meta.env.BASE_URL;
 
   .card-title { font-size: 15px; font-weight: 500; color: var(--ink); line-height: 1.4; }
   .card-subtitle { font-size: 13px; color: var(--mute); margin-top: 2px; }
-  .card-meta { display: flex; gap: 12px; align-items: center; }
-  .card-domain { font-size: 12px; color: var(--taupe); background: var(--bg); padding: 3px 8px; border-radius: var(--radius); }
-  .card-version { font-size: 12px; color: var(--mute); }
 
   .status-selector {
     display: flex; gap: 6px; flex-wrap: wrap; padding-top: 10px;
     border-top: 0.5px solid var(--line-strong);
   }
   .status-opt {
-    padding: 5px 12px; border-radius: var(--radius); border: 0.5px solid var(--line-strong);
-    background: var(--bg); font-size: 12px; cursor: pointer;
-    font-family: inherit; transition: all 0.15s; color: var(--ink);
+    padding: 4px 11px; border-radius: var(--radius); border: 0.5px solid #D5D2CB;
+    background: transparent; font-size: 12px; cursor: pointer;
+    font-family: inherit; transition: all 0.15s; color: #666;
   }
-  .status-opt:hover { background: var(--bg-side); }
-  .status-opt.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-  .status-opt.active-valide { background: var(--moutarde); color: var(--bg); border-color: var(--moutarde); }
-  .status-opt.active-obsolete { background: var(--taupe); color: var(--bg); border-color: var(--taupe); }
+  .status-opt:hover { background: var(--bg-side); color: var(--ink); }
+  .status-opt.active        { background: rgba(92,99,71,0.12); color: #5C6347; border-color: #5C6347; }
+  .status-opt.active-valide  { background: rgba(92,99,71,0.12); color: #5C6347; border-color: #5C6347; }
+  .status-opt.active-obsolete { background: rgba(92,99,71,0.12); color: #5C6347; border-color: #5C6347; }
 
   .linked-articles { border-top: 0.5px solid var(--line-strong); padding-top: 12px; display: none; }
   .linked-articles.open { display: block; }
@@ -169,28 +140,27 @@ const base = import.meta.env.BASE_URL;
 
   .card-actions { display: flex; gap: 10px; align-items: center; margin-top: auto; }
   .btn-download {
-    flex: 1; padding: 9px 16px; background: var(--ink); color: var(--bg);
-    border: 1px solid var(--ink); border-radius: var(--radius); font-size: 13px; font-weight: 500;
+    flex: 1; padding: 8px 16px; background: #5C6347; color: var(--bg);
+    border: 1px solid #5C6347; border-radius: var(--radius); font-size: 13px; font-weight: 500;
     cursor: pointer; text-decoration: none; text-align: center; font-family: inherit;
     display: flex; align-items: center; justify-content: center; gap: 6px;
     transition: background 0.15s; box-shadow: none;
   }
-  .btn-download:hover { background: var(--ink-soft); }
+  .btn-download:hover { background: #4a5038; border-color: #4a5038; }
   .btn-toggle {
-    padding: 9px 14px; background: var(--bg); color: var(--ink);
+    padding: 8px 14px; background: var(--bg); color: var(--ink);
     border: 0.5px solid var(--line-strong); border-radius: var(--radius); font-size: 13px;
     cursor: pointer; font-family: inherit; transition: all 0.15s;
     display: flex; align-items: center; gap: 5px; white-space: nowrap;
     box-shadow: none;
   }
   .btn-toggle:hover { background: var(--bg-side); }
-  .btn-toggle.active { background: var(--ink); color: var(--bg); }
+  .btn-toggle.active { background: rgba(92,99,71,0.12); color: #5C6347; border-color: #5C6347; }
 </style>
 
 <script>
   import { api, toast, API, isImpersonating } from '../scripts/api';
 
-  // Hide admin-only PDF export when in client impersonation mode
   if (isImpersonating()) {
     const btn = document.getElementById('btn-export-pdf');
     if (btn) btn.style.display = 'none';
@@ -200,6 +170,17 @@ const base = import.meta.env.BASE_URL;
   let filters: any = { status: '', domain: '' };
   let openArticles: Set<string> = new Set();
 
+  function sanitizeTitle(t: string): string {
+    return t
+      .replace(/\bControle\b/g, 'Contrôle').replace(/\bcontrole\b/g, 'contrôle')
+      .replace(/\bSelection\b/g, 'Sélection').replace(/\bselection\b/g, 'sélection')
+      .replace(/\bMaitrise\b/g, 'Maîtrise').replace(/\bmaitrise\b/g, 'maîtrise')
+      .replace(/\bEntree\b/g, 'Entrée').replace(/\bentree\b/g, 'entrée')
+      .replace(/\bbeneficiaire\b/g, 'bénéficiaire').replace(/\bBeneficiaire\b/g, 'Bénéficiaire')
+      .replace(/\bverification\b/g, 'vérification').replace(/\bVerification\b/g, 'Vérification')
+      .replace(/\bCompetences\b/g, 'Compétences').replace(/\bcompetences\b/g, 'compétences');
+  }
+
   async function loadProcedures(): Promise<void> {
     try {
       const data: any = await api('/api/v1/my-procedures');
@@ -207,14 +188,13 @@ const base = import.meta.env.BASE_URL;
       if (!data.enabled) {
         document.getElementById('grid')!.innerHTML = `
           <div class="disabled-msg">
-            <h2>Module Procedures non active</h2>
-            <p>Contactez votre administrateur pour activer l'acces aux procedures LCB-FT.</p>
+            <h2>Module Procédures non activé</h2>
+            <p>Contactez votre administrateur pour activer l'accès aux procédures LCB-FT.</p>
           </div>`;
         return;
       }
 
       allProcedures = data.procedures || [];
-      document.getElementById('stats-bar')!.style.display = 'flex';
       document.getElementById('filters-bar')!.style.display = 'flex';
       updateStats();
       renderGrid();
@@ -226,12 +206,13 @@ const base = import.meta.env.BASE_URL;
 
   function updateStats(): void {
     const valide: number = allProcedures.filter((p: any) => p.status === 'valide').length;
-    const pending: number = allProcedures.filter((p: any) => p.status === 'a_valider' || p.status === 'en_cours').length;
     const alert: number = allProcedures.filter((p: any) => p.status_alert).length;
-    document.getElementById('stat-total')!.textContent = String(allProcedures.length);
-    document.getElementById('stat-valide')!.textContent = String(valide);
-    document.getElementById('stat-pending')!.textContent = String(pending);
-    document.getElementById('stat-alert')!.textContent = String(alert);
+    const n = allProcedures.length;
+    const el = document.getElementById('stats-summary');
+    if (el) {
+      el.textContent = `${n} procédure${n > 1 ? 's' : ''} attribuée${n > 1 ? 's' : ''} · ${valide} validée${valide > 1 ? 's' : ''} · ${alert} alerte${alert > 1 ? 's' : ''} active${alert > 1 ? 's' : ''}`;
+      el.style.display = 'block';
+    }
   }
 
   function getFiltered(): any[] {
@@ -261,14 +242,6 @@ const base = import.meta.env.BASE_URL;
     const isOpen: boolean = openArticles.has(p.reference);
     const hasArticles: boolean = p.freshness !== 'ok';
 
-    const statusClassMap: Record<string, string> = {
-      a_valider: 'status-a-reviser',
-      en_cours: 'status-en-cours',
-      valide: 'status-valide',
-      obsolete: 'status-obsolete',
-    };
-    const statusBdg: string = `<span class="${statusClassMap[p.status] || 'status-a-reviser'}">${p.status_label}</span>`;
-
     let freshBdg: string = '';
     if (p.freshness === 'hot') {
       freshBdg = `<span class="freshness-badge hot" data-toggle-articles="${p.reference}">
@@ -281,7 +254,7 @@ const base = import.meta.env.BASE_URL;
     }
 
     const alertRibbon: string = p.status_alert
-      ? `<div class="alert-ribbon">Nouveaux articles detectes — revision recommandee</div>`
+      ? `<div class="alert-ribbon">Nouveaux articles détectés — révision recommandée</div>`
       : '';
 
     const statuses: string[] = ['a_valider', 'en_cours', 'valide', 'obsolete'];
@@ -299,20 +272,16 @@ const base = import.meta.env.BASE_URL;
     return `
     <div class="mp-card ${p.status_alert ? 'alert-border' : ''} ${p.status === 'obsolete' ? 'is-obsolete' : ''}" id="card-${p.reference}">
       <div class="card-top">
-        <span class="card-ref">${p.reference}</span>
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          ${statusBdg}
-          ${freshBdg}
+        <div class="card-top-left">
+          <span class="card-ref">${p.reference}</span>
+          <span class="card-meta-inline">${p.domain} · v${p.version}</span>
         </div>
+        ${freshBdg}
       </div>
       ${alertRibbon}
       <div>
-        <div class="card-title">${p.title}</div>
+        <div class="card-title">${sanitizeTitle(p.title)}</div>
         <div class="card-subtitle">${p.subtitle || ''}</div>
-      </div>
-      <div class="card-meta">
-        <span class="card-domain">${p.domain}</span>
-        <span class="card-version">v${p.version}</span>
       </div>
       <div class="status-selector">${statusSelector}</div>
       <div class="linked-articles ${isOpen ? 'open' : ''}" id="articles-${p.reference}">
@@ -405,7 +374,6 @@ const base = import.meta.env.BASE_URL;
     }
   }
 
-  // Filter UI
   document.querySelectorAll('.filter-btn').forEach((btn: any) => {
     btn.addEventListener('click', () => {
       const filterType: string = btn.dataset.filter;
@@ -417,11 +385,10 @@ const base = import.meta.env.BASE_URL;
     });
   });
 
-  // Export PDF
   document.getElementById('btn-export-pdf')!.addEventListener('click', async () => {
     const btn: HTMLButtonElement = document.getElementById('btn-export-pdf') as HTMLButtonElement;
     btn.disabled = true;
-    btn.textContent = 'Generation en cours...';
+    btn.textContent = 'Génération en cours...';
     try {
       const token: string | null = sessionStorage.getItem('ew_token');
       const res: Response = await fetch(`${API}/api/v1/audit/export-pdf`, {
@@ -445,7 +412,7 @@ const base = import.meta.env.BASE_URL;
       toast(e.message || 'Erreur export PDF', 'error');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Exporter piste d\'audit PDF';
+      btn.textContent = "Exporter piste d'audit PDF";
     }
   });
 
