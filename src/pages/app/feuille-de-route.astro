@@ -14,28 +14,37 @@ import ClientLayout from '../../layouts/ClientLayout.astro';
 
 </ClientLayout>
 
-<style>
+<style is:global>
   .deadline-card {
     border: 0.5px solid var(--line);
     border-radius: var(--radius);
     padding: 18px 22px;
     margin-bottom: 12px;
     display: grid;
-    grid-template-columns: 100px 1fr auto;
+    grid-template-columns: 90px 1fr auto;
     gap: 20px;
     align-items: start;
   }
   .deadline-card.imminent { border-color: #5C6347; }
-  .dl-date {
+  .dl-day {
     font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 42px;
+    font-weight: 300;
+    line-height: 1;
     color: var(--ink);
+  }
+  .dl-monthyear {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--taupe);
+    margin-top: 3px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
   }
   .dl-countdown {
     font-size: 11px;
     color: var(--taupe);
-    margin-top: 4px;
+    margin-top: 6px;
   }
   .dl-title   { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 5px; }
   .dl-desc    { font-size: 12px; color: var(--taupe); margin-bottom: 8px; line-height: 1.5; }
@@ -62,7 +71,17 @@ import ClientLayout from '../../layouts/ClientLayout.astro';
     padding: 3px 8px;
     white-space: nowrap;
   }
-
+  .badge-medium {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--taupe);
+    background: rgba(92,99,71,0.06);
+    border-radius: 3px;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
   .section-label {
     font-family: var(--font-mono);
     font-size: 10px;
@@ -70,26 +89,38 @@ import ClientLayout from '../../layouts/ClientLayout.astro';
     text-transform: uppercase;
     color: var(--mute);
     font-weight: 500;
-    margin: 28px 0 12px;
   }
+  .past-toggle-btn {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: .08em;
+    color: var(--mute);
+    background: none;
+    border: 0.5px solid var(--line);
+    border-radius: 3px;
+    padding: 3px 8px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .past-toggle-btn:hover { color: var(--ink); border-color: var(--line-strong); }
 </style>
 
 <script>
-  import { api, getUser } from '../../scripts/api';
+  import { api } from '../../scripts/api';
 
   async function loadDeadlines() {
     const container = document.getElementById('deadlines-list')!;
     try {
-      const user = getUser();
-      // Filtrer par réglementations du tenant si possible — v1 : toutes les échéances
       const data = await api('/api/v1/deadlines?include_passed=true');
       const all: any[] = Array.isArray(data) ? data : (data?.deadlines || []);
 
       const today = new Date();
-      const upcoming = all.filter((d: any) => new Date(d.deadline_date) >= today)
-                          .sort((a: any, b: any) => new Date(a.deadline_date).getTime() - new Date(b.deadline_date).getTime());
-      const passed   = all.filter((d: any) => new Date(d.deadline_date) < today)
-                          .sort((a: any, b: any) => new Date(b.deadline_date).getTime() - new Date(a.deadline_date).getTime());
+      const upcoming = all
+        .filter((d: any) => new Date(d.deadline_date) >= today)
+        .sort((a: any, b: any) => new Date(a.deadline_date).getTime() - new Date(b.deadline_date).getTime());
+      const passed = all
+        .filter((d: any) => new Date(d.deadline_date) < today)
+        .sort((a: any, b: any) => new Date(b.deadline_date).getTime() - new Date(a.deadline_date).getTime());
 
       if (!upcoming.length && !passed.length) {
         container.innerHTML = '<div class="ew-empty"><div class="ew-empty-title">Aucune échéance</div></div>';
@@ -100,12 +131,26 @@ import ClientLayout from '../../layouts/ClientLayout.astro';
 
       if (passed.length) {
         html += `
-          <div class="section-label">Échéances passées</div>
-          ${passed.map((d: any) => renderDeadline(d, today)).join('')}
-        `;
+          <div style="display:flex;align-items:center;gap:12px;margin-top:28px;margin-bottom:12px">
+            <div class="section-label">Échéances passées</div>
+            <button class="past-toggle-btn" id="toggle-past">Afficher (${passed.length})</button>
+          </div>
+          <div id="past-section" style="display:none">
+            ${passed.map((d: any) => renderDeadline(d, today)).join('')}
+          </div>`;
       }
 
       container.innerHTML = html;
+
+      const toggleBtn = document.getElementById('toggle-past');
+      const pastSection = document.getElementById('past-section');
+      if (toggleBtn && pastSection) {
+        toggleBtn.addEventListener('click', () => {
+          const open = pastSection.style.display !== 'none';
+          pastSection.style.display = open ? 'none' : 'block';
+          toggleBtn.textContent = open ? `Afficher (${passed.length})` : 'Masquer';
+        });
+      }
 
     } catch (e: any) {
       container.innerHTML = `<div class="ew-empty"><div class="ew-empty-title">Erreur</div><div class="ew-empty-sub">${e.message}</div></div>`;
@@ -113,16 +158,18 @@ import ClientLayout from '../../layouts/ClientLayout.astro';
   }
 
   function renderDeadline(d: any, today: Date): string {
-    const dt    = new Date(d.deadline_date);
-    const days  = Math.ceil((dt.getTime() - today.getTime()) / 86400000);
+    const dt   = new Date(d.deadline_date);
+    const days = Math.ceil((dt.getTime() - today.getTime()) / 86400000);
     const isPast = days < 0;
 
-    const dateStr = dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const dayNum   = dt.getDate();
+    const monthYear = dt.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
+
     const countdown = isPast
-      ? `il y a ${Math.abs(days)} jours`
+      ? `il y a ${Math.abs(days)} j`
       : days === 0 ? "aujourd'hui"
       : days === 1 ? 'demain'
-      : days < 30 ? `dans ${days} jours`
+      : days < 30 ? `dans ${days} j`
       : days < 60 ? 'dans 1 mois'
       : `dans ${Math.round(days / 30)} mois`;
 
@@ -130,17 +177,20 @@ import ClientLayout from '../../layouts/ClientLayout.astro';
       ? `<span class="badge-critical">CRITIQUE</span>`
       : d.priority === 'high'
         ? `<span class="badge-high">ÉLEVÉ</span>`
-        : '';
+        : d.priority === 'medium'
+          ? `<span class="badge-medium">MOYEN</span>`
+          : '';
 
     const procs = d.procedures_impacted?.length
-      ? `<div class="dl-procs">Procédures impactées : ${d.procedures_impacted.join(', ')}</div>` : '';
+      ? `<div class="dl-procs">Procédures : ${d.procedures_impacted.join(', ')}</div>` : '';
 
     const isImminent = !isPast && days <= 30;
 
     return `
       <div class="deadline-card${isImminent ? ' imminent' : ''}">
         <div>
-          <div class="dl-date">${dateStr}</div>
+          <div class="dl-day">${dayNum}</div>
+          <div class="dl-monthyear">${monthYear}</div>
           <div class="dl-countdown">${countdown}</div>
         </div>
         <div>

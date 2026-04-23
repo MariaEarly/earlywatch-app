@@ -109,7 +109,7 @@ export function renderClientCard(a, formatDate, { compact = false } = {}) {
 
   const actions = compact ? '' : (() => {
     const toProcessBtn = st === 'to_process'
-      ? `<button class="ew-btn ew-btn-kaki ew-btn-kaki-removing" data-action="inbox" data-id="${a.id}">Retirer des tâches ×</button>`
+      ? `<button class="ew-btn ew-btn-kaki ew-btn-kaki-removing" data-action="inbox" data-id="${a.id}">× Retirer</button>`
       : `<button class="ew-btn ew-btn-kaki" data-action="to_process" data-id="${a.id}">À traiter</button>`;
     const readBtn = st === 'read'
       ? `<button class="ew-btn ew-btn-kaki-outline" data-action="inbox" data-id="${a.id}">Marquer non lu</button>`

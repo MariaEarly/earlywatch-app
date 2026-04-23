@@ -3,13 +3,13 @@ import SmartLayout from '../layouts/SmartLayout.astro';
 const base = import.meta.env.BASE_URL;
 ---
 
-<SmartLayout title="Mes Procedures — Early Watch" activePage="mes-procedures">
+<SmartLayout title="Mes Procédures — Early Watch" activePage="mes-procedures">
   <div class="mp-layout">
     <div class="mp-main">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
         <div>
-          <div class="page-title">Mes procedures LCB-FT</div>
-          <div class="page-subtitle">Vos procedures reglementaires — statut, articles lies et telechargement</div>
+          <div class="page-title">Mes procédures LCB-FT</div>
+          <div class="page-subtitle">Vos procédures réglementaires — statut, articles liés et téléchargement</div>
         </div>
         <button id="btn-export-pdf" class="btn-export-audit">
           Exporter piste d'audit PDF
@@ -19,15 +19,15 @@ const base = import.meta.env.BASE_URL;
       <div id="stats-bar" class="stats-bar" style="display:none">
         <div class="stat-item">
           <div class="stat-value" id="stat-total">--</div>
-          <div class="stat-label">Procedures</div>
+          <div class="stat-label">Procédures</div>
         </div>
         <div class="stat-item stat-ok">
           <div class="stat-value" id="stat-valide">--</div>
-          <div class="stat-label">Validees</div>
+          <div class="stat-label">Validées</div>
         </div>
         <div class="stat-item stat-warn">
           <div class="stat-value" id="stat-pending">--</div>
-          <div class="stat-label">A valider</div>
+          <div class="stat-label">À valider</div>
         </div>
         <div class="stat-item stat-hot">
           <div class="stat-value" id="stat-alert">--</div>
@@ -38,10 +38,10 @@ const base = import.meta.env.BASE_URL;
       <div class="filters" id="filters-bar" style="display:none">
         <span class="filter-label">Statut :</span>
         <button class="filter-btn active" data-filter="status" data-value="">Tous</button>
-        <button class="filter-btn" data-filter="status" data-value="a_valider">A valider</button>
+        <button class="filter-btn" data-filter="status" data-value="a_valider">À valider</button>
         <button class="filter-btn" data-filter="status" data-value="en_cours">En cours</button>
-        <button class="filter-btn" data-filter="status" data-value="valide">Valide</button>
-        <button class="filter-btn" data-filter="status" data-value="obsolete">Obsolete</button>
+        <button class="filter-btn" data-filter="status" data-value="valide">Validé</button>
+        <button class="filter-btn" data-filter="status" data-value="obsolete">Obsolète</button>
 
         <span class="filter-label" style="margin-left:8px">Domaine :</span>
         <button class="filter-btn active" data-filter="domain" data-value="">Tous</button>
@@ -246,7 +246,7 @@ const base = import.meta.env.BASE_URL;
     const procs: any[] = getFiltered();
     const grid: HTMLElement = document.getElementById('grid')!;
     if (!procs.length) {
-      grid.innerHTML = '<div class="loading">Aucune procedure pour ces filtres.</div>';
+      grid.innerHTML = '<div class="loading">Aucune procédure pour ces filtres.</div>';
       return;
     }
     grid.innerHTML = procs.map(renderCard).join('');
@@ -272,7 +272,7 @@ const base = import.meta.env.BASE_URL;
     let freshBdg: string = '';
     if (p.freshness === 'hot') {
       freshBdg = `<span class="freshness-badge hot" data-toggle-articles="${p.reference}">
-        <span class="freshness-dot"></span>${p.articles_count_7d} article${p.articles_count_7d > 1 ? 's' : ''} recent${p.articles_count_7d > 1 ? 's' : ''}
+        <span class="freshness-dot"></span>${p.articles_count_7d} article${p.articles_count_7d > 1 ? 's' : ''} récent${p.articles_count_7d > 1 ? 's' : ''}
       </span>`;
     } else if (p.freshness === 'warm') {
       freshBdg = `<span class="freshness-badge warm" data-toggle-articles="${p.reference}">
@@ -285,7 +285,7 @@ const base = import.meta.env.BASE_URL;
       : '';
 
     const statuses: string[] = ['a_valider', 'en_cours', 'valide', 'obsolete'];
-    const statusLabels: any = { a_valider: 'A valider', en_cours: 'En cours', valide: 'Valide', obsolete: 'Obsolete' };
+    const statusLabels: any = { a_valider: 'À valider', en_cours: 'En cours', valide: 'Validé', obsolete: 'Obsolète' };
     const statusSelector: string = statuses.map((s: string) => {
       let cls: string = 'status-opt';
       if (s === p.status) {
@@ -316,13 +316,13 @@ const base = import.meta.env.BASE_URL;
       </div>
       <div class="status-selector">${statusSelector}</div>
       <div class="linked-articles ${isOpen ? 'open' : ''}" id="articles-${p.reference}">
-        <div class="linked-articles-title">Articles lies (30 jours)</div>
+        <div class="linked-articles-title">Articles liés (30 jours)</div>
         <div id="articles-content-${p.reference}">
           <div class="loading" style="padding:12px 0;font-size:13px">Chargement...</div>
         </div>
       </div>
       <div class="card-actions">
-        <a href="${p.file_url}" download class="btn-download">Telecharger .docx</a>
+        <a href="${p.file_url}" download class="btn-download">Télécharger .docx</a>
         ${hasArticles ? `<button class="btn-toggle ${isOpen ? 'active' : ''}" id="btn-${p.reference}" data-toggle-articles="${p.reference}">Articles</button>` : ''}
       </div>
     </div>`;
@@ -350,12 +350,12 @@ const base = import.meta.env.BASE_URL;
       const proc: any = allProcedures.find((p: any) => p.reference === ref);
       if (proc) {
         proc.status = newStatus;
-        proc.status_label = ({ a_valider: 'A valider', en_cours: 'En cours', valide: 'Valide', obsolete: 'Obsolete' } as any)[newStatus] || newStatus;
+        proc.status_label = ({ a_valider: 'À valider', en_cours: 'En cours', valide: 'Validé', obsolete: 'Obsolète' } as any)[newStatus] || newStatus;
         if (newStatus === 'valide') proc.status_alert = null;
       }
       updateStats();
       renderGrid();
-      toast('Statut mis a jour', 'success');
+      toast('Statut mis à jour', 'success');
     } catch (e: any) {
       toast(e.message || 'Erreur', 'error');
     }
@@ -382,7 +382,7 @@ const base = import.meta.env.BASE_URL;
     try {
       const data: any = await api(`/api/v1/my-procedures/${ref}/articles`);
       if (!data.articles || !data.articles.length) {
-        contentEl.innerHTML = '<div class="no-articles">Aucun article lie sur les 30 derniers jours.</div>';
+        contentEl.innerHTML = '<div class="no-articles">Aucun article lié sur les 30 derniers jours.</div>';
       } else {
         contentEl.innerHTML = data.articles.map((a: any) => {
           const date: string = a.published_at
@@ -440,7 +440,7 @@ const base = import.meta.env.BASE_URL;
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast('PDF telecharge', 'success');
+      toast('PDF téléchargé', 'success');
     } catch (e: any) {
       toast(e.message || 'Erreur export PDF', 'error');
     } finally {
