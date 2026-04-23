@@ -75,20 +75,22 @@ export function bindSortDropdown(onSortChange) {
 // ── Client card ──────────────────────────────────────────────────────────────
 
 /**
- * Client article card — used by /app/veille.
+ * Client article card — used by /app/veille and /app/tableau-de-bord.
  *
  * Shares the same HTML skeleton as the admin card:
  *   .ew-item (3-col grid) · .ew-source-avatar · .ew-item-body · .ew-item-side
  *   .ew-meta · .ew-title · .ew-actions · .ew-btn variants
  *
- * Differs only in action buttons:
- *   Admin  → Quotidien | Hebdo | Tracker | Ignorer
- *   Client → À traiter | Marquer comme lu | Tracker | Ignorer
- *
- * @param {object}   a           article object from /api/v1/app/articles
- * @param {Function} formatDate  formatDate() imported from api.js
+ * @param {object}   a                    article from /api/v1/app/articles
+ * @param {Function} formatDate           formatDate() from api.js
+ * @param {object}   [opts]
+ * @param {boolean}  [opts.compact=false] Compact mode (tableau de bord):
+ *   - No action buttons
+ *   - Whole card is a clickable <a> linking to original_url
+ *   - Title is plain text (card is already the link — no nested <a>)
+ *   - Same structure, padding, separators as the full card
  */
-export function renderClientCard(a, formatDate) {
+export function renderClientCard(a, formatDate, { compact = false } = {}) {
   const st = a.client_status || 'inbox';
 
   const impactRow = (a.has_impact && a.impacted_procedures?.length)
@@ -99,16 +101,35 @@ export function renderClientCard(a, formatDate) {
          ).join(' · ')}
        </div>` : '';
 
-  const toProcessBtn = st === 'to_process'
-    ? `<button class="ew-btn ew-btn-kaki ew-btn-kaki-removing" data-action="inbox" data-id="${a.id}">Retirer des tâches ×</button>`
-    : `<button class="ew-btn ew-btn-kaki" data-action="to_process" data-id="${a.id}">À traiter</button>`;
+  // Compact: card wrapper is <a>, title must be plain (no nested link).
+  // Full:    card wrapper is <div>, title linked to original_url.
+  const titleContent = (!compact && a.original_url)
+    ? `<a href="${a.original_url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${a.title || 'Sans titre'}</a>`
+    : (a.title || 'Sans titre');
 
-  const readBtn = st === 'read'
-    ? `<button class="ew-btn ew-btn-kaki-outline" data-action="inbox" data-id="${a.id}">Marquer non lu</button>`
-    : `<button class="ew-btn ew-btn-kaki-outline" data-action="read" data-id="${a.id}">Marquer comme lu</button>`;
+  const actions = compact ? '' : (() => {
+    const toProcessBtn = st === 'to_process'
+      ? `<button class="ew-btn ew-btn-kaki ew-btn-kaki-removing" data-action="inbox" data-id="${a.id}">Retirer des tâches ×</button>`
+      : `<button class="ew-btn ew-btn-kaki" data-action="to_process" data-id="${a.id}">À traiter</button>`;
+    const readBtn = st === 'read'
+      ? `<button class="ew-btn ew-btn-kaki-outline" data-action="inbox" data-id="${a.id}">Marquer non lu</button>`
+      : `<button class="ew-btn ew-btn-kaki-outline" data-action="read" data-id="${a.id}">Marquer comme lu</button>`;
+    return `<div class="ew-actions" style="margin-top:16px">
+        ${toProcessBtn}
+        ${readBtn}
+        <div class="ew-act-sep"></div>
+        <button class="ew-btn ew-btn-ghost" data-open-tracker="${a.id}">+ Tracker</button>
+        <button class="ew-btn ew-btn-ghost" data-action="ignored" data-id="${a.id}">Ignorer</button>
+      </div>`;
+  })();
+
+  const tag   = compact ? 'a' : 'div';
+  const attrs = compact
+    ? `href="${a.original_url || '#'}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"`
+    : '';
 
   return `
-    <div class="ew-item" id="card-${a.id}">
+    <${tag} class="ew-item" id="card-${a.id}" ${attrs}>
       ${sourceAvatarHTML(a.source_name)}
       <div class="ew-item-body">
         <div class="ew-meta">
@@ -116,21 +137,10 @@ export function renderClientCard(a, formatDate) {
           <span class="dot">·</span>
           <span class="date">${formatDate(a.published_at)}</span>
         </div>
-        <h3 class="ew-title">
-          ${a.original_url
-            ? `<a href="${a.original_url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${a.title || 'Sans titre'}</a>`
-            : (a.title || 'Sans titre')
-          }
-        </h3>
+        <h3 class="ew-title">${titleContent}</h3>
         ${impactRow}
-        <div class="ew-actions" style="margin-top:16px">
-          ${toProcessBtn}
-          ${readBtn}
-          <div class="ew-act-sep"></div>
-          <button class="ew-btn ew-btn-ghost" data-open-tracker="${a.id}">+ Tracker</button>
-          <button class="ew-btn ew-btn-ghost" data-action="ignored" data-id="${a.id}">Ignorer</button>
-        </div>
+        ${actions}
       </div>
       <div class="ew-item-side"></div>
-    </div>`;
+    </${tag}>`;
 }

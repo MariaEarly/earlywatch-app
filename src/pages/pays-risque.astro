@@ -1,9 +1,9 @@
 ---
-import AppLayout from '../layouts/AppLayout.astro';
+import SmartLayout from '../layouts/SmartLayout.astro';
 const base = import.meta.env.BASE_URL;
 ---
 
-<AppLayout title="Pays à risque — Early Watch" activePage="pays-risque">
+<SmartLayout title="Pays à risque — Early Watch" activePage="pays-risque">
   <div style="max-width:1100px;margin:0 auto;">
     <div class="cr-page-title">Pays à risque LCB-FT</div>
     <div class="cr-page-sub">FATF (noire/grise) + EU high-risk + ACPR — croisement automatique avec la veille</div>
@@ -63,7 +63,7 @@ const base = import.meta.env.BASE_URL;
       Prochaine mise à jour : après le Plénaire FATF de juin 2026
     </div>
   </div>
-</AppLayout>
+</SmartLayout>
 
 <style>
   .cr-page-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }

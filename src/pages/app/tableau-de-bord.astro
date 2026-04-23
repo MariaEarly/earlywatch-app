@@ -116,50 +116,6 @@ const base = import.meta.env.BASE_URL;
   }
   .client-section-more:hover { color: var(--ink); text-decoration: underline; }
 
-  /* Carte compacte aperçu veille */
-  .preview-card {
-    padding: 14px 0;
-    border-bottom: 0.5px solid var(--line);
-    display: grid;
-    grid-template-columns: 44px 1fr;
-    gap: 16px;
-    align-items: start;
-  }
-  .preview-card:last-child { border-bottom: none; }
-  .preview-card-meta {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    color: var(--mute);
-    text-transform: uppercase;
-    margin-bottom: 5px;
-  }
-  .preview-card-title {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--ink);
-    line-height: 1.4;
-  }
-  .preview-card-impact {
-    font-size: 11px;
-    color: var(--taupe);
-    margin-top: 4px;
-  }
-
-  /* Carte tâche */
-  .task-card {
-    padding: 12px 16px;
-    border: 0.5px solid var(--line);
-    border-radius: var(--radius);
-    margin-bottom: 8px;
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-  }
-  .task-card-title { font-size: 13px; font-weight: 500; color: var(--ink); }
-  .task-card-meta  { font-size: 11px; color: var(--taupe); white-space: nowrap; }
-
   /* Échéance */
   .deadline-row {
     padding: 12px 0;
@@ -192,18 +148,9 @@ const base = import.meta.env.BASE_URL;
 
 <script>
   import { api, getUser, formatDate } from '../../scripts/api';
+  import { renderClientCard } from '../../scripts/article-card.js';
 
   const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
-
-  const SIGLES: Record<string, string> = {
-    'AMF': 'AMF', 'ACPR': 'ACPR', 'EBA': 'EBA', 'ESMA': 'ESMA',
-    'AMLA': 'AMLA', 'OFAC': 'OFAC', 'GAFI': 'GAFI',
-  };
-
-  function avatar(source: string): string {
-    const s = (source || '').toUpperCase().substring(0, 4);
-    return `<div class="ew-source-avatar" style="width:32px;height:32px;font-size:10px">${s}</div>`;
-  }
 
   async function loadDashboard() {
     const user = getUser();
@@ -264,18 +211,7 @@ const base = import.meta.env.BASE_URL;
       el.innerHTML = '<div style="font-size:13px;color:var(--taupe);padding:16px 0">Aucun article récent.</div>';
       return;
     }
-    el.innerHTML = articles.map((a: any) => `
-      <div class="preview-card">
-        ${avatar(a.source_name)}
-        <div>
-          <div class="preview-card-meta">${a.source_name || ''} · ${formatDate(a.published_at)}</div>
-          <div class="preview-card-title">${a.title || 'Sans titre'}</div>
-          ${a.has_impact && a.impacted_procedures?.length
-            ? `<div class="preview-card-impact">Impacte → ${a.impacted_procedures.slice(0,2).join(' · ')}</div>`
-            : ''}
-        </div>
-      </div>
-    `).join('');
+    el.innerHTML = `<div class="ew-list">${articles.map((a: any) => renderClientCard(a, formatDate, { compact: true })).join('')}</div>`;
   }
 
   function renderTasks(tasks: any[]) {
@@ -285,12 +221,7 @@ const base = import.meta.env.BASE_URL;
       el.innerHTML = '<div style="font-size:13px;color:var(--taupe);padding:12px 0">Aucune tâche en cours.</div>';
       return;
     }
-    el.innerHTML = tasks.map((t: any) => `
-      <div class="task-card">
-        <div class="task-card-title">${t.title || 'Sans titre'}</div>
-        <div class="task-card-meta">${t.source_name || ''}</div>
-      </div>
-    `).join('');
+    el.innerHTML = `<div class="ew-list">${tasks.map((t: any) => renderClientCard(t, formatDate, { compact: true })).join('')}</div>`;
   }
 
   function renderDeadlines(deadlines: any[]) {
