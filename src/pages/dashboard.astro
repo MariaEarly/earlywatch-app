@@ -546,18 +546,27 @@ const base = import.meta.env.BASE_URL;
   let apercuType = 'hebdo';
   let dragIdx = -1;
 
-  function openApercu(type: string): void {
+  async function openApercu(type: string): Promise<void> {
     apercuType = type;
-    apercuOrder = articles
-      .filter((a: any) => type === 'quotidien' ? a.status === 'quotidien' : (a.status === 'hebdo' || a.status === 'quotidien'))
-      .sort((a: any, b: any) => sortDate(b) - sortDate(a));
     const overlay = document.getElementById('apercu-overlay')!;
     overlay.style.display = 'flex';
     document.getElementById('apercu-title')!.textContent = `Aperçu ${type === 'quotidien' ? 'Quotidien' : 'Hebdo'}`;
-    renderApercuList();
+    // Affiche un loader pendant le fetch — évite d'afficher une liste vide
+    document.getElementById('apercu-list')!.innerHTML =
+      '<div style="padding:30px;text-align:center;color:var(--taupe);font-size:13px">Chargement…</div>';
     document.getElementById('apercu-close')!.onclick = closeApercu;
     document.getElementById('apercu-cancel')!.onclick = closeApercu;
     document.getElementById('apercu-export')!.onclick = exportApercuOrder;
+    try {
+      // Appel API : retourne tous les articles triagés (y compris lifecycle='published')
+      // au lieu de filtrer l'array local qui n'inclut que inbox+triaged.
+      const data: any = await api(`/api/v1/articles/export?type=${type}`);
+      apercuOrder = Array.isArray(data) ? data : (data?.items || []);
+      renderApercuList();
+    } catch (e: any) {
+      document.getElementById('apercu-list')!.innerHTML =
+        '<div style="padding:30px;text-align:center;color:var(--rouge);font-size:13px">Erreur de chargement</div>';
+    }
   }
 
   function closeApercu(): void {
