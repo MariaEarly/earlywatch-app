@@ -337,6 +337,10 @@ const base = import.meta.env.BASE_URL;
       ? `<span class="ew-badge ew-badge-ok" style="font-family:var(--font-mono);font-size:9px">✓ Tracker</span>`
       : `<button class="ew-btn ew-btn-ghost" data-tracker="${a.id}" data-source="${escHtml(a.source_name||'')}" data-date="${a.published_at||''}" data-title="${escHtml(a.title||'')}" data-synthese="${escHtml(a.reminder_text||'')}" data-type="${a.impact_type||'info'}" data-url="${escHtml(a.original_url||'')}">+ Tracker</button>`;
 
+    const pubBtn = a.pub_added
+      ? `<span class="ew-badge ew-badge-ok" style="font-family:var(--font-mono);font-size:9px">✓ Pub</span>`
+      : `<button class="ew-btn ew-btn-ghost" data-pub="${a.id}" data-source="${escHtml(a.source_name||'')}" data-date="${a.published_at||''}" data-title="${escHtml(a.title||'')}" data-url="${escHtml(a.original_url||'')}">+ Pub</button>`;
+
     const impactRow = (a.has_impact && a.impacted_procedures?.length)
       ? `<div style="display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap" onclick="event.stopPropagation()">
           <span style="font-size:11px;color:#888">Impacte →</span>
@@ -369,6 +373,8 @@ const base = import.meta.env.BASE_URL;
             <button class="ew-btn${hClass}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo${a.status === 'hebdo' ? ` <span class="triage-reset" data-reset="${a.id}">×</span>` : ''}</button>
             <div class="ew-act-sep"></div>
             ${trackerBtn}
+            <div class="ew-act-sep"></div>
+            ${pubBtn}
             <div class="ew-act-sep"></div>
             <button class="ew-btn ew-btn-ghost${a.status === 'ignorer' ? ' ew-btn-active' : ''}" data-triage="${a.id}" data-triage-status="ignorer">Ignorer</button>
           </div>
@@ -697,6 +703,30 @@ const base = import.meta.env.BASE_URL;
         renderArticles(); renderRightPanel();
         toast('Article ajouté au Tracker');
       } else { toast('Erreur tracker', 'error'); }
+    } catch (err: any) { toast('Erreur: ' + err.message, 'error'); }
+  });
+
+  document.addEventListener('click', async (e: Event) => {
+    const btn = (e.target as HTMLElement).closest('[data-pub]') as HTMLElement | null;
+    if (!btn) return;
+    e.stopPropagation();
+    const articleId = btn.dataset.pub!;
+    const article = articles.find((a: any) => a.id === articleId);
+    try {
+      await api(`/api/v1/tracker/pub/propose?article_id=${articleId}`, {
+        method: 'POST',
+        body: {
+          date: article?.published_at ? article.published_at.slice(0, 10) : '',
+          source: article?.source_name || '',
+          type: 'Intelligence',
+          titre: article?.title || '',
+          lien: article?.original_url || '',
+        },
+      });
+      const idx = articles.findIndex((a: any) => a.id === articleId);
+      if (idx !== -1) articles[idx].pub_added = true;
+      renderArticles(); renderRightPanel();
+      toast('Ajouté aux autres publications');
     } catch (err: any) { toast('Erreur: ' + err.message, 'error'); }
   });
 
