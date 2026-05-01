@@ -1,0 +1,421 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+const base = import.meta.env.BASE_URL;
+---
+
+<AppLayout title="Recap — Early Watch" activePage="recap">
+
+  <style>
+    /* ── Page Recap ──────────────────────────────────────────────── */
+    .recap-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .recap-title {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    /* ── Onglets ─────────────────────────────────────────────────── */
+    .recap-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--line-strong);
+      margin-bottom: 20px;
+    }
+    .recap-tab {
+      padding: 8px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--taupe);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: color 0.15s;
+      position: relative;
+    }
+    .recap-tab.active {
+      color: var(--ink);
+      border-bottom-color: #5C6347;
+    }
+    .recap-tab.disabled {
+      color: var(--ghost);
+      cursor: not-allowed;
+    }
+    .recap-tab.disabled:hover::after {
+      content: "Disponible prochainement";
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--ink);
+      color: #fff;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* ── Barre date + copier ─────────────────────────────────────── */
+    .recap-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .recap-date-select {
+      font-family: var(--font);
+      font-size: 13px;
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+      outline: none;
+    }
+    .recap-date-select:focus {
+      border-color: #5C6347;
+    }
+    .recap-published-badge {
+      font-size: 11px;
+      color: #5C6347;
+      background: #EDF0E7;
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-weight: 500;
+      display: none;
+    }
+    .btn-copy {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font);
+      background: #5C6347;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-copy:hover:not(:disabled) { opacity: 0.88; }
+    .btn-copy:disabled {
+      background: var(--ghost);
+      cursor: not-allowed;
+    }
+
+    /* ── Liste articles ──────────────────────────────────────────── */
+    #recap-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .recap-card {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      background: #fff;
+      border: 1px solid #D5D2CB;
+      border-radius: 8px;
+      padding: 12px 14px;
+      transition: opacity 0.2s;
+    }
+    .recap-card.excluded {
+      opacity: 0.38;
+    }
+    .recap-card-body {
+      flex: 1;
+      min-width: 0;
+    }
+    .recap-card-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      text-decoration: none;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .recap-card-title:hover { text-decoration: underline; }
+    .recap-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .recap-card-source {
+      font-size: 11px;
+      color: var(--taupe);
+      font-weight: 500;
+    }
+    .recap-card-date {
+      font-size: 11px;
+      color: var(--mute);
+    }
+    .btn-exclude {
+      flex-shrink: 0;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-family: var(--font);
+      color: var(--taupe);
+      background: none;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-exclude:hover { background: var(--bg-hover); color: var(--ink); }
+    .btn-exclude.is-excluded {
+      color: #5C6347;
+      border-color: #5C6347;
+      background: #EDF0E7;
+    }
+
+    /* ── États de chargement ─────────────────────────────────────── */
+    .recap-empty {
+      padding: 32px;
+      text-align: center;
+      color: var(--mute);
+      font-size: 13px;
+    }
+    .recap-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: var(--mute);
+      font-size: 13px;
+    }
+    .ew-spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--line-strong);
+      border-top-color: #5C6347;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+
+  <div class="recap-header">
+    <h1 class="recap-title">Recap</h1>
+  </div>
+
+  <!-- Onglets -->
+  <div class="recap-tabs">
+    <button class="recap-tab active" id="tab-quotidien">Quotidien</button>
+    <button class="recap-tab disabled" title="Disponible prochainement" onclick="return false">Hebdo</button>
+    <button class="recap-tab disabled" title="Disponible prochainement" onclick="return false">Mensuel</button>
+  </div>
+
+  <!-- Contrôles : sélecteur date + badge publié + bouton copier -->
+  <div class="recap-controls">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <label for="recap-date-select" style="font-size:12px;color:var(--taupe);">Date :</label>
+      <select id="recap-date-select" class="recap-date-select"></select>
+      <span class="recap-published-badge" id="published-badge"></span>
+    </div>
+    <button class="btn-copy" id="btn-copy" disabled>
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      Copier Quotidien
+    </button>
+  </div>
+
+  <!-- Liste articles -->
+  <div id="recap-list">
+    <div class="recap-loading"><div class="ew-spinner"></div>Chargement…</div>
+  </div>
+
+</AppLayout>
+
+<script>
+  import { api, toast, formatDate } from '../scripts/api';
+
+  // ── État ─────────────────────────────────────────────────────────────────
+  let currentDate: string = '';
+  let currentArticles: any[] = [];
+  let excludedIds = new Set<string>();
+  let isPublished = false;
+  let publishedAt: string | null = null;
+
+  // ── Init sélecteur de date (J-1 par défaut, J à J-30) ────────────────────
+  function initDateSelect() {
+    const sel = document.getElementById('recap-date-select') as HTMLSelectElement;
+    const now = new Date();
+    for (let i = 1; i <= 30; i++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const iso = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString('fr-FR', {
+        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+      });
+      const opt = document.createElement('option');
+      opt.value = iso;
+      opt.textContent = label;
+      if (i === 1) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    currentDate = sel.value;
+    sel.addEventListener('change', () => {
+      currentDate = sel.value;
+      loadRecap(currentDate);
+    });
+  }
+
+  // ── Chargement recap ─────────────────────────────────────────────────────
+  async function loadRecap(dateIso: string) {
+    const listEl = document.getElementById('recap-list')!;
+    listEl.innerHTML = '<div class="recap-loading"><div class="ew-spinner"></div>Chargement…</div>';
+    excludedIds.clear();
+    document.getElementById('btn-copy')!.setAttribute('disabled', '');
+    updatePublishedBadge(false, null);
+
+    try {
+      const data = await api(`/api/v1/recap/quotidien?date=${dateIso}`);
+      currentArticles = data.articles || [];
+      isPublished = data.is_published;
+      publishedAt = data.published_at;
+
+      updatePublishedBadge(isPublished, publishedAt);
+      renderArticles();
+    } catch (e: any) {
+      listEl.innerHTML = `<div class="recap-empty">Erreur de chargement : ${e.message}</div>`;
+    }
+  }
+
+  // ── Rendu liste articles ─────────────────────────────────────────────────
+  function renderArticles() {
+    const listEl = document.getElementById('recap-list')!;
+    const copyBtn = document.getElementById('btn-copy')! as HTMLButtonElement;
+
+    if (currentArticles.length === 0) {
+      listEl.innerHTML = '<div class="recap-empty">Aucun article "Quotidien" pour cette date.</div>';
+      copyBtn.disabled = true;
+      return;
+    }
+
+    copyBtn.disabled = false;
+    listEl.innerHTML = '';
+
+    currentArticles.forEach((art) => {
+      const isExcluded = excludedIds.has(art.id);
+      const card = document.createElement('div');
+      card.className = `recap-card${isExcluded ? ' excluded' : ''}`;
+      card.dataset.id = art.id;
+
+      const dateStr = art.published_at ? formatDate(art.published_at) : '—';
+
+      card.innerHTML = `
+        <div class="recap-card-body">
+          <a class="recap-card-title" href="${art.original_url || '#'}" target="_blank" rel="noopener"
+             title="${escHtml(art.title)}">${escHtml(art.title)}</a>
+          <div class="recap-card-meta">
+            <span class="recap-card-source">${escHtml(art.source_name || '')}</span>
+            <span class="recap-card-date">${dateStr}</span>
+          </div>
+        </div>
+        <button class="btn-exclude${isExcluded ? ' is-excluded' : ''}"
+                data-id="${art.id}"
+                data-excluded="${isExcluded}">
+          ${isExcluded ? 'Réinclure' : 'Exclure'}
+        </button>
+      `;
+
+      const btn = card.querySelector('.btn-exclude') as HTMLButtonElement;
+      btn.addEventListener('click', () => toggleExclude(art.id));
+
+      listEl.appendChild(card);
+    });
+  }
+
+  // ── Exclure / Réinclure ──────────────────────────────────────────────────
+  async function toggleExclude(articleId: string) {
+    const isCurrentlyExcluded = excludedIds.has(articleId);
+    const endpoint = isCurrentlyExcluded ? '/api/v1/recap/include' : '/api/v1/recap/exclude';
+
+    try {
+      await api(endpoint, {
+        method: 'POST',
+        body: {
+          article_id: articleId,
+          recap_type: 'quotidien',
+          recap_period: currentDate,
+        },
+      });
+
+      if (isCurrentlyExcluded) {
+        excludedIds.delete(articleId);
+      } else {
+        excludedIds.add(articleId);
+      }
+      renderArticles();
+    } catch (e: any) {
+      toast(e.message, 'error');
+    }
+  }
+
+  // ── Copier / Publier ─────────────────────────────────────────────────────
+  async function copyRecap() {
+    const copyBtn = document.getElementById('btn-copy')! as HTMLButtonElement;
+    copyBtn.disabled = true;
+    try {
+      const data = await api('/api/v1/recap/publish', {
+        method: 'POST',
+        body: { recap_type: 'quotidien', recap_period: currentDate },
+      });
+
+      // Copier dans le presse-papier
+      await navigator.clipboard.writeText(data.markdown || '');
+      toast('Copié dans le presse-papier ✓');
+
+      isPublished = true;
+      publishedAt = data.published_at || new Date().toISOString();
+      updatePublishedBadge(true, publishedAt);
+    } catch (e: any) {
+      toast(e.message || 'Erreur lors de la publication', 'error');
+    } finally {
+      copyBtn.disabled = currentArticles.length === 0;
+    }
+  }
+
+  // ── Badge "Publié à HH:MM" ───────────────────────────────────────────────
+  function updatePublishedBadge(pub: boolean, at: string | null) {
+    const badge = document.getElementById('published-badge')!;
+    if (pub && at) {
+      const dt = new Date(at);
+      const hhmm = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      badge.textContent = `Publié à ${hhmm}`;
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  function escHtml(s: string): string {
+    return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // ── Bootstrap ────────────────────────────────────────────────────────────
+  initDateSelect();
+  loadRecap(currentDate);
+
+  document.getElementById('btn-copy')!.addEventListener('click', copyRecap);
+</script>
