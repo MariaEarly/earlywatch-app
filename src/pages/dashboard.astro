@@ -93,6 +93,7 @@ const base = import.meta.env.BASE_URL;
 
 <script>
   import { api, formatDate, toast, getUser } from '../scripts/api';
+  import { bootstrapAuth } from '../scripts/bootstrap-auth';
   import { sourceAvatarHTML } from '../scripts/sigles.js';
   import { renderEwTab, renderSortDropdown, bindSortDropdown, SORT_LABELS } from '../scripts/article-card.js';
 
@@ -736,6 +737,7 @@ const base = import.meta.env.BASE_URL;
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  bootstrapAuth();
   init();
 </script>
 
@@ -782,6 +784,7 @@ const base = import.meta.env.BASE_URL;
 <!-- ── Sélecteur vue client (superadmin uniquement) ── -->
 <script>
   import { getUser, api, startImpersonation } from '../scripts/api';
+  import { bootstrapAuth } from '../scripts/bootstrap-auth';
   const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
 
   async function initDemoButton() {
@@ -816,5 +819,6 @@ const base = import.meta.env.BASE_URL;
     });
   }
 
+  bootstrapAuth();
   initDemoButton();
 </script>

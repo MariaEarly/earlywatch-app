@@ -10,6 +10,7 @@ const base = import.meta.env.BASE_URL;
 
 <script>
   import { api, toast, getUser, logout } from '../scripts/api';
+  import { bootstrapAuth } from '../scripts/bootstrap-auth';
 
   function escHtml(s: string): string {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -117,5 +118,6 @@ const base = import.meta.env.BASE_URL;
     }
   }
 
+  bootstrapAuth();
   render();
 </script>
