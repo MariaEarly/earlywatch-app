@@ -11,6 +11,7 @@ const base = import.meta.env.BASE_URL;
 
 <script>
   import { api, formatDate, statusBadge, actionBadge, toast, renderMarkdown, initExpandables } from '../scripts/api';
+  import { bootstrapAuth } from '../scripts/bootstrap-auth';
 
   const BASE = import.meta.env.BASE_URL || '/earlywatch-app/';
 
@@ -213,5 +214,6 @@ const base = import.meta.env.BASE_URL;
     }
   }
 
+  bootstrapAuth();
   init();
 </script>

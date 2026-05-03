@@ -157,6 +157,7 @@ const base = import.meta.env.BASE_URL;
 
 <script>
   import { api } from '../scripts/api';
+  import { bootstrapAuth } from '../scripts/bootstrap-auth';
 
   let allItems: any[] = [];
 
@@ -270,5 +271,6 @@ const base = import.meta.env.BASE_URL;
   document.getElementById('detail-close-btn')!.addEventListener('click', closeDetail);
   document.addEventListener('keydown', (e: KeyboardEvent) => { if (e.key === 'Escape') closeDetail(); });
 
+  bootstrapAuth();
   loadData();
 </script>

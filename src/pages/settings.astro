@@ -169,6 +169,7 @@ const base = import.meta.env.BASE_URL;
 
 <script>
   import { api, toast } from '../scripts/api';
+  import { bootstrapAuth } from '../scripts/bootstrap-auth';
 
   let settingsData: any = {};
   let hasChanges: boolean = false;
@@ -910,5 +911,6 @@ const base = import.meta.env.BASE_URL;
     }
   };
 
+  bootstrapAuth();
   loadSettings();
 </script>

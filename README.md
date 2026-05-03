@@ -1,3 +1,34 @@
+# Early Watch — Frontend Astro
+
+## Conventions frontend
+
+### Invariant — bootstrap auth (toutes pages authentifiées)
+
+**Toute page Astro qui utilise `AppLayout` doit appeler `bootstrapAuth()` en première ligne de son `<script type="module">`, avant tout `fetch()` ou IO.**
+
+```typescript
+import { bootstrapAuth } from '../scripts/bootstrap-auth';
+bootstrapAuth();
+// ... reste du bootstrap de page
+```
+
+**Pourquoi ?** Astro produit deux modules ES indépendants (`type="module"`) pour chaque page :
+1. `AppLayout.js` — appelle `requireAuth()` → si pas de session : `window.location.href = 'login'` + throw
+2. `{page}.js` — démarre immédiatement ses appels API au bootstrap
+
+Ces deux modules s'exécutent **en parallèle**. Si l'utilisateur ouvre la page sans session active (onglet neuf, deep link, refresh), AppLayout déclenche la navigation pendant que le script de page lance déjà un `fetch()`. Le browser annule la requête → `TypeError: Failed to fetch` affiché à l'utilisateur.
+
+`bootstrapAuth()` (dans `src/scripts/bootstrap-auth.ts`) coupe court proprement avant tout IO.
+
+**Vérification mécanique :**
+```bash
+diff <(grep -rl "AppLayout" src/pages/ | sort) \
+     <(grep -rl "bootstrapAuth" src/pages/ | sort)
+# Sortie attendue : vide
+```
+
+---
+
 # Astro Starter Kit: Minimal
 
 ```sh
