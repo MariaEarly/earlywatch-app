@@ -218,9 +218,19 @@ export function initExpandables() {
 }
 
 // ---- Reminder badge (nav) ----
+// Utilise fetch() brut — PAS api() — pour éviter que logout() soit appelé
+// sur un 401 et navigue vers /login en plein vol d'une requête parallèle.
+// Race condition documentée INV-011 : Nav badge 401 → logout() →
+// window.location.href → abort fetch en cours → "Failed to fetch".
 export async function loadReminderBadge() {
   try {
-    const counts = await api('/api/v1/reminders/counts');
+    const token = getToken();
+    if (!token) return;
+    const res = await fetch(`${API}/api/v1/reminders/counts`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return; // silently ignore — ne jamais logout depuis un widget nav
+    const counts = await res.json();
     const total = (counts.critical || 0) + (counts.high || 0) + (counts.medium || 0);
     const badge = document.getElementById('nav-badge-ctrl');
     if (badge && total > 0) {
