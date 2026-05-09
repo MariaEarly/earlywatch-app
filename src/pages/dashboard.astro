@@ -166,6 +166,90 @@ const base = import.meta.env.BASE_URL;
   let newsletterCounts: any = null;
   let trackerPendingCount = 0;
 
+  // ── V3 card state ─────────────────────────────────────────────────────────
+  // State machine per article card : booléens in_flash/in_hebdo/in_mensuel
+  // + origin (direct vs cascade) pour l'affichage visuel à 3 niveaux.
+  const cardStates = new Map<string, any>();
+
+  function getState(id: string): any {
+    if (!cardStates.has(id)) {
+      cardStates.set(id, {
+        in_flash:       false,
+        in_hebdo:       false,
+        in_mensuel:     false,
+        hebdo_origin:   'none',   // 'none' | 'direct' | 'cascade'
+        mensuel_origin: 'none',
+        registre:       null,     // null | 'tracker' | 'autres_pub'
+      });
+    }
+    return cardStates.get(id);
+  }
+
+  // Cascade Q→H→M selon spec §6.2 :
+  // - Activer Q → cascade H et M (si pas déjà actifs)
+  // - Désactiver Q → Q s'éteint UNIQUEMENT, H et M restent cochés
+  // - Activer H → cascade M (si pas déjà actif)
+  // - Désactiver H → H s'éteint UNIQUEMENT, M reste coché
+  // - Mensuel : toggle simple
+  function toggleField(id: string, field: string): void {
+    const s = getState(id);
+    if (field === 'flash') {
+      if (!s.in_flash) {
+        s.in_flash = true;
+        if (!s.in_hebdo)   { s.in_hebdo = true;   s.hebdo_origin = 'cascade';   }
+        if (!s.in_mensuel) { s.in_mensuel = true;  s.mensuel_origin = 'cascade'; }
+      } else {
+        s.in_flash = false;
+        // Décocher Quotidien laisse Hebdo et Mensuel cochés (pas de rétro-cascade)
+      }
+    } else if (field === 'hebdo') {
+      if (!s.in_hebdo) {
+        s.in_hebdo = true; s.hebdo_origin = 'direct';
+        if (!s.in_mensuel) { s.in_mensuel = true; s.mensuel_origin = 'cascade'; }
+      } else {
+        s.in_hebdo = false; s.hebdo_origin = 'none';
+        // Décocher Hebdo laisse Mensuel coché
+      }
+    } else {
+      // Mensuel : toggle direct
+      s.in_mensuel = !s.in_mensuel;
+      s.mensuel_origin = s.in_mensuel ? 'direct' : 'none';
+    }
+    updateCardDOM(id);
+  }
+
+  // Met à jour les classes CSS d'une carte sans re-rendre toute la liste.
+  function updateCardDOM(id: string): void {
+    const s = getState(id);
+    const card = document.querySelector(`[data-article-id="${id}"]`);
+    if (!card) return;
+
+    const flashBtn   = card.querySelector('[data-field="flash"]')            as HTMLElement | null;
+    const hebdoBtn   = card.querySelector('[data-field="hebdo"]')            as HTMLElement | null;
+    const mensuelBtn = card.querySelector('[data-field="mensuel"]')          as HTMLElement | null;
+    const validerBtn = card.querySelector('[data-valider]')                  as HTMLButtonElement | null;
+    const trackerBtn = card.querySelector('[data-registre-val="tracker"]')   as HTMLElement | null;
+    const pubBtn     = card.querySelector('[data-registre-val="autres_pub"]') as HTMLElement | null;
+
+    function setCls(el: HTMLElement | null, cls: string): void {
+      if (!el) return;
+      el.classList.remove('active-direct', 'active-cascade');
+      if (cls) el.classList.add(cls);
+    }
+
+    setCls(flashBtn, s.in_flash ? 'active-direct' : '');
+    setCls(hebdoBtn,   !s.in_hebdo   ? '' : s.hebdo_origin   === 'direct' ? 'active-direct' : 'active-cascade');
+    setCls(mensuelBtn, !s.in_mensuel ? '' : s.mensuel_origin === 'direct' ? 'active-direct' : 'active-cascade');
+    setCls(trackerBtn, s.registre === 'tracker'    ? 'active-direct' : '');
+    setCls(pubBtn,     s.registre === 'autres_pub' ? 'active-direct' : '');
+
+    const anyOn = s.in_flash || s.in_hebdo || s.in_mensuel;
+    if (validerBtn) {
+      validerBtn.disabled = !anyOn;
+      validerBtn.classList.toggle('ew-btn-valider-active', anyOn);
+    }
+  }
+
   function newsletterEnabled(): boolean {
     return !!getUser()?.tenant_newsletter_enabled;
   }
@@ -287,21 +371,48 @@ const base = import.meta.env.BASE_URL;
     container.innerHTML = listHtml;
     if (tabs) container.insertAdjacentElement('afterbegin', tabs);
 
-    // Bind événements
+    // Bind événements V3
     container.querySelectorAll('[data-article-nav]').forEach((el: any) => {
       el.addEventListener('click', (e: any) => {
         if (e.target.closest('button,a,select')) return;
         window.location.href = `${BASE}article?id=${el.dataset.articleNav}`;
       });
     });
-    container.querySelectorAll('[data-triage]').forEach((el: any) => {
+    // Boutons Q/H/M — toggle avec cascade
+    container.querySelectorAll('[data-toggle]').forEach((el: any) => {
       el.addEventListener('click', (e: any) => {
         e.stopPropagation();
-        if ((e.target as HTMLElement).closest('.triage-reset')) {
-          triage(el.dataset.triage, 'nouveau');
-          return;
-        }
-        triage(el.dataset.triage, el.dataset.triageStatus);
+        toggleField(el.dataset.toggle, el.dataset.field);
+      });
+    });
+    // Boutons + Tracker / + Pub — radio mutuellement exclusifs
+    container.querySelectorAll('[data-registre]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        e.stopPropagation();
+        const s = getState(el.dataset.registre);
+        s.registre = s.registre === el.dataset.registreVal ? null : el.dataset.registreVal;
+        updateCardDOM(el.dataset.registre);
+      });
+    });
+    // Valider — POST /triage v3
+    container.querySelectorAll('[data-valider]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        e.stopPropagation();
+        if (!(el as HTMLButtonElement).disabled) validateCard(el.dataset.valider);
+      });
+    });
+    // Ignorer — POST /ignore
+    container.querySelectorAll('[data-ignorer]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        e.stopPropagation();
+        ignoreCard(el.dataset.ignorer);
+      });
+    });
+    // Archiver — POST /archive
+    container.querySelectorAll('[data-archiver]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        e.stopPropagation();
+        archiveCard(el.dataset.archiver);
       });
     });
     container.querySelectorAll('.fix-date-link').forEach((el: any) => {
@@ -326,21 +437,27 @@ const base = import.meta.env.BASE_URL;
     });
   }
 
+  // ── Carte article V3 — spec EB-WORKFLOW-001 v3.1 §6 ─────────────────────
+  // 8 boutons : Quotidien · Hebdo · Mensuel | + Tracker · + Pub | Valider | Ignorer · Archiver
+  // 3 états visuels : inactif / actif-direct / actif-cascade (classes CSS dédiées)
   function articleCard(a: any): string {
-    const isIgnored = a.status === 'ignorer';
-    const isActive = (status: string) => a.status === status && a.lifecycle_status !== 'published';
-    const isPublished = (status: string) => a.status === status && a.lifecycle_status === 'published';
+    const s = getState(a.id);
+    const anyOn = s.in_flash || s.in_hebdo || s.in_mensuel;
 
-    const qClass = isActive('quotidien') ? ' ew-btn-active' : isPublished('quotidien') ? ' ew-btn-ghost' : '';
-    const hClass = isActive('hebdo') ? ' ew-btn-active' : isPublished('hebdo') ? ' ew-btn-ghost' : '';
+    // Classes CSS selon état et origine
+    const flashCls   = s.in_flash   ? 'active-direct' : '';
+    const hebdoCls   = !s.in_hebdo   ? '' : s.hebdo_origin   === 'direct' ? 'active-direct' : 'active-cascade';
+    const mensuelCls = !s.in_mensuel ? '' : s.mensuel_origin === 'direct' ? 'active-direct' : 'active-cascade';
 
-    const trackerBtn = a.tracker_added
+    // + Tracker : badge si déjà ajouté, bouton radio sinon
+    const trackerEl = a.tracker_added
       ? `<span class="ew-badge ew-badge-ok" style="font-family:var(--font-mono);font-size:9px">✓ Tracker</span>`
-      : `<button class="ew-btn ew-btn-ghost" data-tracker="${a.id}" data-source="${escHtml(a.source_name||'')}" data-date="${a.published_at||''}" data-title="${escHtml(a.title||'')}" data-synthese="${escHtml(a.reminder_text||'')}" data-type="${a.impact_type||'info'}" data-url="${escHtml(a.original_url||'')}">+ Tracker</button>`;
+      : `<button class="ew-btn-v3${s.registre === 'tracker' ? ' active-direct' : ''}" data-registre="${a.id}" data-registre-val="tracker">+ Tracker</button>`;
 
-    const pubBtn = a.pub_added
+    // + Pub : badge si déjà ajouté, bouton radio sinon
+    const pubEl = a.pub_added
       ? `<span class="ew-badge ew-badge-ok" style="font-family:var(--font-mono);font-size:9px">✓ Pub</span>`
-      : `<button class="ew-btn ew-btn-ghost" data-pub="${a.id}" data-source="${escHtml(a.source_name||'')}" data-date="${a.published_at||''}" data-title="${escHtml(a.title||'')}" data-url="${escHtml(a.original_url||'')}">+ Pub</button>`;
+      : `<button class="ew-btn-v3${s.registre === 'autres_pub' ? ' active-direct' : ''}" data-registre="${a.id}" data-registre-val="autres_pub">+ Pub</button>`;
 
     const impactRow = (a.has_impact && a.impacted_procedures?.length)
       ? `<div style="display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap" onclick="event.stopPropagation()">
@@ -349,11 +466,10 @@ const base = import.meta.env.BASE_URL;
           <a href="${BASE}controle" style="font-size:11px;color:#5C6347;text-decoration:underline;margin-left:auto" onclick="event.stopPropagation()">Voir reminder</a>
         </div>` : '';
 
-    const newBadge = a.status === 'nouveau'
-      ? `<span class="tag-new-right">Nouveau</span>` : '';
+    const newBadge = a.status === 'nouveau' ? `<span class="tag-new-right">Nouveau</span>` : '';
 
     return `
-      <div class="ew-item${isIgnored ? ' is-ignored' : ''}" data-article-nav="${a.id}" style="cursor:pointer">
+      <div class="ew-item" data-article-nav="${a.id}" data-article-id="${a.id}" style="cursor:pointer">
         ${sourceAvatarHTML(a.source_name)}
         <div class="ew-item-body">
           <div class="ew-meta">
@@ -370,40 +486,76 @@ const base = import.meta.env.BASE_URL;
           </h3>
           ${impactRow}
           <div class="ew-actions" style="margin-top:16px">
-            <button class="ew-btn ew-btn-primary${qClass}" data-triage="${a.id}" data-triage-status="quotidien">Quotidien${a.status === 'quotidien' ? ` <span class="triage-reset" data-reset="${a.id}">×</span>` : ''}</button>
-            <button class="ew-btn${hClass}" data-triage="${a.id}" data-triage-status="hebdo">Hebdo${a.status === 'hebdo' ? ` <span class="triage-reset" data-reset="${a.id}">×</span>` : ''}</button>
+            <button class="ew-btn-v3 ${flashCls}"   data-toggle="${a.id}" data-field="flash">Quotidien</button>
+            <button class="ew-btn-v3 ${hebdoCls}"   data-toggle="${a.id}" data-field="hebdo">Hebdo</button>
+            <button class="ew-btn-v3 ${mensuelCls}" data-toggle="${a.id}" data-field="mensuel">Mensuel</button>
             <div class="ew-act-sep"></div>
-            ${trackerBtn}
+            ${trackerEl}
+            ${pubEl}
             <div class="ew-act-sep"></div>
-            ${pubBtn}
+            <button class="ew-btn-v3 ew-btn-valider${anyOn ? ' ew-btn-valider-active' : ''}"
+                    data-valider="${a.id}"${anyOn ? '' : ' disabled'}>Valider</button>
             <div class="ew-act-sep"></div>
-            <button class="ew-btn ew-btn-ghost${a.status === 'ignorer' ? ' ew-btn-active' : ''}" data-triage="${a.id}" data-triage-status="ignorer">Ignorer</button>
+            <button class="ew-btn-v3" data-ignorer="${a.id}">Ignorer</button>
+            <button class="ew-btn-v3" data-archiver="${a.id}">Archiver</button>
           </div>
+          <div class="ew-card-error" id="err-${a.id}" style="display:none"></div>
         </div>
         <div class="ew-item-side">${newBadge}</div>
       </div>`;
   }
 
-  // ── Triage ───────────────────────────────────────────────────────────────
+  // ── Actions V3 ──────────────────────────────────────────────────────────
+  // Remplace l'ancien PATCH /triage v2 par les 3 endpoints POST v3.
 
-  const LIFECYCLE_MAP: Record<string, string> = {
-    nouveau: 'inbox', important: 'inbox', relu: 'inbox',
-    quotidien: 'triaged', hebdo: 'triaged',
-    ignorer: 'ignored', archive: 'published',
-  };
+  // Valider : POST /triage avec {in_flash, in_hebdo, in_mensuel, registre_public_target?}
+  async function validateCard(id: string): Promise<void> {
+    const s = getState(id);
+    const body: any = {
+      in_flash:   s.in_flash,
+      in_hebdo:   s.in_hebdo,
+      in_mensuel: s.in_mensuel,
+    };
+    if (s.registre) body.registre_public_target = s.registre;
 
-  async function triage(id: string, status: string): Promise<void> {
+    const btn = document.querySelector(`[data-valider="${id}"]`) as HTMLButtonElement | null;
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
     try {
-      await api(`/api/v1/articles/${id}/triage`, { method: 'PATCH', body: { status } });
-      const idx = articles.findIndex((a: any) => a.id === id);
-      if (idx !== -1) {
-        articles[idx].status = status;
-        articles[idx].lifecycle_status = LIFECYCLE_MAP[status] || articles[idx].lifecycle_status;
-      }
+      await api(`/api/v1/articles/${id}/triage`, { method: 'POST', body });
+      articles = articles.filter((a: any) => a.id !== id);
+      cardStates.delete(id);
       renderTabs(); renderArticles();
-      const label = status === 'quotidien' ? 'Article — Quotidien' : status === 'hebdo' ? 'Article — Hebdo' : 'Article ignoré';
+      const label = s.in_flash ? 'Article — Quotidien' : s.in_hebdo ? 'Article — Hebdo' : 'Article — Mensuel';
       toast(label);
-    } catch (e: any) { toast(e.message, 'error'); }
+    } catch (e: any) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Valider'; }
+      // Erreur affichée dans la carte sans rafraîchir la liste
+      const errEl = document.getElementById(`err-${id}`);
+      if (errEl) { errEl.textContent = e.message || 'Erreur'; errEl.style.display = 'block'; }
+    }
+  }
+
+  // Ignorer : POST /ignore — article quitte l'inbox
+  async function ignoreCard(id: string): Promise<void> {
+    try {
+      await api(`/api/v1/articles/${id}/ignore`, { method: 'POST', body: {} });
+      articles = articles.filter((a: any) => a.id !== id);
+      cardStates.delete(id);
+      renderTabs(); renderArticles();
+      toast('Article ignoré');
+    } catch (e: any) { toast(e.message || 'Erreur', 'error'); }
+  }
+
+  // Archiver : POST /archive — article quitte l'inbox
+  async function archiveCard(id: string): Promise<void> {
+    try {
+      await api(`/api/v1/articles/${id}/archive`, { method: 'POST', body: {} });
+      articles = articles.filter((a: any) => a.id !== id);
+      cardStates.delete(id);
+      renderTabs(); renderArticles();
+      toast('Article archivé');
+    } catch (e: any) { toast(e.message || 'Erreur', 'error'); }
   }
 
   // ── Right panel ──────────────────────────────────────────────────────────
@@ -779,6 +931,76 @@ const base = import.meta.env.BASE_URL;
   #apercu-overlay { display: none; }
   #cloturer-overlay { display: none; }
   #tracker-overlay { display: none; }
+
+  /* ── Boutons de triage V3 — spec §9.4 ── */
+
+  /* Base : état inactif — texte kaki, fond transparent, bordure douce */
+  .ew-btn-v3 {
+    font-size: 12px;
+    padding: 6px 12px;
+    background: transparent;
+    color: #5C6347;
+    border: 0.5px solid #D5D2CB;
+    border-radius: var(--radius, 4px);
+    font-family: var(--font);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    letter-spacing: 0.005em;
+    white-space: nowrap;
+    position: relative;
+  }
+  .ew-btn-v3:hover:not(.active-direct):not(.active-cascade):not(:disabled) {
+    background: var(--bg-side);
+    border-color: #B8B3AA;
+    color: var(--ink);
+  }
+
+  /* Actif direct : clic utilisateur — fond soutenu + soulignement kaki */
+  .ew-btn-v3.active-direct {
+    color: #1A1918;
+    background: var(--bg-triage-active, #EEE7D2);
+    border-color: #5C6347;
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: #5C6347;
+    text-underline-offset: 2px;
+  }
+
+  /* Actif cascade : allumé par propagation — fond beige léger, pas de soulignement */
+  .ew-btn-v3.active-cascade {
+    color: #1A1918;
+    background: rgba(238, 231, 210, 0.45);
+    border-color: #C8C4BC;
+  }
+
+  /* Valider — désactivé tant qu'aucun in_X */
+  .ew-btn-valider:disabled {
+    opacity: 0.32;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* Valider — actif quand au moins un in_X est coché */
+  .ew-btn-valider-active {
+    background: var(--ink, #1A1918);
+    color: var(--bg, #F4F0E6);
+    border-color: var(--ink, #1A1918);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .ew-btn-valider-active:hover {
+    background: var(--ink-soft, #3A3530);
+    border-color: var(--ink-soft, #3A3530);
+  }
+
+  /* Message d'erreur inline dans la carte (affiché sur erreur API) */
+  .ew-card-error {
+    font-size: 11px;
+    color: #c0392b;
+    margin-top: 6px;
+    display: none;
+    font-family: var(--font-mono);
+  }
 </style>
 
 <!-- ── Sélecteur vue client (superadmin uniquement) ── -->
