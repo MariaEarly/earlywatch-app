@@ -435,12 +435,12 @@ const base = import.meta.env.BASE_URL;
     const ctrl = document.getElementById('recap-controls')!;
 
     if (m === 'quotidien') {
-      // Sélecteur liste déroulante J-1 à J-30
+      // Sélecteur liste déroulante J (aujourd'hui) à J-30
       const sel = document.createElement('select');
       sel.id = 'recap-date-select';
       sel.className = 'recap-date-select';
       const now = new Date();
-      for (let i = 1; i <= 30; i++) {
+      for (let i = 0; i <= 30; i++) {
         const d = new Date(now);
         d.setDate(d.getDate() - i);
         const iso = toISO(d);
@@ -450,7 +450,7 @@ const base = import.meta.env.BASE_URL;
         const opt = document.createElement('option');
         opt.value = iso;
         opt.textContent = label;
-        if (i === 1) opt.selected = true;
+        if (i === 0) opt.selected = true;
         sel.appendChild(opt);
       }
       qDate = sel.value;
