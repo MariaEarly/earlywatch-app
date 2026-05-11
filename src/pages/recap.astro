@@ -39,30 +39,13 @@ const base = import.meta.env.BASE_URL;
       transition: color 0.15s;
       position: relative;
     }
+    .recap-tab:hover { color: var(--ink); }
     .recap-tab.active {
       color: var(--ink);
       border-bottom-color: #5C6347;
     }
-    .recap-tab.disabled {
-      color: var(--ghost);
-      cursor: not-allowed;
-    }
-    .recap-tab.disabled:hover::after {
-      content: "Disponible prochainement";
-      position: absolute;
-      bottom: calc(100% + 6px);
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--ink);
-      color: #fff;
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 4px;
-      white-space: nowrap;
-      pointer-events: none;
-    }
 
-    /* ── Barre date + copier ─────────────────────────────────────── */
+    /* ── Barre date + publier ────────────────────────────────────── */
     .recap-controls {
       display: flex;
       align-items: center;
@@ -82,8 +65,22 @@ const base = import.meta.env.BASE_URL;
       cursor: pointer;
       outline: none;
     }
-    .recap-date-select:focus {
-      border-color: #5C6347;
+    .recap-date-select:focus { border-color: #5C6347; }
+    .recap-month-input {
+      font-family: var(--font);
+      font-size: 13px;
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+      outline: none;
+    }
+    .recap-month-input:focus { border-color: #5C6347; }
+    .recap-period-label {
+      font-size: 12px;
+      color: var(--taupe);
     }
     .recap-published-badge {
       font-size: 11px;
@@ -94,7 +91,7 @@ const base = import.meta.env.BASE_URL;
       font-weight: 500;
       display: none;
     }
-    .btn-copy {
+    .btn-publish {
       display: flex;
       align-items: center;
       gap: 6px;
@@ -109,8 +106,8 @@ const base = import.meta.env.BASE_URL;
       cursor: pointer;
       transition: opacity 0.15s;
     }
-    .btn-copy:hover:not(:disabled) { opacity: 0.88; }
-    .btn-copy:disabled {
+    .btn-publish:hover:not(:disabled) { opacity: 0.88; }
+    .btn-publish:disabled {
       background: var(--ghost);
       cursor: not-allowed;
     }
@@ -121,6 +118,17 @@ const base = import.meta.env.BASE_URL;
       flex-direction: column;
       gap: 8px;
     }
+    .recap-day-header {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--taupe);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 6px 0 2px;
+      border-bottom: 1px solid var(--line-strong);
+      margin-top: 8px;
+    }
+    .recap-day-header:first-child { margin-top: 0; }
     .recap-card {
       display: flex;
       align-items: flex-start;
@@ -132,9 +140,7 @@ const base = import.meta.env.BASE_URL;
       padding: 12px 14px;
       transition: opacity 0.2s;
     }
-    .recap-card.excluded {
-      opacity: 0.38;
-    }
+    .recap-card.excluded { opacity: 0.38; }
     .recap-card-body {
       flex: 1;
       min-width: 0;
@@ -210,6 +216,69 @@ const base = import.meta.env.BASE_URL;
       margin-right: 10px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Modal ───────────────────────────────────────────────────── */
+    .ew-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26,25,24,0.32);
+      z-index: 100;
+    }
+    .ew-modal-box {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      padding: 24px;
+      width: 380px;
+      max-width: calc(100vw - 40px);
+      z-index: 101;
+    }
+    .ew-modal-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+    .ew-modal-msg {
+      font-size: 13px;
+      color: var(--taupe);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .ew-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .btn-modal-cancel {
+      padding: 7px 16px;
+      font-size: 13px;
+      font-family: var(--font);
+      background: none;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--taupe);
+    }
+    .btn-modal-cancel:hover { border-color: var(--ink); color: var(--ink); }
+    .btn-modal-ok {
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font);
+      background: #5C6347;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-modal-ok:hover { opacity: 0.88; }
+    .btn-modal-ok:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
 
   <div class="recap-header">
@@ -218,30 +287,48 @@ const base = import.meta.env.BASE_URL;
 
   <!-- Onglets -->
   <div class="recap-tabs">
-    <button class="recap-tab active" id="tab-quotidien">Quotidien</button>
-    <button class="recap-tab disabled" title="Disponible prochainement" onclick="return false">Hebdo</button>
-    <button class="recap-tab disabled" title="Disponible prochainement" onclick="return false">Mensuel</button>
+    <button class="recap-tab active" id="tab-quotidien" data-tab="quotidien">Quotidien</button>
+    <button class="recap-tab" id="tab-hebdo" data-tab="hebdo">Hebdo</button>
+    <button class="recap-tab" id="tab-mensuel" data-tab="mensuel">Mensuel</button>
   </div>
 
-  <!-- Contrôles : sélecteur date + badge publié + bouton copier -->
-  <div class="recap-controls">
-    <div style="display:flex;align-items:center;gap:10px;">
-      <label for="recap-date-select" style="font-size:12px;color:var(--taupe);">Date :</label>
-      <select id="recap-date-select" class="recap-date-select"></select>
-      <span class="recap-published-badge" id="published-badge"></span>
-    </div>
-    <button class="btn-copy" id="btn-copy" disabled>
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.5"/>
-      </svg>
-      Copier Quotidien
-    </button>
-  </div>
+  <!-- Contrôles : sélecteur date + badge + bouton publier (injecté par JS) -->
+  <div class="recap-controls" id="recap-controls"></div>
 
   <!-- Liste articles -->
   <div id="recap-list">
     <div class="recap-loading"><div class="ew-spinner"></div>Chargement…</div>
+  </div>
+
+  <!-- Modal confirmation publication -->
+  <div id="modal-confirm" style="display:none" role="dialog" aria-modal="true">
+    <div class="ew-modal-overlay" id="modal-confirm-overlay"></div>
+    <div class="ew-modal-box">
+      <p class="ew-modal-title" id="modal-confirm-title"></p>
+      <p class="ew-modal-msg" id="modal-confirm-msg"></p>
+      <div class="ew-modal-actions">
+        <button class="btn-modal-cancel" id="btn-modal-cancel">Annuler</button>
+        <button class="btn-modal-ok" id="btn-modal-ok">Publier</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal fallback presse-papier -->
+  <div id="modal-clipboard" style="display:none" role="dialog" aria-modal="true">
+    <div class="ew-modal-overlay" id="modal-clipboard-overlay"></div>
+    <div class="ew-modal-box" style="width:560px">
+      <p class="ew-modal-title">Copie manuelle</p>
+      <p class="ew-modal-msg">La copie automatique a échoué. Sélectionnez et copiez le contenu ci-dessous :</p>
+      <textarea id="clipboard-markdown"
+        style="width:100%;height:200px;font-family:var(--font-mono);font-size:11px;
+               border:1px solid var(--line-strong);border-radius:4px;padding:8px;
+               resize:vertical;color:var(--ink)"
+        readonly></textarea>
+      <div class="ew-modal-actions" style="margin-top:12px">
+        <button class="btn-modal-cancel" id="btn-clipboard-close">Fermer</button>
+        <button class="btn-modal-ok" id="btn-clipboard-copy">Copier</button>
+      </div>
+    </div>
   </div>
 
 </AppLayout>
@@ -250,118 +337,379 @@ const base = import.meta.env.BASE_URL;
   import { api, toast, formatDate } from '../scripts/api';
   import { bootstrapAuth } from '../scripts/bootstrap-auth';
 
-  // ── État ─────────────────────────────────────────────────────────────────
-  let currentDate: string = '';
+  // ── Types & constantes ───────────────────────────────────────────────────
+  type Mode = 'quotidien' | 'hebdo' | 'mensuel';
+
+  // ── État global ──────────────────────────────────────────────────────────
+  let mode: Mode = 'quotidien';
+
+  // Quotidien
+  let qDate: string = '';
+
+  // Hebdo
+  let hebdoWeekStart: string = '';
+  let hebdoWeekEnd: string = '';
+
+  // Mensuel
+  let mensuelYear: number = 0;
+  let mensuelMonth: number = 0;   // 1-12
+  let mensuelPeriodStart: string = ''; // YYYY-MM-01 (pour exclusions)
+
+  // Partagé
   let currentArticles: any[] = [];
+  let currentMarkdown: string = '';
   let excludedIds = new Set<string>();
   let isPublished = false;
   let publishedAt: string | null = null;
 
-  // ── Init sélecteur de date (J-1 par défaut, J à J-30) ────────────────────
-  function initDateSelect() {
-    const sel = document.getElementById('recap-date-select') as HTMLSelectElement;
-    const now = new Date();
-    for (let i = 1; i <= 30; i++) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      const iso = d.toISOString().slice(0, 10);
-      const label = d.toLocaleDateString('fr-FR', {
-        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
-      });
-      const opt = document.createElement('option');
-      opt.value = iso;
-      opt.textContent = label;
-      if (i === 1) opt.selected = true;
-      sel.appendChild(opt);
-    }
-    currentDate = sel.value;
-    sel.addEventListener('change', () => {
-      currentDate = sel.value;
-      loadRecap(currentDate);
-    });
+  // ── Utilitaires ──────────────────────────────────────────────────────────
+  function escHtml(s: string): string {
+    return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  // ── Chargement recap ─────────────────────────────────────────────────────
-  async function loadRecap(dateIso: string) {
+  /** Retourne le lundi de la semaine écoulée (semaine précédente). */
+  function lastWeekMonday(): Date {
+    const today = new Date();
+    // Lundi de la semaine courante
+    const thisMonday = new Date(today);
+    thisMonday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+    // Lundi de la semaine précédente
+    const last = new Date(thisMonday);
+    last.setDate(thisMonday.getDate() - 7);
+    return last;
+  }
+
+  /** Retourne les N derniers lundis (du plus récent au plus ancien). */
+  function lastNMondays(n: number): Date[] {
+    const mondays: Date[] = [];
+    const today = new Date();
+    // Lundi de la semaine courante (inclus comme max navigable)
+    let d = new Date(today);
+    d.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+    for (let i = 0; i < n; i++) {
+      mondays.push(new Date(d));
+      d.setDate(d.getDate() - 7);
+    }
+    return mondays;
+  }
+
+  function toISO(d: Date): string {
+    return d.toISOString().slice(0, 10);
+  }
+
+  function addDays(d: Date, n: number): Date {
+    const r = new Date(d);
+    r.setDate(r.getDate() + n);
+    return r;
+  }
+
+  function formatWeekLabel(monday: Date): string {
+    const sunday = addDays(monday, 6);
+    const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' };
+    const mLabel = monday.toLocaleDateString('fr-FR', opts);
+    const sLabel = sunday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    return `Semaine du ${mLabel} au ${sLabel}`;
+  }
+
+  function formatMonthLabel(y: number, m: number): string {
+    const d = new Date(y, m - 1, 1);
+    return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  }
+
+  /** Retourne "YYYY-MM" du mois écoulé (mois précédent). */
+  function lastMonthValue(): string {
+    const now = new Date();
+    const y = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    const m = now.getMonth() === 0 ? 12 : now.getMonth();
+    return `${y}-${String(m).padStart(2, '0')}`;
+  }
+
+  /** Retourne "YYYY-MM" du mois courant (max pour l'input). */
+  function currentMonthValue(): string {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  // ── Initialisation des contrôles selon le mode ───────────────────────────
+  function initControls(m: Mode): void {
+    const ctrl = document.getElementById('recap-controls')!;
+
+    if (m === 'quotidien') {
+      // Sélecteur liste déroulante J-1 à J-30
+      const sel = document.createElement('select');
+      sel.id = 'recap-date-select';
+      sel.className = 'recap-date-select';
+      const now = new Date();
+      for (let i = 1; i <= 30; i++) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const iso = toISO(d);
+        const label = d.toLocaleDateString('fr-FR', {
+          weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+        });
+        const opt = document.createElement('option');
+        opt.value = iso;
+        opt.textContent = label;
+        if (i === 1) opt.selected = true;
+        sel.appendChild(opt);
+      }
+      qDate = sel.value;
+      sel.addEventListener('change', () => { qDate = sel.value; loadData(); });
+
+      ctrl.innerHTML = '';
+      const left = document.createElement('div');
+      left.style.cssText = 'display:flex;align-items:center;gap:10px';
+      const label = document.createElement('label');
+      label.htmlFor = 'recap-date-select';
+      label.style.cssText = 'font-size:12px;color:var(--taupe)';
+      label.textContent = 'Date :';
+      const badge = document.createElement('span');
+      badge.className = 'recap-published-badge';
+      badge.id = 'published-badge';
+      left.append(label, sel, badge);
+
+      const btn = document.createElement('button');
+      btn.className = 'btn-publish';
+      btn.id = 'btn-publish';
+      btn.disabled = true;
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.5"/></svg> Copier Quotidien`;
+      btn.addEventListener('click', () => publishQuotidien());
+
+      ctrl.append(left, btn);
+
+    } else if (m === 'hebdo') {
+      const mondays = lastNMondays(13); // lundi courant + 12 semaines passées
+      const sel = document.createElement('select');
+      sel.id = 'recap-hebdo-select';
+      sel.className = 'recap-date-select';
+      mondays.forEach((mon, i) => {
+        const opt = document.createElement('option');
+        opt.value = toISO(mon);
+        opt.textContent = formatWeekLabel(mon);
+        if (i === 1) opt.selected = true; // semaine écoulée par défaut
+        sel.appendChild(opt);
+      });
+      hebdoWeekStart = sel.value;
+      sel.addEventListener('change', () => { hebdoWeekStart = sel.value; loadData(); });
+
+      ctrl.innerHTML = '';
+      const left = document.createElement('div');
+      left.style.cssText = 'display:flex;align-items:center;gap:10px';
+      left.append(sel);
+
+      const btn = document.createElement('button');
+      btn.className = 'btn-publish';
+      btn.id = 'btn-publish';
+      btn.disabled = true;
+      btn.textContent = 'Publier Hebdo';
+      btn.addEventListener('click', () => showPublishModal());
+
+      ctrl.append(left, btn);
+
+    } else { // mensuel
+      const inp = document.createElement('input');
+      inp.type = 'month';
+      inp.id = 'recap-month-input';
+      inp.className = 'recap-month-input';
+      inp.max = currentMonthValue();
+      inp.value = lastMonthValue();
+      const [y, mo] = inp.value.split('-').map(Number);
+      mensuelYear = y;
+      mensuelMonth = mo;
+      mensuelPeriodStart = `${inp.value}-01`;
+      inp.addEventListener('change', () => {
+        const [ny, nm] = inp.value.split('-').map(Number);
+        mensuelYear = ny;
+        mensuelMonth = nm;
+        mensuelPeriodStart = `${inp.value}-01`;
+        loadData();
+      });
+
+      ctrl.innerHTML = '';
+      const left = document.createElement('div');
+      left.style.cssText = 'display:flex;align-items:center;gap:10px';
+      const lbl = document.createElement('label');
+      lbl.htmlFor = 'recap-month-input';
+      lbl.style.cssText = 'font-size:12px;color:var(--taupe)';
+      lbl.textContent = 'Mois :';
+      left.append(lbl, inp);
+
+      const btn = document.createElement('button');
+      btn.className = 'btn-publish';
+      btn.id = 'btn-publish';
+      btn.disabled = true;
+      btn.textContent = 'Publier Mensuel';
+      btn.addEventListener('click', () => showPublishModal());
+
+      ctrl.append(left, btn);
+    }
+  }
+
+  // ── Chargement données ───────────────────────────────────────────────────
+  async function loadData(): Promise<void> {
     const listEl = document.getElementById('recap-list')!;
     listEl.innerHTML = '<div class="recap-loading"><div class="ew-spinner"></div>Chargement…</div>';
     excludedIds.clear();
-    document.getElementById('btn-copy')!.setAttribute('disabled', '');
-    updatePublishedBadge(false, null);
+    const publishBtn = document.getElementById('btn-publish') as HTMLButtonElement | null;
+    if (publishBtn) publishBtn.disabled = true;
+    if (mode === 'quotidien') {
+      const badge = document.getElementById('published-badge');
+      if (badge) badge.style.display = 'none';
+    }
 
     try {
-      const data = await api(`/api/v1/recap/quotidien?date=${dateIso}`);
-      currentArticles = data.articles || [];
-      isPublished = data.is_published;
-      publishedAt = data.published_at;
+      if (mode === 'quotidien') {
+        const data = await api(`/api/v1/recap/quotidien?date=${qDate}`);
+        currentArticles = data.articles || [];
+        currentMarkdown = data.markdown || '';
+        isPublished = data.is_published || false;
+        publishedAt = data.published_at || null;
+        updatePublishedBadge(isPublished, publishedAt);
 
-      updatePublishedBadge(isPublished, publishedAt);
+      } else if (mode === 'hebdo') {
+        const data = await api(`/api/v1/recap/hebdo?week_start=${hebdoWeekStart}`);
+        currentArticles = data.articles || [];
+        currentMarkdown = data.markdown || '';
+        hebdoWeekEnd = data.week_end || '';
+
+      } else { // mensuel
+        const data = await api(`/api/v1/recap/mensuel?year=${mensuelYear}&month=${mensuelMonth}`);
+        currentArticles = data.articles || [];
+        currentMarkdown = data.markdown || '';
+      }
+
       renderArticles();
+
     } catch (e: any) {
-      listEl.innerHTML = `<div class="recap-empty">Erreur de chargement : ${e.message}</div>`;
+      listEl.innerHTML = `<div class="recap-empty">Erreur de chargement : ${escHtml(e.message)}</div>`;
     }
   }
 
   // ── Rendu liste articles ─────────────────────────────────────────────────
-  function renderArticles() {
+  function renderArticles(): void {
     const listEl = document.getElementById('recap-list')!;
-    const copyBtn = document.getElementById('btn-copy')! as HTMLButtonElement;
+    const publishBtn = document.getElementById('btn-publish') as HTMLButtonElement | null;
+
+    const included = currentArticles.filter(a => !excludedIds.has(a.id));
 
     if (currentArticles.length === 0) {
-      listEl.innerHTML = '<div class="recap-empty">Aucun article "Quotidien" pour cette date.</div>';
-      copyBtn.disabled = true;
+      const label = mode === 'quotidien' ? 'Quotidien'
+                  : mode === 'hebdo'     ? 'Hebdo'
+                  :                        'Mensuel';
+      listEl.innerHTML = `<div class="recap-empty">Aucun article "${label}" pour cette période.</div>`;
+      if (publishBtn) publishBtn.disabled = true;
       return;
     }
 
-    copyBtn.disabled = false;
+    if (publishBtn) publishBtn.disabled = included.length === 0;
+
     listEl.innerHTML = '';
 
-    currentArticles.forEach((art) => {
-      const isExcluded = excludedIds.has(art.id);
-      const card = document.createElement('div');
-      card.className = `recap-card${isExcluded ? ' excluded' : ''}`;
-      card.dataset.id = art.id;
+    // Grouper par jour (ordre chronologique)
+    if (mode === 'hebdo') {
+      renderGroupedByDay(listEl);
+    } else if (mode === 'mensuel') {
+      renderGroupedByWeek(listEl);
+    } else {
+      // Quotidien : pas de regroupement
+      currentArticles.forEach(art => listEl.appendChild(makeCard(art)));
+    }
+  }
 
-      const dateStr = art.published_at ? formatDate(art.published_at) : '—';
-
-      card.innerHTML = `
-        <div class="recap-card-body">
-          <a class="recap-card-title" href="${art.original_url || '#'}" target="_blank" rel="noopener"
-             title="${escHtml(art.title)}">${escHtml(art.title)}</a>
-          <div class="recap-card-meta">
-            <span class="recap-card-source">${escHtml(art.source_name || '')}</span>
-            <span class="recap-card-date">${dateStr}</span>
-          </div>
-        </div>
-        <button class="btn-exclude${isExcluded ? ' is-excluded' : ''}"
-                data-id="${art.id}"
-                data-excluded="${isExcluded}">
-          ${isExcluded ? 'Réinclure' : 'Exclure'}
-        </button>
-      `;
-
-      const btn = card.querySelector('.btn-exclude') as HTMLButtonElement;
-      btn.addEventListener('click', () => toggleExclude(art.id));
-
-      listEl.appendChild(card);
+  function renderGroupedByDay(container: HTMLElement): void {
+    const byDay = new Map<string, any[]>();
+    currentArticles.forEach(art => {
+      const day = art.published_at ? art.published_at.slice(0, 10) : 'sans-date';
+      if (!byDay.has(day)) byDay.set(day, []);
+      byDay.get(day)!.push(art);
+    });
+    // Trier par date croissante
+    const sorted = [...byDay.entries()].sort(([a], [b]) => a.localeCompare(b));
+    sorted.forEach(([day, arts]) => {
+      const header = document.createElement('div');
+      header.className = 'recap-day-header';
+      if (day === 'sans-date') {
+        header.textContent = 'Sans date';
+      } else {
+        const d = new Date(day + 'T12:00:00');
+        header.textContent = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+      }
+      container.appendChild(header);
+      arts.forEach(art => container.appendChild(makeCard(art)));
     });
   }
 
+  function renderGroupedByWeek(container: HTMLElement): void {
+    // Pour le mensuel, grouper par semaine ISO
+    const byWeek = new Map<string, any[]>();
+    currentArticles.forEach(art => {
+      const day = art.published_at ? art.published_at.slice(0, 10) : 'sans-date';
+      let weekKey = day;
+      if (day !== 'sans-date') {
+        const d = new Date(day + 'T12:00:00');
+        const mon = new Date(d);
+        mon.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+        weekKey = toISO(mon);
+      }
+      if (!byWeek.has(weekKey)) byWeek.set(weekKey, []);
+      byWeek.get(weekKey)!.push(art);
+    });
+    const sorted = [...byWeek.entries()].sort(([a], [b]) => a.localeCompare(b));
+    sorted.forEach(([weekStart, arts]) => {
+      const header = document.createElement('div');
+      header.className = 'recap-day-header';
+      if (weekStart === 'sans-date') {
+        header.textContent = 'Sans date';
+      } else {
+        const mon = new Date(weekStart + 'T12:00:00');
+        header.textContent = formatWeekLabel(mon);
+      }
+      container.appendChild(header);
+      arts.forEach(art => container.appendChild(makeCard(art)));
+    });
+  }
+
+  function makeCard(art: any): HTMLElement {
+    const isExcluded = excludedIds.has(art.id);
+    const card = document.createElement('div');
+    card.className = `recap-card${isExcluded ? ' excluded' : ''}`;
+    card.dataset.id = art.id;
+
+    const dateStr = art.published_at ? formatDate(art.published_at) : '—';
+
+    card.innerHTML = `
+      <div class="recap-card-body">
+        <a class="recap-card-title" href="${escHtml(art.original_url || '#')}"
+           target="_blank" rel="noopener" title="${escHtml(art.title)}">${escHtml(art.title)}</a>
+        <div class="recap-card-meta">
+          <span class="recap-card-source">${escHtml(art.source_name || '')}</span>
+          <span class="recap-card-date">${dateStr}</span>
+        </div>
+      </div>
+      <button class="btn-exclude${isExcluded ? ' is-excluded' : ''}" data-id="${art.id}">
+        ${isExcluded ? 'Réinclure' : 'Exclure'}
+      </button>
+    `;
+
+    card.querySelector('.btn-exclude')!.addEventListener('click', () => toggleExclude(art.id));
+    return card;
+  }
+
   // ── Exclure / Réinclure ──────────────────────────────────────────────────
-  async function toggleExclude(articleId: string) {
+  async function toggleExclude(articleId: string): Promise<void> {
     const isCurrentlyExcluded = excludedIds.has(articleId);
     const endpoint = isCurrentlyExcluded ? '/api/v1/recap/include' : '/api/v1/recap/exclude';
+    const recapPeriod = getExclusionPeriod();
 
     try {
       await api(endpoint, {
         method: 'POST',
         body: {
           article_id: articleId,
-          recap_type: 'quotidien',
-          recap_period: currentDate,
+          recap_type: mode,
+          recap_period: recapPeriod,
         },
       });
-
       if (isCurrentlyExcluded) {
         excludedIds.delete(articleId);
       } else {
@@ -369,37 +717,148 @@ const base = import.meta.env.BASE_URL;
       }
       renderArticles();
     } catch (e: any) {
-      toast(e.message, 'error');
+      toast(e.message || 'Erreur', 'error');
     }
   }
 
-  // ── Copier / Publier ─────────────────────────────────────────────────────
-  async function copyRecap() {
-    const copyBtn = document.getElementById('btn-copy')! as HTMLButtonElement;
-    copyBtn.disabled = true;
+  function getExclusionPeriod(): string {
+    if (mode === 'quotidien') return qDate;
+    if (mode === 'hebdo') return hebdoWeekStart;
+    return mensuelPeriodStart; // YYYY-MM-01
+  }
+
+  // ── Publier Quotidien (comportement existant) ────────────────────────────
+  async function publishQuotidien(): Promise<void> {
+    const btn = document.getElementById('btn-publish') as HTMLButtonElement;
+    btn.disabled = true;
     try {
       const data = await api('/api/v1/recap/publish', {
         method: 'POST',
-        body: { recap_type: 'quotidien', recap_period: currentDate },
+        body: { recap_type: 'quotidien', recap_period: qDate },
       });
-
-      // Copier dans le presse-papier
-      await navigator.clipboard.writeText(data.markdown || '');
-      toast('Copié dans le presse-papier ✓');
-
+      await copyMarkdownToClipboard(data.markdown || '');
+      toast('Copié dans le presse-papier');
       isPublished = true;
       publishedAt = data.published_at || new Date().toISOString();
       updatePublishedBadge(true, publishedAt);
     } catch (e: any) {
       toast(e.message || 'Erreur lors de la publication', 'error');
     } finally {
-      copyBtn.disabled = currentArticles.length === 0;
+      btn.disabled = currentArticles.length === 0;
     }
   }
 
-  // ── Badge "Publié à HH:MM" ───────────────────────────────────────────────
-  function updatePublishedBadge(pub: boolean, at: string | null) {
-    const badge = document.getElementById('published-badge')!;
+  // ── Modal de confirmation Hebdo/Mensuel ──────────────────────────────────
+  function showPublishModal(): void {
+    const included = currentArticles.filter(a => !excludedIds.has(a.id));
+    if (included.length === 0) return;
+
+    const modal = document.getElementById('modal-confirm')!;
+    const titleEl = document.getElementById('modal-confirm-title')!;
+    const msgEl = document.getElementById('modal-confirm-msg')!;
+
+    if (mode === 'hebdo') {
+      const mon = new Date(hebdoWeekStart + 'T12:00:00');
+      const sun = addDays(mon, 6);
+      const fmt = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+      titleEl.textContent = 'Publier le récap Hebdo';
+      msgEl.textContent = `Publier le récap de la semaine du ${fmt(mon)} au ${fmt(sun)} ? ${included.length} article${included.length > 1 ? 's' : ''} sera${included.length > 1 ? 'ont' : ''} marqué${included.length > 1 ? 's' : ''} comme publié${included.length > 1 ? 's' : ''}.`;
+    } else {
+      titleEl.textContent = 'Publier le récap Mensuel';
+      msgEl.textContent = `Publier le récap de ${formatMonthLabel(mensuelYear, mensuelMonth)} ? ${included.length} article${included.length > 1 ? 's' : ''} sera${included.length > 1 ? 'ont' : ''} marqué${included.length > 1 ? 's' : ''} comme publié${included.length > 1 ? 's' : ''}.`;
+    }
+
+    modal.style.display = 'block';
+  }
+
+  function hidePublishModal(): void {
+    document.getElementById('modal-confirm')!.style.display = 'none';
+  }
+
+  // ── Confirmation → appel API publish ────────────────────────────────────
+  async function confirmPublish(): Promise<void> {
+    const okBtn = document.getElementById('btn-modal-ok') as HTMLButtonElement;
+    okBtn.disabled = true;
+    okBtn.textContent = 'Publication…';
+
+    try {
+      // Re-fetch pour obtenir le markdown à jour (reflète les exclusions en DB)
+      let freshMarkdown = currentMarkdown;
+      let freshIds: string[] = [];
+
+      if (mode === 'hebdo') {
+        const fresh = await api(`/api/v1/recap/hebdo?week_start=${hebdoWeekStart}`);
+        freshMarkdown = fresh.markdown || '';
+        freshIds = (fresh.articles || []).map((a: any) => a.id);
+        // Retirer les exclusions client-side (au cas où l'API exclude n'aurait pas encore propagé)
+        freshIds = freshIds.filter((id: string) => !excludedIds.has(id));
+      } else {
+        const fresh = await api(`/api/v1/recap/mensuel?year=${mensuelYear}&month=${mensuelMonth}`);
+        freshMarkdown = fresh.markdown || '';
+        freshIds = (fresh.articles || []).map((a: any) => a.id);
+        freshIds = freshIds.filter((id: string) => !excludedIds.has(id));
+      }
+
+      if (freshIds.length === 0) {
+        toast('Aucun article à publier.', 'error');
+        hidePublishModal();
+        return;
+      }
+
+      // Appel publish
+      if (mode === 'hebdo') {
+        await api('/api/v1/recap/hebdo/publish', {
+          method: 'POST',
+          body: { week_start: hebdoWeekStart, included_article_ids: freshIds },
+        });
+      } else {
+        await api('/api/v1/recap/mensuel/publish', {
+          method: 'POST',
+          body: { year: mensuelYear, month: mensuelMonth, included_article_ids: freshIds },
+        });
+      }
+
+      hidePublishModal();
+
+      // Copier le markdown
+      await copyMarkdownToClipboard(freshMarkdown);
+
+      const label = mode === 'hebdo' ? 'Récap hebdo publié' : 'Récap mensuel publié';
+      toast(`${label}. Markdown copié dans le presse-papier.`);
+
+      // Vider la liste (articles publiés ne doivent plus apparaître)
+      currentArticles = [];
+      currentMarkdown = '';
+      excludedIds.clear();
+      renderArticles();
+
+    } catch (e: any) {
+      toast(e.message || 'Erreur lors de la publication', 'error');
+      hidePublishModal();
+    } finally {
+      okBtn.disabled = false;
+      okBtn.textContent = 'Publier';
+    }
+  }
+
+  // ── Copie presse-papier avec fallback ────────────────────────────────────
+  async function copyMarkdownToClipboard(markdown: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(markdown);
+    } catch {
+      // Fallback : afficher dans textarea modale
+      const modal = document.getElementById('modal-clipboard')!;
+      const ta = document.getElementById('clipboard-markdown') as HTMLTextAreaElement;
+      ta.value = markdown;
+      modal.style.display = 'block';
+      ta.select();
+    }
+  }
+
+  // ── Badge "Publié" (Quotidien seulement) ─────────────────────────────────
+  function updatePublishedBadge(pub: boolean, at: string | null): void {
+    const badge = document.getElementById('published-badge');
+    if (!badge) return;
     if (pub && at) {
       const dt = new Date(at);
       const hhmm = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -410,14 +869,55 @@ const base = import.meta.env.BASE_URL;
     }
   }
 
-  function escHtml(s: string): string {
-    return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  // ── Navigation entre onglets ─────────────────────────────────────────────
+  function switchTab(newMode: Mode): void {
+    if (newMode === mode) return;
+    mode = newMode;
+
+    // Mettre à jour les classes actives
+    document.querySelectorAll('.recap-tab').forEach(btn => {
+      btn.classList.toggle('active', (btn as HTMLElement).dataset.tab === newMode);
+    });
+
+    // Réinitialiser les contrôles et charger les données
+    initControls(newMode);
+    loadData();
   }
 
   // ── Bootstrap ────────────────────────────────────────────────────────────
   bootstrapAuth();
-  initDateSelect();
-  loadRecap(currentDate);
 
-  document.getElementById('btn-copy')!.addEventListener('click', copyRecap);
+  // Activer les onglets
+  document.querySelectorAll('.recap-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      switchTab((btn as HTMLElement).dataset.tab as Mode);
+    });
+  });
+
+  // Modal confirm : boutons
+  document.getElementById('btn-modal-cancel')!.addEventListener('click', hidePublishModal);
+  document.getElementById('modal-confirm-overlay')!.addEventListener('click', hidePublishModal);
+  document.getElementById('btn-modal-ok')!.addEventListener('click', confirmPublish);
+
+  // Modal clipboard : boutons
+  document.getElementById('btn-clipboard-close')!.addEventListener('click', () => {
+    document.getElementById('modal-clipboard')!.style.display = 'none';
+  });
+  document.getElementById('modal-clipboard-overlay')!.addEventListener('click', () => {
+    document.getElementById('modal-clipboard')!.style.display = 'none';
+  });
+  document.getElementById('btn-clipboard-copy')!.addEventListener('click', () => {
+    const ta = document.getElementById('clipboard-markdown') as HTMLTextAreaElement;
+    ta.select();
+    try {
+      navigator.clipboard.writeText(ta.value);
+      toast('Copié');
+    } catch {
+      document.execCommand('copy');
+    }
+  });
+
+  // Initialisation onglet Quotidien
+  initControls('quotidien');
+  loadData();
 </script>
