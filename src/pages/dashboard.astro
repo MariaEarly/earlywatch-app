@@ -265,14 +265,32 @@ const base = import.meta.env.BASE_URL;
     }
 
     try {
-      const [articlesData, countsData, trackerData]: any[] = await Promise.all([
+      const [articlesData, countsData, trackerData, autoTaggedData]: any[] = await Promise.all([
         api('/api/v1/articles?page_size=200&score_min=11'),
         newsletterEnabled() ? api('/api/v1/articles/newsletter/counts').catch(() => null) : Promise.resolve(null),
         api('/api/v1/tracker/pending-count').catch(() => ({ pending: 0 })),
+        // EB-AUTO-001 : articles auto-tagués kept sans flash — fenêtre 48h
+        api('/api/v1/articles?lifecycle_status=kept&in_flash=false&page_size=100&score_min=11').catch(() => ({ items: [] })),
       ]);
-      articles = Array.isArray(articlesData) ? articlesData : (articlesData?.items || []);
+      const mainArticles = Array.isArray(articlesData) ? articlesData : (articlesData?.items || []);
       newsletterCounts = countsData;
       trackerPendingCount = trackerData?.pending || 0;
+
+      // Filtrer et pré-initialiser les articles auto-tagués des 48 dernières heures
+      const autoTaggedRaw = Array.isArray(autoTaggedData) ? autoTaggedData : (autoTaggedData?.items || []);
+      const cutoff48h = Date.now() - 48 * 3600 * 1000;
+      const autoTagged = autoTaggedRaw.filter(
+        (a: any) => a.created_at && new Date(a.created_at).getTime() >= cutoff48h
+      );
+      autoTagged.forEach((a: any) => {
+        a._auto_tagged = true;
+        const s = getState(a.id);
+        s.in_hebdo    = !!a.in_hebdo;
+        s.in_mensuel  = !!a.in_mensuel;
+        s.hebdo_origin   = a.in_hebdo   ? 'cascade' : 'none';
+        s.mensuel_origin = a.in_mensuel ? 'cascade' : 'none';
+      });
+      articles = [...mainArticles, ...autoTagged];
 
       // Expose inbox count pour le badge nav
       const inbox = articles.filter((a: any) =>
@@ -467,15 +485,21 @@ const base = import.meta.env.BASE_URL;
         </div>` : '';
 
     const newBadge = a.status === 'nouveau' ? `<span class="tag-new-right">Nouveau</span>` : '';
+    const isAuto = !!a._auto_tagged;
+    const autoBadge = isAuto
+      ? `<span style="font-size:9px;font-family:var(--font-mono);letter-spacing:0.06em;background:rgba(238,231,210,0.55);border:0.5px solid #C8C4BC;border-radius:3px;padding:1px 5px;color:var(--taupe)">auto</span>`
+      : '';
+    const autoStyle = isAuto ? 'border-left:2px solid #C8C4BC;padding-left:14px;' : '';
 
     return `
-      <div class="ew-item" data-article-nav="${a.id}" data-article-id="${a.id}" style="cursor:pointer">
+      <div class="ew-item" data-article-nav="${a.id}" data-article-id="${a.id}" style="cursor:pointer;${autoStyle}">
         ${sourceAvatarHTML(a.source_name)}
         <div class="ew-item-body">
           <div class="ew-meta">
             <span class="src">${escHtml(a.source_name || 'Source inconnue')}</span>
             <span class="dot">·</span>
             <span class="date">${displayDate(a)}</span>
+            ${autoBadge}
             ${a.impact_type ? `<span class="dot">·</span><span style="font-size:9px;font-weight:500;letter-spacing:0.12em;color:var(--taupe)">${escHtml(impactLabel(a.impact_type)).toUpperCase()}</span>` : ''}
           </div>
           <h3 class="ew-title">
@@ -495,9 +519,9 @@ const base = import.meta.env.BASE_URL;
             <div class="ew-act-sep"></div>
             <button class="ew-btn-v3 ew-btn-valider${anyOn ? ' ew-btn-valider-active' : ''}"
                     data-valider="${a.id}"${anyOn ? '' : ' disabled'}>Valider</button>
-            <div class="ew-act-sep"></div>
+            ${isAuto ? '' : `<div class="ew-act-sep"></div>
             <button class="ew-btn-v3" data-ignorer="${a.id}">Ignorer</button>
-            <button class="ew-btn-v3" data-archiver="${a.id}">Archiver</button>
+            <button class="ew-btn-v3" data-archiver="${a.id}">Archiver</button>`}
           </div>
           <div class="ew-card-error" id="err-${a.id}" style="display:none"></div>
         </div>
