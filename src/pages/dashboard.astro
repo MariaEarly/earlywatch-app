@@ -22,9 +22,14 @@ const base = import.meta.env.BASE_URL;
     <div class="ew-loading"><div class="ew-spinner"></div></div>
   </div>
 
-  <!-- ── Col 3 : panel droit (rempli dynamiquement par renderRightPanel) ── -->
+  <!-- ── Col 3 : panel droit ── -->
   <aside slot="right" class="ew-right" id="sidebar-right">
-    <div class="ew-loading"><div class="ew-spinner"></div></div>
+    <!-- Section digest/stats (vue par défaut) -->
+    <div id="panel-digest">
+      <div class="ew-loading"><div class="ew-spinner"></div></div>
+    </div>
+    <!-- Section article detail (ouverte au clic sur une carte) -->
+    <div id="panel-article" style="display:none"></div>
   </aside>
 
 </AppLayout>
@@ -166,6 +171,15 @@ const base = import.meta.env.BASE_URL;
   let newsletterCounts: any = null;
   let trackerPendingCount = 0;
 
+  // Panel state
+  let selectedArticleId: string | null = null;
+  let panelArticle: any = null;          // article currently loaded in panel (full data)
+  let hideTraites = false;               // toggle "masquer les traités"
+  let visibleArticleIds: string[] = [];  // ordered list for keyboard nav
+
+  // Undo state for ignore/archive (map id → {action, timer})
+  const undoPending = new Map<string, {action: string; timer: ReturnType<typeof setTimeout>}>();
+
   // ── V3 card state ─────────────────────────────────────────────────────────
   // State machine per article card : booléens in_flash/in_hebdo/in_mensuel
   // + origin (direct vs cascade) pour l'affichage visuel à 3 niveaux.
@@ -180,6 +194,8 @@ const base = import.meta.env.BASE_URL;
         hebdo_origin:   'none',   // 'none' | 'direct' | 'cascade'
         mensuel_origin: 'none',
         registre:       null,     // null | 'tracker' | 'autres_pub'
+        _treated:       false,    // true après le premier POST /triage réussi dans cette session
+        _treating:      false,    // true pendant un POST en vol
       });
     }
     return cardStates.get(id);
@@ -222,31 +238,44 @@ const base = import.meta.env.BASE_URL;
   function updateCardDOM(id: string): void {
     const s = getState(id);
     const card = document.querySelector(`[data-article-id="${id}"]`);
-    if (!card) return;
+    if (card) {
+      const flashBtn   = card.querySelector('[data-field="flash"]')             as HTMLElement | null;
+      const hebdoBtn   = card.querySelector('[data-field="hebdo"]')             as HTMLElement | null;
+      const mensuelBtn = card.querySelector('[data-field="mensuel"]')           as HTMLElement | null;
+      const trackerBtn = card.querySelector('[data-registre-val="tracker"]')    as HTMLElement | null;
+      const pubBtn     = card.querySelector('[data-registre-val="autres_pub"]') as HTMLElement | null;
 
-    const flashBtn   = card.querySelector('[data-field="flash"]')            as HTMLElement | null;
-    const hebdoBtn   = card.querySelector('[data-field="hebdo"]')            as HTMLElement | null;
-    const mensuelBtn = card.querySelector('[data-field="mensuel"]')          as HTMLElement | null;
-    const validerBtn = card.querySelector('[data-valider]')                  as HTMLButtonElement | null;
-    const trackerBtn = card.querySelector('[data-registre-val="tracker"]')   as HTMLElement | null;
-    const pubBtn     = card.querySelector('[data-registre-val="autres_pub"]') as HTMLElement | null;
+      function setCls(el: HTMLElement | null, cls: string): void {
+        if (!el) return;
+        el.classList.remove('active-direct', 'active-cascade');
+        if (cls) el.classList.add(cls);
+      }
 
-    function setCls(el: HTMLElement | null, cls: string): void {
-      if (!el) return;
-      el.classList.remove('active-direct', 'active-cascade');
-      if (cls) el.classList.add(cls);
+      setCls(flashBtn,   s.in_flash   ? 'active-direct' : '');
+      setCls(hebdoBtn,   !s.in_hebdo   ? '' : s.hebdo_origin   === 'direct' ? 'active-direct' : 'active-cascade');
+      setCls(mensuelBtn, !s.in_mensuel ? '' : s.mensuel_origin === 'direct' ? 'active-direct' : 'active-cascade');
+      setCls(trackerBtn, s.registre === 'tracker'    ? 'active-direct' : '');
+      setCls(pubBtn,     s.registre === 'autres_pub' ? 'active-direct' : '');
+
+      // Mettre à jour l'état "traité" visuellement sur la carte
+      const newTreated = s.in_flash || s.in_hebdo || s.in_mensuel;
+      const wasTreated = s._treated;
+      s._treated = newTreated;
+      card.classList.toggle('ew-item--traite', s._treated);
+
+      // Badge ✓ sur le titre
+      const badgeEl = card.querySelector('.ew-badge-traite');
+      if (s._treated && !badgeEl) {
+        card.querySelector('.ew-title')?.insertAdjacentHTML('afterend',
+          '<span class="ew-badge-traite">&#10003;</span>');
+      } else if (!s._treated && badgeEl) {
+        badgeEl.remove();
+      }
     }
 
-    setCls(flashBtn, s.in_flash ? 'active-direct' : '');
-    setCls(hebdoBtn,   !s.in_hebdo   ? '' : s.hebdo_origin   === 'direct' ? 'active-direct' : 'active-cascade');
-    setCls(mensuelBtn, !s.in_mensuel ? '' : s.mensuel_origin === 'direct' ? 'active-direct' : 'active-cascade');
-    setCls(trackerBtn, s.registre === 'tracker'    ? 'active-direct' : '');
-    setCls(pubBtn,     s.registre === 'autres_pub' ? 'active-direct' : '');
-
-    const anyOn = s.in_flash || s.in_hebdo || s.in_mensuel;
-    if (validerBtn) {
-      validerBtn.disabled = !anyOn;
-      validerBtn.classList.toggle('ew-btn-valider-active', anyOn);
+    // Synchroniser les boutons du panneau si c'est l'article sélectionné
+    if (selectedArticleId === id) {
+      updatePanelButtons(id);
     }
   }
 
@@ -306,7 +335,7 @@ const base = import.meta.env.BASE_URL;
 
     renderTabs();
     renderArticles();
-    renderRightPanel();
+    renderDigestPanel();
   }
 
   // ── Tabs ─────────────────────────────────────────────────────────────────
@@ -318,6 +347,11 @@ const base = import.meta.env.BASE_URL;
     const cnt: any = { all: visible.length, nouveau: 0, quotidien: 0, hebdo: 0, ignorer: 0 };
     visible.forEach((a: any) => { if (cnt[a.status] !== undefined) cnt[a.status]++; });
 
+    const traitesCount = visible.filter((a: any) => getState(a.id)._treated).length;
+    const masquerLabel = hideTraites
+      ? `Afficher traités${traitesCount > 0 ? ` (${traitesCount})` : ''}`
+      : `Masquer traités${traitesCount > 0 ? ` (${traitesCount})` : ''}`;
+
     const tabHtml = `
       <div class="ew-tabs" id="ew-tabs">
         ${renderEwTab('all',       'Tous',      cnt.all,      activeFilter)}
@@ -326,6 +360,7 @@ const base = import.meta.env.BASE_URL;
         ${renderEwTab('hebdo',     'Hebdo',     cnt.hebdo,    activeFilter)}
         ${renderEwTab('ignorer',   'Ignorés',   cnt.ignorer,  activeFilter)}
         ${renderSortDropdown(sortMode)}
+        ${traitesCount > 0 ? `<button class="ew-btn-masquer" id="btn-masquer-traites">${masquerLabel}</button>` : ''}
       </div>`;
 
     const container = document.getElementById('article-list')!;
@@ -349,6 +384,12 @@ const base = import.meta.env.BASE_URL;
       renderTabs();
       renderArticles();
     });
+
+    document.getElementById('btn-masquer-traites')?.addEventListener('click', () => {
+      hideTraites = !hideTraites;
+      renderTabs();
+      renderArticles();
+    });
   }
 
   // ── Articles ─────────────────────────────────────────────────────────────
@@ -358,6 +399,11 @@ const base = import.meta.env.BASE_URL;
       a.lifecycle_status === 'inbox' || a.lifecycle_status === 'triaged'
     );
     if (activeFilter !== 'all') filtered = filtered.filter((a: any) => a.status === activeFilter);
+
+    // Masquer les articles traités dans cette session si toggle actif
+    if (hideTraites) {
+      filtered = filtered.filter((a: any) => !getState(a.id)._treated);
+    }
 
     const now = new Date();
     if (sortMode === 'week') {
@@ -370,6 +416,9 @@ const base = import.meta.env.BASE_URL;
     filtered.sort((a: any, b: any) => {
       return sortMode === 'oldest' ? sortDate(a) - sortDate(b) : sortDate(b) - sortDate(a);
     });
+
+    // Mettre à jour la liste des IDs visibles pour la navigation clavier
+    visibleArticleIds = filtered.map((a: any) => a.id);
 
     const container = document.getElementById('article-list')!;
     const tabs = container.querySelector('#ew-tabs');
@@ -384,26 +433,30 @@ const base = import.meta.env.BASE_URL;
       return;
     }
 
-    // Rendre la liste V9
+    // Rendre la liste
     const listHtml = `<div class="ew-list" id="ew-list">${filtered.map((a: any) => articleCard(a)).join('')}</div>`;
     container.innerHTML = listHtml;
     if (tabs) container.insertAdjacentElement('afterbegin', tabs);
 
-    // Bind événements V3
+    // ── Bind événements ──────────────────────────────────────────────────
+
+    // Clic sur une carte → ouvre le panneau latéral
     container.querySelectorAll('[data-article-nav]').forEach((el: any) => {
       el.addEventListener('click', (e: any) => {
         if (e.target.closest('button,a,select')) return;
-        window.location.href = `${BASE}article?id=${el.dataset.articleNav}`;
+        openPanel(el.dataset.articleNav);
       });
     });
-    // Boutons Q/H/M — toggle avec cascade
+
+    // Boutons Q/H/M — POST direct avec cascade
     container.querySelectorAll('[data-toggle]').forEach((el: any) => {
       el.addEventListener('click', (e: any) => {
         e.stopPropagation();
-        toggleField(el.dataset.toggle, el.dataset.field);
+        toggleFieldDirect(el.dataset.toggle, el.dataset.field);
       });
     });
-    // Boutons + Tracker / + Pub — radio mutuellement exclusifs
+
+    // Boutons + Tracker / + Pub — radio mutuellement exclusifs (envoyés avec prochain POST)
     container.querySelectorAll('[data-registre]').forEach((el: any) => {
       el.addEventListener('click', (e: any) => {
         e.stopPropagation();
@@ -412,27 +465,24 @@ const base = import.meta.env.BASE_URL;
         updateCardDOM(el.dataset.registre);
       });
     });
-    // Valider — POST /triage v3
-    container.querySelectorAll('[data-valider]').forEach((el: any) => {
-      el.addEventListener('click', (e: any) => {
-        e.stopPropagation();
-        if (!(el as HTMLButtonElement).disabled) validateCard(el.dataset.valider);
-      });
-    });
-    // Ignorer — POST /ignore
+
+    // Ignorer — avec undo 3s
     container.querySelectorAll('[data-ignorer]').forEach((el: any) => {
       el.addEventListener('click', (e: any) => {
         e.stopPropagation();
-        ignoreCard(el.dataset.ignorer);
+        ignoreWithUndo(el.dataset.ignorer);
       });
     });
-    // Archiver — POST /archive
+
+    // Archiver — avec undo 3s
     container.querySelectorAll('[data-archiver]').forEach((el: any) => {
       el.addEventListener('click', (e: any) => {
         e.stopPropagation();
-        archiveCard(el.dataset.archiver);
+        archiveWithUndo(el.dataset.archiver);
       });
     });
+
+    // Correction date
     container.querySelectorAll('.fix-date-link').forEach((el: any) => {
       el.addEventListener('click', (e: any) => {
         e.stopPropagation(); e.preventDefault();
@@ -456,11 +506,12 @@ const base = import.meta.env.BASE_URL;
   }
 
   // ── Carte article V3 — spec EB-WORKFLOW-001 v3.1 §6 ─────────────────────
-  // 8 boutons : Quotidien · Hebdo · Mensuel | + Tracker · + Pub | Valider | Ignorer · Archiver
-  // 3 états visuels : inactif / actif-direct / actif-cascade (classes CSS dédiées)
+  // 7 boutons : Quotidien · Hebdo · Mensuel | + Tracker · + Pub | Ignorer · Archiver
+  // Plus de bouton Valider — chaque clic Q/H/M envoie un POST direct (spec CLAUDE-CODE-UX-INBOX-PANEL v1.0)
   function articleCard(a: any): string {
     const s = getState(a.id);
-    const anyOn = s.in_flash || s.in_hebdo || s.in_mensuel;
+    const isSelected = a.id === selectedArticleId;
+    const isTreated  = s._treated;
 
     // Classes CSS selon état et origine
     const flashCls   = s.in_flash   ? 'active-direct' : '';
@@ -469,12 +520,12 @@ const base = import.meta.env.BASE_URL;
 
     // + Tracker : badge si déjà ajouté, bouton radio sinon
     const trackerEl = a.tracker_added
-      ? `<span class="ew-badge ew-badge-ok" style="font-family:var(--font-mono);font-size:9px">✓ Tracker</span>`
+      ? `<span class="ew-badge ew-badge-ok" style="font-family:var(--font-mono);font-size:9px">&#10003; Tracker</span>`
       : `<button class="ew-btn-v3${s.registre === 'tracker' ? ' active-direct' : ''}" data-registre="${a.id}" data-registre-val="tracker">+ Tracker</button>`;
 
     // + Pub : badge si déjà ajouté, bouton radio sinon
     const pubEl = a.pub_added
-      ? `<span class="ew-badge ew-badge-ok" style="font-family:var(--font-mono);font-size:9px">✓ Pub</span>`
+      ? `<span class="ew-badge ew-badge-ok" style="font-family:var(--font-mono);font-size:9px">&#10003; Pub</span>`
       : `<button class="ew-btn-v3${s.registre === 'autres_pub' ? ' active-direct' : ''}" data-registre="${a.id}" data-registre-val="autres_pub">+ Pub</button>`;
 
     const impactRow = (a.has_impact && a.impacted_procedures?.length)
@@ -490,9 +541,10 @@ const base = import.meta.env.BASE_URL;
       ? `<span style="font-size:9px;font-family:var(--font-mono);letter-spacing:0.06em;background:rgba(238,231,210,0.55);border:0.5px solid #C8C4BC;border-radius:3px;padding:1px 5px;color:var(--taupe)">auto</span>`
       : '';
     const autoStyle = isAuto ? 'border-left:2px solid #C8C4BC;padding-left:14px;' : '';
+    const traiteBadge = isTreated ? `<span class="ew-badge-traite">&#10003;</span>` : '';
 
     return `
-      <div class="ew-item" data-article-nav="${a.id}" data-article-id="${a.id}" style="cursor:pointer;${autoStyle}">
+      <div class="ew-item${isSelected ? ' ew-item--selected' : ''}${isTreated ? ' ew-item--traite' : ''}" data-article-nav="${a.id}" data-article-id="${a.id}" style="cursor:pointer;${autoStyle}">
         ${sourceAvatarHTML(a.source_name)}
         <div class="ew-item-body">
           <div class="ew-meta">
@@ -503,6 +555,7 @@ const base = import.meta.env.BASE_URL;
             ${a.impact_type ? `<span class="dot">·</span><span style="font-size:9px;font-weight:500;letter-spacing:0.12em;color:var(--taupe)">${escHtml(impactLabel(a.impact_type)).toUpperCase()}</span>` : ''}
           </div>
           <h3 class="ew-title">
+            ${traiteBadge}
             ${a.original_url
               ? `<a href="${escHtml(a.original_url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none" onclick="event.stopPropagation()">${escHtml(a.title || 'Sans titre')}${LINK_ICON}</a>`
               : escHtml(a.title || 'Sans titre')
@@ -516,9 +569,6 @@ const base = import.meta.env.BASE_URL;
             <div class="ew-act-sep"></div>
             ${trackerEl}
             ${pubEl}
-            <div class="ew-act-sep"></div>
-            <button class="ew-btn-v3 ew-btn-valider${anyOn ? ' ew-btn-valider-active' : ''}"
-                    data-valider="${a.id}"${anyOn ? '' : ' disabled'}>Valider</button>
             ${isAuto ? '' : `<div class="ew-act-sep"></div>
             <button class="ew-btn-v3" data-ignorer="${a.id}">Ignorer</button>
             <button class="ew-btn-v3" data-archiver="${a.id}">Archiver</button>`}
@@ -529,62 +579,390 @@ const base = import.meta.env.BASE_URL;
       </div>`;
   }
 
-  // ── Actions V3 ──────────────────────────────────────────────────────────
-  // Remplace l'ancien PATCH /triage v2 par les 3 endpoints POST v3.
+  // ── Toggle direct avec POST ───────────────────────────────────────────────
+  // Remplace l'ancien validateCard() : chaque clic Q/H/M envoie un POST /triage immédiat.
+  // Le backend accepte les articles en to_triage ET en kept (re-triage pour mise à jour des flags).
 
-  // Valider : POST /triage avec {in_flash, in_hebdo, in_mensuel, registre_public_target?}
-  async function validateCard(id: string): Promise<void> {
+  async function toggleFieldDirect(id: string, field: string): Promise<void> {
     const s = getState(id);
-    const body: any = {
-      in_flash:   s.in_flash,
-      in_hebdo:   s.in_hebdo,
-      in_mensuel: s.in_mensuel,
-    };
-    if (s.registre) body.registre_public_target = s.registre;
+    if (s._treating) return; // POST déjà en vol
 
-    const btn = document.querySelector(`[data-valider="${id}"]`) as HTMLButtonElement | null;
-    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+    // Mise à jour locale de l'état + cascade
+    toggleField(id, field);
 
+    const anyOn = s.in_flash || s.in_hebdo || s.in_mensuel;
+
+    if (!anyOn) {
+      // Tous les flags sont désactivés — pas de POST (backend exige au moins un flag).
+      // L'article reste 'kept' côté serveur s'il avait déjà été trié,
+      // mais visuellement la carte redevient "non-traitée".
+      updateCardDOM(id); // retire la classe ew-item--traite
+      return;
+    }
+
+    // POST /triage avec l'état courant
+    s._treating = true;
     try {
+      const body: any = {
+        in_flash:   s.in_flash,
+        in_hebdo:   s.in_hebdo,
+        in_mensuel: s.in_mensuel,
+      };
+      if (s.registre) body.registre_public_target = s.registre;
+
       await api(`/api/v1/articles/${id}/triage`, { method: 'POST', body });
-      articles = articles.filter((a: any) => a.id !== id);
-      cardStates.delete(id);
-      renderTabs(); renderArticles();
-      const label = s.in_flash ? 'Article — Quotidien' : s.in_hebdo ? 'Article — Hebdo' : 'Article — Mensuel';
-      toast(label);
+
+      // Mettre à jour le tableau local (lifecycle → triaged pour rester visible)
+      const idx = articles.findIndex((a: any) => a.id === id);
+      if (idx !== -1) {
+        articles[idx].lifecycle_status = 'triaged';
+        articles[idx].in_flash   = s.in_flash;
+        articles[idx].in_hebdo   = s.in_hebdo;
+        articles[idx].in_mensuel = s.in_mensuel;
+      }
+
+      updateCardDOM(id); // applique ew-item--traite + badge ✓
+      if (hideTraites && s._treated) {
+        // Si "masquer traités" est actif, retirer la carte de la liste
+        const card = document.querySelector(`[data-article-id="${id}"]`) as HTMLElement | null;
+        if (card) { card.style.transition = 'opacity 0.3s'; card.style.opacity = '0'; }
+        setTimeout(() => renderArticles(), 300);
+      }
+
     } catch (e: any) {
-      if (btn) { btn.disabled = false; btn.textContent = 'Valider'; }
-      // Erreur affichée dans la carte sans rafraîchir la liste
+      // Annuler le toggle local en cas d'erreur
+      toggleField(id, field); // inverse le toggle
       const errEl = document.getElementById(`err-${id}`);
       if (errEl) { errEl.textContent = e.message || 'Erreur'; errEl.style.display = 'block'; }
+    } finally {
+      s._treating = false;
     }
   }
 
-  // Ignorer : POST /ignore — article quitte l'inbox
+  // ── Actions ──────────────────────────────────────────────────────────────
+
+  // Barre d'undo affichée dans #article-list pendant 3s
+  function showUndoBar(id: string, action: string, label: string): void {
+    // Retirer une barre undo existante
+    document.getElementById('undo-bar')?.remove();
+
+    const bar = document.createElement('div');
+    bar.id = 'undo-bar';
+    bar.className = 'ew-undo-bar';
+    bar.innerHTML = `<span>${label}</span><button class="ew-undo-btn" id="btn-undo-action">Annuler</button>`;
+
+    const container = document.getElementById('article-list')!;
+    const list = container.querySelector('#ew-list');
+    if (list) container.insertBefore(bar, list);
+    else container.prepend(bar);
+
+    document.getElementById('btn-undo-action')?.addEventListener('click', () => {
+      const pending = undoPending.get(id);
+      if (pending) { clearTimeout(pending.timer); undoPending.delete(id); }
+      bar.remove();
+      // Restaurer la carte
+      const card = document.querySelector(`[data-article-id="${id}"]`) as HTMLElement | null;
+      if (card) { card.style.opacity = ''; card.style.pointerEvents = ''; }
+    });
+  }
+
+  function ignoreWithUndo(id: string): void {
+    // Annuler une éventuelle action undo précédente sur le même id
+    const prev = undoPending.get(id);
+    if (prev) { clearTimeout(prev.timer); undoPending.delete(id); }
+
+    const card = document.querySelector(`[data-article-id="${id}"]`) as HTMLElement | null;
+    if (card) { card.style.opacity = '0.3'; card.style.pointerEvents = 'none'; }
+
+    showUndoBar(id, 'ignore', 'Article ignoré');
+
+    const timer = setTimeout(() => {
+      undoPending.delete(id);
+      document.getElementById('undo-bar')?.remove();
+      ignoreCard(id);
+    }, 3000);
+    undoPending.set(id, { action: 'ignore', timer });
+  }
+
+  function archiveWithUndo(id: string): void {
+    const prev = undoPending.get(id);
+    if (prev) { clearTimeout(prev.timer); undoPending.delete(id); }
+
+    const card = document.querySelector(`[data-article-id="${id}"]`) as HTMLElement | null;
+    if (card) { card.style.opacity = '0.3'; card.style.pointerEvents = 'none'; }
+
+    showUndoBar(id, 'archive', 'Article archivé');
+
+    const timer = setTimeout(() => {
+      undoPending.delete(id);
+      document.getElementById('undo-bar')?.remove();
+      archiveCard(id);
+    }, 3000);
+    undoPending.set(id, { action: 'archive', timer });
+  }
+
   async function ignoreCard(id: string): Promise<void> {
     try {
       await api(`/api/v1/articles/${id}/ignore`, { method: 'POST', body: {} });
       articles = articles.filter((a: any) => a.id !== id);
       cardStates.delete(id);
+      if (selectedArticleId === id) closePanel();
       renderTabs(); renderArticles();
       toast('Article ignoré');
     } catch (e: any) { toast(e.message || 'Erreur', 'error'); }
   }
 
-  // Archiver : POST /archive — article quitte l'inbox
   async function archiveCard(id: string): Promise<void> {
     try {
       await api(`/api/v1/articles/${id}/archive`, { method: 'POST', body: {} });
       articles = articles.filter((a: any) => a.id !== id);
       cardStates.delete(id);
+      if (selectedArticleId === id) closePanel();
       renderTabs(); renderArticles();
       toast('Article archivé');
     } catch (e: any) { toast(e.message || 'Erreur', 'error'); }
   }
 
-  // ── Right panel ──────────────────────────────────────────────────────────
+  // ── Panneau latéral article (style Gmail) ────────────────────────────────
 
-  function renderRightPanel(): void {
+  async function openPanel(id: string): Promise<void> {
+    // Mettre à jour l'état de sélection sans re-rendre la liste
+    if (selectedArticleId) {
+      document.querySelector(`[data-article-id="${selectedArticleId}"]`)?.classList.remove('ew-item--selected');
+    }
+    selectedArticleId = id;
+    document.querySelector(`[data-article-id="${id}"]`)?.classList.add('ew-item--selected');
+
+    // Basculer le layout vers "panneau ouvert"
+    document.body.classList.add('ew-panel-open');
+    document.getElementById('panel-digest')!.style.display = 'none';
+    const panelEl = document.getElementById('panel-article')!;
+    panelEl.style.display = 'flex';
+
+    // Afficher les données locales immédiates (titre, meta)
+    const localArt = articles.find((a: any) => a.id === id);
+    panelEl.innerHTML = renderPanelSkeleton(localArt);
+    bindPanelActions(id);
+
+    // Charger les données complètes (content_html, summary)
+    try {
+      const fullArt: any = await api(`/api/v1/articles/${id}`);
+      panelArticle = fullArt;
+      panelEl.innerHTML = renderPanelContent(fullArt);
+      bindPanelActions(id);
+    } catch (e: any) {
+      const contentEl = panelEl.querySelector('.ew-panel-body');
+      if (contentEl) {
+        contentEl.innerHTML = `<p style="color:var(--rouge);font-size:13px">Erreur de chargement : ${escHtml(e.message)}</p>`;
+      }
+    }
+  }
+
+  function closePanel(): void {
+    if (selectedArticleId) {
+      document.querySelector(`[data-article-id="${selectedArticleId}"]`)?.classList.remove('ew-item--selected');
+    }
+    selectedArticleId = null;
+    panelArticle = null;
+    document.body.classList.remove('ew-panel-open');
+    document.getElementById('panel-digest')!.style.display = '';
+    const panelEl = document.getElementById('panel-article')!;
+    panelEl.style.display = 'none';
+    panelEl.innerHTML = '';
+  }
+
+  // Squelette affiché avant le chargement des données complètes
+  function renderPanelSkeleton(a: any): string {
+    if (!a) return '<div style="padding:24px;color:var(--taupe)">Chargement…</div>';
+    return renderPanelHTML(a, '<div style="padding:24px 24px 16px;text-align:center;color:var(--taupe);font-size:13px">Chargement du contenu…</div>');
+  }
+
+  function renderPanelContent(a: any): string {
+    let bodyHtml = '';
+    if (a.content_html) {
+      bodyHtml = `<div class="ew-panel-article-html">${a.content_html}</div>`;
+    } else if (a.summary) {
+      bodyHtml = `<p style="font-size:14px;line-height:1.65;color:var(--ink-soft)">${escHtml(a.summary)}</p>`;
+    } else {
+      bodyHtml = `<p style="font-size:13px;color:var(--taupe);font-style:italic">Contenu non disponible — voir l'original.</p>`;
+    }
+    return renderPanelHTML(a, bodyHtml);
+  }
+
+  function renderPanelHTML(a: any, bodyHtml: string): string {
+    const s = getState(a.id);
+    const flashCls   = s.in_flash   ? 'active-direct' : '';
+    const hebdoCls   = !s.in_hebdo   ? '' : s.hebdo_origin   === 'direct' ? 'active-direct' : 'active-cascade';
+    const mensuelCls = !s.in_mensuel ? '' : s.mensuel_origin === 'direct' ? 'active-direct' : 'active-cascade';
+
+    const dateStr = a.published_at
+      ? new Date(a.published_at).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+      : (a.created_at ? new Date(a.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '');
+
+    return `
+      <div class="ew-panel-header">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:11px;font-family:var(--font-mono);color:var(--taupe);letter-spacing:0.1em;margin-bottom:8px;text-transform:uppercase">${escHtml(a.source_name || '')}</div>
+          <h2 style="font-size:16px;font-weight:500;color:var(--ink);line-height:1.35;margin:0 0 8px">${escHtml(a.title || 'Sans titre')}</h2>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:12px;color:var(--taupe)">${escHtml(dateStr)}</span>
+            ${a.original_url
+              ? `<a href="${escHtml(a.original_url)}" target="_blank" rel="noopener" style="font-size:12px;color:#5C6347;text-decoration:underline;display:flex;align-items:center;gap:3px">Voir l'original${LINK_ICON}</a>`
+              : ''}
+            <a href="${BASE}article?id=${escHtml(a.id)}" style="font-size:11px;color:var(--mute);text-decoration:underline">Fiche complète</a>
+          </div>
+        </div>
+        <button id="panel-close-btn" style="background:none;border:none;font-size:22px;color:var(--taupe);cursor:pointer;padding:4px 0 4px 12px;line-height:1;flex-shrink:0;align-self:flex-start">&times;</button>
+      </div>
+      <div class="ew-panel-body">${bodyHtml}</div>
+      <div class="ew-panel-footer">
+        <button class="ew-btn-v3 ${flashCls}"   data-panel-toggle="${a.id}" data-panel-field="flash">Quotidien</button>
+        <button class="ew-btn-v3 ${hebdoCls}"   data-panel-toggle="${a.id}" data-panel-field="hebdo">Hebdo</button>
+        <button class="ew-btn-v3 ${mensuelCls}" data-panel-toggle="${a.id}" data-panel-field="mensuel">Mensuel</button>
+        <div class="ew-act-sep"></div>
+        <button class="ew-btn-v3" data-panel-tracker="${a.id}"
+          data-source="${escHtml(a.source_name||'')}"
+          data-date="${a.published_at ? a.published_at.slice(0,10) : ''}"
+          data-title="${escHtml(a.title||'')}"
+          data-synthese="${escHtml(a.summary||'')}"
+          data-url="${escHtml(a.original_url||'')}"
+          data-type="${escHtml(a.impact_type||'')}">+ Tracker</button>
+        <button class="ew-btn-v3" data-panel-pub="${a.id}">+ Pub</button>
+        <div class="ew-act-sep"></div>
+        <button class="ew-btn-v3" data-panel-ignorer="${a.id}">Ignorer</button>
+        <button class="ew-btn-v3" data-panel-archiver="${a.id}">Archiver</button>
+      </div>`;
+  }
+
+  function bindPanelActions(id: string): void {
+    const panelEl = document.getElementById('panel-article')!;
+
+    document.getElementById('panel-close-btn')?.addEventListener('click', () => closePanel());
+
+    // Q/H/M — POST direct
+    panelEl.querySelectorAll('[data-panel-toggle]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        e.stopPropagation();
+        toggleFieldDirect(el.dataset.panelToggle, el.dataset.panelField);
+      });
+    });
+
+    // + Tracker — ouvre le drawer tracker pré-rempli
+    panelEl.querySelectorAll('[data-panel-tracker]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        e.stopPropagation();
+        const trackerArticleId = el.dataset.panelTracker;
+        (document.getElementById('tracker-source') as HTMLInputElement).value = el.dataset.source || '';
+        (document.getElementById('tracker-date') as HTMLInputElement).value = el.dataset.date || '';
+        (document.getElementById('tracker-sujet') as HTMLInputElement).value = el.dataset.title || '';
+        (document.getElementById('tracker-synthese') as HTMLTextAreaElement).value = el.dataset.synthese || '';
+        (document.getElementById('tracker-lien') as HTMLInputElement).value = el.dataset.url || '';
+        (document.getElementById('tracker-statut') as HTMLInputElement).value = 'Publié';
+        const typeMap: Record<string, string> = { nouvelle_regle: 'TEXTE', mise_a_jour: 'TEXTE', sanction: 'DECISION', appel_vigilance: 'CONSULTATION', info: 'TEXTE' };
+        (document.getElementById('tracker-type') as HTMLSelectElement).value = typeMap[el.dataset.type||''] || 'TEXTE';
+        // Stocker l'ID pour le confirm
+        (document.getElementById('tracker-overlay') as any)._articleId = trackerArticleId;
+        document.getElementById('tracker-overlay')!.style.display = 'flex';
+      });
+    });
+
+    // + Pub — appel direct API
+    panelEl.querySelectorAll('[data-panel-pub]').forEach((el: any) => {
+      el.addEventListener('click', async (e: any) => {
+        e.stopPropagation();
+        const articleId = el.dataset.panelPub;
+        const art = panelArticle || articles.find((a: any) => a.id === articleId);
+        if (!art) return;
+        try {
+          await api(`/api/v1/tracker/pub/propose?article_id=${articleId}`, {
+            method: 'POST',
+            body: {
+              date: art.published_at ? art.published_at.slice(0, 10) : '',
+              source: art.source_name || '',
+              type: 'Intelligence',
+              titre: art.title || '',
+              lien: art.original_url || '',
+            },
+          });
+          const idx = articles.findIndex((a: any) => a.id === articleId);
+          if (idx !== -1) articles[idx].pub_added = true;
+          renderArticles(); renderDigestPanel();
+          toast('Ajouté aux autres publications');
+        } catch (err: any) { toast('Erreur: ' + err.message, 'error'); }
+      });
+    });
+
+    // Ignorer / Archiver depuis le panneau
+    panelEl.querySelectorAll('[data-panel-ignorer]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        e.stopPropagation();
+        ignoreWithUndo(el.dataset.panelIgnorer);
+      });
+    });
+    panelEl.querySelectorAll('[data-panel-archiver]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        e.stopPropagation();
+        archiveWithUndo(el.dataset.panelArchiver);
+      });
+    });
+  }
+
+  // Mettre à jour les boutons Q/H/M dans le panneau sans le re-rendre entièrement
+  function updatePanelButtons(id: string): void {
+    const panelEl = document.getElementById('panel-article');
+    if (!panelEl || panelEl.style.display === 'none') return;
+
+    const s = getState(id);
+
+    function setPanelCls(field: string, cls: string): void {
+      const btn = panelEl!.querySelector(`[data-panel-field="${field}"]`) as HTMLElement | null;
+      if (!btn) return;
+      btn.classList.remove('active-direct', 'active-cascade');
+      if (cls) btn.classList.add(cls);
+    }
+
+    setPanelCls('flash',   s.in_flash   ? 'active-direct' : '');
+    setPanelCls('hebdo',   !s.in_hebdo   ? '' : s.hebdo_origin   === 'direct' ? 'active-direct' : 'active-cascade');
+    setPanelCls('mensuel', !s.in_mensuel ? '' : s.mensuel_origin === 'direct' ? 'active-direct' : 'active-cascade');
+  }
+
+  // ── Navigation clavier ────────────────────────────────────────────────────
+
+  document.addEventListener('keydown', (e: KeyboardEvent) => {
+    // Ignorer si l'utilisateur est dans un champ de texte
+    if ((e.target as HTMLElement).closest('input,textarea,select')) return;
+
+    if (e.key === 'ArrowDown' || e.key === 'j') {
+      e.preventDefault();
+      navigateArticle(1);
+    } else if (e.key === 'ArrowUp' || e.key === 'k') {
+      e.preventDefault();
+      navigateArticle(-1);
+    } else if (e.key === 'Escape') {
+      if (selectedArticleId) { e.preventDefault(); closePanel(); }
+    }
+  });
+
+  function navigateArticle(direction: number): void {
+    if (!visibleArticleIds.length) return;
+    const currentIdx = selectedArticleId ? visibleArticleIds.indexOf(selectedArticleId) : -1;
+    let newIdx = currentIdx + direction;
+    // Clamp entre 0 et len-1 ; si aucun sélectionné et direction=+1, commencer à 0
+    if (currentIdx === -1) newIdx = direction > 0 ? 0 : visibleArticleIds.length - 1;
+    newIdx = Math.max(0, Math.min(visibleArticleIds.length - 1, newIdx));
+    const newId = visibleArticleIds[newIdx];
+    if (newId) {
+      openPanel(newId);
+      // Scroller la carte sélectionnée dans la vue
+      setTimeout(() => {
+        document.querySelector(`[data-article-id="${newId}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 50);
+    }
+  }
+
+  // ── Digest panel (panneau droit en mode sans article sélectionné) ─────────
+
+  function renderDigestPanel(): void {
     const nc: any = newsletterCounts;
     const qTotal = nc?.quotidien_total || 0;
     const qPub   = nc?.quotidien_published || 0;
@@ -630,7 +1008,7 @@ const base = import.meta.env.BASE_URL;
         <div style="font-size:12px;color:var(--mute)">Aucun article en attente.</div>
       </div>`;
 
-    document.getElementById('sidebar-right')!.innerHTML = `
+    document.getElementById('panel-digest')!.innerHTML = `
       ${digestSection}
       <div class="ew-divider"></div>
       ${trackerSection}
@@ -715,7 +1093,7 @@ const base = import.meta.env.BASE_URL;
       newsletterCounts = await api('/api/v1/articles/newsletter/counts').catch(() => newsletterCounts);
       const tc: any = await api('/api/v1/tracker/pending-count').catch(() => ({ pending: 0 }));
       trackerPendingCount = tc?.pending || 0;
-      renderArticles(); renderRightPanel();
+      renderArticles(); renderDigestPanel();
       toast(`${res.published || 0} article${(res.published||0) > 1 ? 's' : ''} publiés — session clôturée`);
     } catch (e: any) {
       toast('Erreur: ' + (e.message || 'publication échouée'), 'error');
@@ -734,15 +1112,12 @@ const base = import.meta.env.BASE_URL;
     const overlay = document.getElementById('apercu-overlay')!;
     overlay.style.display = 'flex';
     document.getElementById('apercu-title')!.textContent = `Aperçu ${type === 'quotidien' ? 'Quotidien' : 'Hebdo'}`;
-    // Affiche un loader pendant le fetch — évite d'afficher une liste vide
     document.getElementById('apercu-list')!.innerHTML =
       '<div style="padding:30px;text-align:center;color:var(--taupe);font-size:13px">Chargement…</div>';
     document.getElementById('apercu-close')!.onclick = closeApercu;
     document.getElementById('apercu-cancel')!.onclick = closeApercu;
     document.getElementById('apercu-export')!.onclick = exportApercuOrder;
     try {
-      // Appel API : retourne tous les articles triagés (y compris lifecycle='published')
-      // au lieu de filtrer l'array local qui n'inclut que inbox+triaged.
       const data: any = await api(`/api/v1/articles/export?type=${type}`);
       apercuOrder = Array.isArray(data) ? data : (data?.items || []);
       renderApercuList();
@@ -815,7 +1190,7 @@ const base = import.meta.env.BASE_URL;
       const data: any = await api(`/api/v1/articles/export/markdown?type=${type}`);
       await navigator.clipboard.writeText(typeof data === 'string' ? data : JSON.stringify(data, null, 2));
       const orig = btn.textContent;
-      btn.textContent = '✓ Copié !';
+      btn.textContent = '&#10003; Copié !';
       setTimeout(() => { btn.textContent = orig; }, 2000);
     } catch (e: any) { toast(e.message || 'Erreur de copie', 'error'); }
   }
@@ -860,6 +1235,8 @@ const base = import.meta.env.BASE_URL;
   });
 
   document.getElementById('tracker-confirm')?.addEventListener('click', async () => {
+    // L'ID peut venir du panneau (stocké dans _articleId) ou de la variable locale
+    const artId = (document.getElementById('tracker-overlay') as any)._articleId || trackerArticleId;
     const body = {
       source:   (document.getElementById('tracker-source') as HTMLInputElement).value,
       date:     (document.getElementById('tracker-date') as HTMLInputElement).value,
@@ -870,14 +1247,14 @@ const base = import.meta.env.BASE_URL;
       statut:   (document.getElementById('tracker-statut') as HTMLInputElement).value,
     };
     try {
-      const res: any = await api(`/api/v1/tracker/propose?article_id=${trackerArticleId}`, { method: 'POST', body });
+      const res: any = await api(`/api/v1/tracker/propose?article_id=${artId}`, { method: 'POST', body });
       if (res.success) {
-        const idx = articles.findIndex((a: any) => a.id === trackerArticleId);
+        const idx = articles.findIndex((a: any) => a.id === artId);
         if (idx !== -1) articles[idx].tracker_added = true;
         document.getElementById('tracker-overlay')!.style.display = 'none';
         const tc: any = await api('/api/v1/tracker/pending-count').catch(() => ({ pending: 0 }));
         trackerPendingCount = tc?.pending || 0;
-        renderArticles(); renderRightPanel();
+        renderArticles(); renderDigestPanel();
         toast('Article ajouté au Tracker');
       } else { toast('Erreur tracker', 'error'); }
     } catch (err: any) { toast('Erreur: ' + err.message, 'error'); }
@@ -902,7 +1279,7 @@ const base = import.meta.env.BASE_URL;
       });
       const idx = articles.findIndex((a: any) => a.id === articleId);
       if (idx !== -1) articles[idx].pub_added = true;
-      renderArticles(); renderRightPanel();
+      renderArticles(); renderDigestPanel();
       toast('Ajouté aux autres publications');
     } catch (err: any) { toast('Erreur: ' + err.message, 'error'); }
   });
@@ -958,7 +1335,6 @@ const base = import.meta.env.BASE_URL;
 
   /* ── Boutons de triage V3 — spec §9.4 ── */
 
-  /* Base : état inactif — texte kaki, fond transparent, bordure douce */
   .ew-btn-v3 {
     font-size: 12px;
     padding: 6px 12px;
@@ -979,7 +1355,7 @@ const base = import.meta.env.BASE_URL;
     color: var(--ink);
   }
 
-  /* Actif direct : clic utilisateur — fond soutenu + soulignement kaki */
+  /* Actif direct : clic utilisateur */
   .ew-btn-v3.active-direct {
     color: #1A1918;
     background: var(--bg-triage-active, #EEE7D2);
@@ -990,31 +1366,11 @@ const base = import.meta.env.BASE_URL;
     text-underline-offset: 2px;
   }
 
-  /* Actif cascade : allumé par propagation — fond beige léger, pas de soulignement */
+  /* Actif cascade : allumé par propagation */
   .ew-btn-v3.active-cascade {
     color: #1A1918;
     background: rgba(238, 231, 210, 0.45);
     border-color: #C8C4BC;
-  }
-
-  /* Valider — désactivé tant qu'aucun in_X */
-  .ew-btn-valider:disabled {
-    opacity: 0.32;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
-
-  /* Valider — actif quand au moins un in_X est coché */
-  .ew-btn-valider-active {
-    background: var(--ink, #1A1918);
-    color: var(--bg, #F4F0E6);
-    border-color: var(--ink, #1A1918);
-    font-weight: 500;
-    text-decoration: none;
-  }
-  .ew-btn-valider-active:hover {
-    background: var(--ink-soft, #3A3530);
-    border-color: var(--ink-soft, #3A3530);
   }
 
   /* Message d'erreur inline dans la carte (affiché sur erreur API) */
@@ -1024,6 +1380,176 @@ const base = import.meta.env.BASE_URL;
     margin-top: 6px;
     display: none;
     font-family: var(--font-mono);
+  }
+
+  /* ── Carte sélectionnée (article ouvert dans le panneau) ── */
+  .ew-item--selected {
+    background: var(--bg-hover, #EAE6DA) !important;
+    border-left: 2px solid #5C6347 !important;
+    padding-left: 12px;
+  }
+
+  /* ── Carte traitée (au moins un Q/H/M activé et sauvegardé) ── */
+  .ew-item--traite {
+    opacity: 0.62;
+  }
+  .ew-item--traite .ew-title {
+    color: var(--taupe);
+  }
+
+  /* Badge ✓ traité — affiché à côté du titre */
+  .ew-badge-traite {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: #5C6347;
+    background: rgba(92, 99, 71, 0.1);
+    border: 0.5px solid rgba(92, 99, 71, 0.4);
+    border-radius: 2px;
+    padding: 0 4px;
+    margin-right: 5px;
+    vertical-align: middle;
+    font-weight: 600;
+  }
+
+  /* ── Bouton "Masquer/Afficher les traités" dans les tabs ── */
+  .ew-btn-masquer {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.06em;
+    color: var(--taupe);
+    background: none;
+    border: 0.5px solid var(--line-strong);
+    border-radius: var(--radius, 4px);
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: color 0.12s, border-color 0.12s;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+  .ew-btn-masquer:hover {
+    color: var(--ink);
+    border-color: var(--taupe);
+  }
+
+  /* ── Barre undo (ignore/archive avec délai 3s) ── */
+  .ew-undo-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    margin-bottom: 8px;
+    background: var(--ink, #1A1918);
+    color: var(--bg, #F4F0E6);
+    border-radius: var(--radius, 4px);
+    font-size: 13px;
+    font-family: var(--font);
+    animation: ew-slide-down 0.2s ease-out;
+  }
+  @keyframes ew-slide-down {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .ew-undo-btn {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    color: var(--bg, #F4F0E6);
+    background: none;
+    border: 0.5px solid rgba(244,240,230,0.4);
+    border-radius: 3px;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: background 0.12s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .ew-undo-btn:hover { background: rgba(244,240,230,0.15); }
+
+  /* ── Layout panneau ouvert : élargit la colonne droite ── */
+  body.ew-panel-open .ew-frame {
+    grid-template-columns: 220px minmax(320px, 2fr) minmax(380px, 3fr);
+  }
+
+  /* ── Panneau article (occupe toute la hauteur de .ew-right quand visible) ── */
+  #panel-article {
+    /* Le panneau utilise des marges négatives pour annuler le padding de .ew-right */
+    margin: -28px -24px;
+    /* height = 100vh car .ew-right a height:100vh */
+    height: 100vh;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg-side, #F5F1E8);
+    border-left: 0.5px solid var(--line, #E5E2D9);
+    animation: ew-panel-in 0.18s ease-out;
+  }
+  @keyframes ew-panel-in {
+    from { opacity: 0; transform: translateX(12px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Header du panneau article */
+  .ew-panel-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 20px 22px 16px;
+    border-bottom: 0.5px solid var(--line, #E5E2D9);
+    flex-shrink: 0;
+  }
+
+  /* Corps scrollable du panneau */
+  .ew-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 22px;
+    scrollbar-gutter: stable;
+  }
+
+  /* Contenu HTML de l'article dans le panneau */
+  .ew-panel-article-html {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--ink-soft, #3A3530);
+  }
+  .ew-panel-article-html h1,
+  .ew-panel-article-html h2,
+  .ew-panel-article-html h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 16px 0 6px;
+  }
+  .ew-panel-article-html p { margin: 0 0 10px; }
+  .ew-panel-article-html a { color: #5C6347; }
+  .ew-panel-article-html ul,
+  .ew-panel-article-html ol { padding-left: 18px; margin: 0 0 10px; }
+
+  /* Footer d'actions du panneau */
+  .ew-panel-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px 18px;
+    border-top: 0.5px solid var(--line, #E5E2D9);
+    flex-shrink: 0;
+    background: var(--bg-side, #F5F1E8);
+  }
+
+  /* ── Mobile : panneau en overlay plein écran ── */
+  @media (max-width: 768px) {
+    body.ew-panel-open .ew-frame {
+      grid-template-columns: 220px 1fr 0;
+    }
+    #panel-article {
+      position: fixed;
+      inset: 0;
+      margin: 0;
+      height: 100vh;
+      height: 100dvh;
+      z-index: 400;
+    }
   }
 </style>
 
