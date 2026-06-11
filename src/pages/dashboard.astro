@@ -518,15 +518,25 @@ const base = import.meta.env.BASE_URL;
     const hebdoCls   = !s.in_hebdo   ? '' : s.hebdo_origin   === 'direct' ? 'active-direct' : 'active-cascade';
     const mensuelCls = !s.in_mensuel ? '' : s.mensuel_origin === 'direct' ? 'active-direct' : 'active-cascade';
 
-    // + Tracker : badge si déjà ajouté, bouton radio sinon
+    // + Tracker : badge si déjà ajouté, sinon bouton qui ouvre l'overlay tracker.
+    // Câblé sur data-tracker (+ attributs de pré-remplissage) → handler [data-tracker].
+    // (Auparavant data-registre : handler radio mort, aucun appel/overlay.)
     const trackerEl = a.tracker_added
       ? `<span class="ew-badge ew-badge-ok" style="font-family:var(--font-mono);font-size:9px">&#10003; Tracker</span>`
-      : `<button class="ew-btn-v3${s.registre === 'tracker' ? ' active-direct' : ''}" data-registre="${a.id}" data-registre-val="tracker">+ Tracker</button>`;
+      : `<button class="ew-btn-v3" data-tracker="${a.id}"
+          data-source="${escHtml(a.source_name||'')}"
+          data-date="${a.published_at ? a.published_at.slice(0,10) : ''}"
+          data-title="${escHtml(a.title||'')}"
+          data-synthese="${escHtml(a.summary||'')}"
+          data-url="${escHtml(a.original_url||'')}"
+          data-type="${escHtml(a.impact_type||'')}">+ Tracker</button>`;
 
-    // + Pub : badge si déjà ajouté, bouton radio sinon
+    // + Pub : badge si déjà ajouté, sinon bouton qui appelle l'API directement.
+    // Câblé sur data-pub → handler [data-pub] (POST /tracker/pub/propose).
+    // (Auparavant data-registre : handler radio mort, aucun appel API.)
     const pubEl = a.pub_added
       ? `<span class="ew-badge ew-badge-ok" style="font-family:var(--font-mono);font-size:9px">&#10003; Pub</span>`
-      : `<button class="ew-btn-v3${s.registre === 'autres_pub' ? ' active-direct' : ''}" data-registre="${a.id}" data-registre-val="autres_pub">+ Pub</button>`;
+      : `<button class="ew-btn-v3" data-pub="${a.id}">+ Pub</button>`;
 
     const impactRow = (a.has_impact && a.impacted_procedures?.length)
       ? `<div style="display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap" onclick="event.stopPropagation()">
