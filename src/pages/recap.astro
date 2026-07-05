@@ -5,8 +5,11 @@ const base = import.meta.env.BASE_URL;
 
 <AppLayout title="Recap — Early Watch" activePage="recap">
 
-  <style>
+  <style is:global>
     /* ── Page Recap ──────────────────────────────────────────────── */
+    /* is:global requis : les cartes/labels sont créés côté client (makeCard, JS),
+       donc ils ne portent pas l'attribut de scope Astro — un <style> scopé
+       laisserait ces éléments dynamiques sans style (cartes brutes). */
     .recap-header {
       display: flex;
       align-items: center;
@@ -14,34 +17,42 @@ const base = import.meta.env.BASE_URL;
       margin-bottom: 20px;
     }
     .recap-title {
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 500;
       color: var(--ink);
+      letter-spacing: -0.015em;
     }
 
-    /* ── Onglets ─────────────────────────────────────────────────── */
+    /* ── Onglets — alignés design system (.ew-tabs) ──────────────── */
     .recap-tabs {
       display: flex;
-      gap: 0;
-      border-bottom: 1px solid var(--line-strong);
+      gap: 24px;
+      border-bottom: 0.5px solid var(--line);
       margin-bottom: 20px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
     .recap-tab {
-      padding: 8px 20px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--taupe);
+      padding: 4px 0 14px;
+      color: var(--mute);
       background: none;
       border: none;
-      border-bottom: 2px solid transparent;
+      border-bottom: 1.5px solid transparent;
+      margin-bottom: -0.5px;
       cursor: pointer;
-      font-family: var(--font);
-      transition: color 0.15s;
+      font-family: inherit;
+      font-size: inherit;
+      letter-spacing: inherit;
+      text-transform: inherit;
+      transition: color 0.12s;
       position: relative;
     }
-    .recap-tab:hover { color: var(--ink); }
+    .recap-tab:hover { color: var(--ink-soft); }
     .recap-tab.active {
       color: var(--ink);
+      font-weight: 500;
       border-bottom-color: #5C6347;
     }
 
@@ -58,24 +69,26 @@ const base = import.meta.env.BASE_URL;
       font-family: var(--font);
       font-size: 13px;
       color: var(--ink);
-      background: #fff;
-      border: 1px solid var(--line-strong);
+      background: var(--bg-side);
+      border: 0.5px solid var(--line-strong);
       border-radius: 4px;
       padding: 6px 10px;
       cursor: pointer;
       outline: none;
+      transition: border-color 0.15s;
     }
     .recap-date-select:focus { border-color: #5C6347; }
     .recap-month-input {
       font-family: var(--font);
       font-size: 13px;
       color: var(--ink);
-      background: #fff;
-      border: 1px solid var(--line-strong);
+      background: var(--bg-side);
+      border: 0.5px solid var(--line-strong);
       border-radius: 4px;
       padding: 6px 10px;
       cursor: pointer;
       outline: none;
+      transition: border-color 0.15s;
     }
     .recap-month-input:focus { border-color: #5C6347; }
     .recap-period-label {
@@ -85,7 +98,7 @@ const base = import.meta.env.BASE_URL;
     .recap-published-badge {
       font-size: 11px;
       color: #5C6347;
-      background: #EDF0E7;
+      background: rgba(92,99,71,0.08);
       border-radius: 4px;
       padding: 3px 8px;
       font-weight: 500;
@@ -118,29 +131,53 @@ const base = import.meta.env.BASE_URL;
       flex-direction: column;
       gap: 8px;
     }
+    /* En-tête de jour = label de section kaki (cf. design system) */
     .recap-day-header {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--taupe);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 500;
+      color: #5C6347;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 6px 0 2px;
-      border-bottom: 1px solid var(--line-strong);
-      margin-top: 8px;
+      letter-spacing: 0.16em;
+      padding: 4px 0 8px;
+      margin-top: 20px;
     }
-    .recap-day-header:first-child { margin-top: 0; }
+    .recap-day-header:first-child { margin-top: 4px; }
+
+    /* ── Carte article ───────────────────────────────────────────── */
     .recap-card {
+      background: var(--bg-side);
+      border: 0.5px solid var(--line-strong);
+      border-radius: 8px;                 /* valeur nommée par Maria (cf. incohérence tokens) */
+      padding: 12px 14px;
+      transition: opacity 0.2s, border-color 0.15s;
+    }
+    .recap-card.excluded { opacity: 0.38; }
+    /* Le résumé étant repliable, la carte devient cliquable quand elle est dépliable */
+    .recap-card.is-expandable { cursor: pointer; }
+    .recap-card.is-expandable:hover { border-color: rgba(92,99,71,0.4); }
+
+    /* Ligne compacte : chevron | corps | bouton exclure */
+    .recap-card-head {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 12px;
-      background: #fff;
-      border: 1px solid #D5D2CB;
-      border-radius: 8px;
-      padding: 12px 14px;
-      transition: opacity 0.2s;
+      gap: 10px;
     }
-    .recap-card.excluded { opacity: 0.38; }
+    .recap-chevron {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      margin-top: 1px;
+      color: var(--mute);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, color 0.15s;
+    }
+    .recap-card.is-open .recap-chevron { transform: rotate(90deg); color: #5C6347; }
+    /* Espace réservé quand la carte n'a pas de résumé (pas de chevron) */
+    .recap-chevron-spacer { flex-shrink: 0; width: 16px; }
     .recap-card-body {
       flex: 1;
       min-width: 0;
@@ -171,32 +208,52 @@ const base = import.meta.env.BASE_URL;
       font-size: 11px;
       color: var(--mute);
     }
+
+    /* Résumé replié par défaut, déplié via .is-open */
+    .recap-card-summary {
+      display: none;
+      margin-top: 10px;
+      padding-top: 10px;
+      padding-left: 26px;               /* aligné sous le titre (largeur chevron + gap) */
+      border-top: 0.5px solid var(--line);
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: var(--ink-soft);
+    }
+    .recap-card.is-open .recap-card-summary { display: block; }
+
     .btn-exclude {
       flex-shrink: 0;
       padding: 4px 10px;
       font-size: 11px;
       font-family: var(--font);
       color: var(--taupe);
-      background: none;
-      border: 1px solid var(--line-strong);
+      background: transparent;
+      border: 0.5px solid var(--line-strong);
       border-radius: 4px;
       cursor: pointer;
       white-space: nowrap;
-      transition: background 0.15s, color 0.15s;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
     .btn-exclude:hover { background: var(--bg-hover); color: var(--ink); }
     .btn-exclude.is-excluded {
       color: #5C6347;
       border-color: #5C6347;
-      background: #EDF0E7;
+      background: rgba(92,99,71,0.08);
     }
 
-    /* ── États de chargement ─────────────────────────────────────── */
+    /* ── États de chargement / vide ──────────────────────────────── */
     .recap-empty {
-      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 56px 32px;
       text-align: center;
       color: var(--mute);
       font-size: 13px;
+      line-height: 1.55;
     }
     .recap-loading {
       display: flex;
@@ -596,7 +653,11 @@ const base = import.meta.env.BASE_URL;
       const label = mode === 'quotidien' ? 'Quotidien'
                   : mode === 'hebdo'     ? 'Hebdo'
                   :                        'Mensuel';
-      listEl.innerHTML = `<div class="recap-empty">Aucun article "${label}" pour cette période.</div>`;
+      listEl.innerHTML = `
+        <div class="recap-empty">
+          <span style="font-size:14px;font-weight:500;color:var(--ink)">Aucun article ${escHtml(label)}</span>
+          <span>Rien à publier pour cette période.</span>
+        </div>`;
       if (publishBtn) publishBtn.disabled = true;
       return;
     }
@@ -671,27 +732,61 @@ const base = import.meta.env.BASE_URL;
 
   function makeCard(art: any): HTMLElement {
     const isExcluded = excludedIds.has(art.id);
+
+    // Dégradation gracieuse : le champ `summary` n'arrive qu'après le deploy
+    // de la PR backend #85. Si absent/vide → pas de chevron, carte non dépliable.
+    const summary = typeof art.summary === 'string' ? art.summary.trim() : '';
+    const hasSummary = summary.length > 0;
+
     const card = document.createElement('div');
-    card.className = `recap-card${isExcluded ? ' excluded' : ''}`;
+    card.className = `recap-card${isExcluded ? ' excluded' : ''}${hasSummary ? ' is-expandable' : ''}`;
     card.dataset.id = art.id;
 
     const dateStr = art.published_at ? formatDate(art.published_at) : '—';
 
+    // Chevron uniquement si un résumé est disponible ; sinon spacer pour aligner.
+    const chevronHtml = hasSummary
+      ? `<span class="recap-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4.5 2.5L8 6l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
+      : `<span class="recap-chevron-spacer" aria-hidden="true"></span>`;
+
+    const summaryHtml = hasSummary
+      ? `<div class="recap-card-summary">${escHtml(summary)}</div>`
+      : '';
+
     card.innerHTML = `
-      <div class="recap-card-body">
-        <a class="recap-card-title" href="${escHtml(art.original_url || '#')}"
-           target="_blank" rel="noopener" title="${escHtml(art.title)}">${escHtml(art.title)}</a>
-        <div class="recap-card-meta">
-          <span class="recap-card-source">${escHtml(art.source_name || '')}</span>
-          <span class="recap-card-date">${dateStr}</span>
+      <div class="recap-card-head">
+        ${chevronHtml}
+        <div class="recap-card-body">
+          <a class="recap-card-title" href="${escHtml(art.original_url || '#')}"
+             target="_blank" rel="noopener" title="${escHtml(art.title)}">${escHtml(art.title)}</a>
+          <div class="recap-card-meta">
+            <span class="recap-card-source">${escHtml(art.source_name || '')}</span>
+            <span class="recap-card-date">${dateStr}</span>
+          </div>
         </div>
+        <button class="btn-exclude${isExcluded ? ' is-excluded' : ''}" data-id="${art.id}">
+          ${isExcluded ? 'Réinclure' : 'Exclure'}
+        </button>
       </div>
-      <button class="btn-exclude${isExcluded ? ' is-excluded' : ''}" data-id="${art.id}">
-        ${isExcluded ? 'Réinclure' : 'Exclure'}
-      </button>
+      ${summaryHtml}
     `;
 
-    card.querySelector('.btn-exclude')!.addEventListener('click', () => toggleExclude(art.id));
+    // Exclure/Réinclure — comportement inchangé
+    const excludeBtn = card.querySelector('.btn-exclude')!;
+    excludeBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // ne pas déplier/replier la carte en cliquant Exclure
+      toggleExclude(art.id);
+    });
+
+    // Repli/dépli du résumé (interaction purement visuelle, aucun appel API)
+    if (hasSummary) {
+      card.addEventListener('click', (e) => {
+        // Laisser passer les clics sur le lien du titre (ouvre l'article)
+        if ((e.target as HTMLElement).closest('.recap-card-title')) return;
+        card.classList.toggle('is-open');
+      });
+    }
+
     return card;
   }
 
