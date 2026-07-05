@@ -5,8 +5,11 @@ const base = import.meta.env.BASE_URL;
 
 <AppLayout title="Recap — Early Watch" activePage="recap">
 
-  <style>
+  <style is:global>
     /* ── Page Recap ──────────────────────────────────────────────── */
+    /* is:global requis : les cartes/labels sont créés côté client (makeCard, JS),
+       donc ils ne portent pas l'attribut de scope Astro — un <style> scopé
+       laisserait ces éléments dynamiques sans style (cartes brutes). */
     .recap-header {
       display: flex;
       align-items: center;
