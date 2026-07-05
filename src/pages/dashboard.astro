@@ -56,13 +56,14 @@ const base = import.meta.env.BASE_URL;
 <div id="cloturer-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,24,20,0.45);z-index:1100;align-items:center;justify-content:center">
   <div id="cloturer-modal" style="background:var(--bg);border:0.5px solid var(--line-strong);border-radius:8px;width:440px;max-width:90vw">
     <div style="padding:20px 24px 16px">
-      <div style="font-weight:500;font-size:15px;color:var(--ink);margin-bottom:10px">Articles non ajoutés au tracker</div>
-      <p id="cloturer-msg" style="font-size:13px;color:var(--ink-soft);margin:0 0 6px;line-height:1.5"></p>
-      <p style="font-size:12px;color:var(--taupe);margin:0;line-height:1.4">Vous pourrez les retrouver dans les Archives.</p>
+      <div style="font-weight:500;font-size:15px;color:var(--ink);margin-bottom:10px">Clôturer la session</div>
+      <p id="cloturer-intro" style="font-size:13px;color:var(--ink-soft);margin:0 0 12px;line-height:1.5"></p>
+      <div id="cloturer-list" style="max-height:240px;overflow-y:auto;margin:0 0 4px"></div>
+      <p id="cloturer-msg" style="font-size:12px;color:var(--taupe);margin:10px 0 0;line-height:1.4;display:none"></p>
     </div>
     <div style="padding:14px 24px;border-top:0.5px solid var(--line);display:flex;gap:10px;justify-content:flex-end">
       <button id="cloturer-cancel" class="ew-btn">Annuler</button>
-      <button id="cloturer-confirm" style="font-size:13px;padding:7px 18px;border:none;background:var(--ink);color:var(--bg);border-radius:6px;cursor:pointer;font-family:var(--font)">Clôturer quand même</button>
+      <button id="cloturer-confirm" style="font-size:13px;padding:7px 18px;border:none;background:var(--ink);color:var(--bg);border-radius:6px;cursor:pointer;font-family:var(--font)">Clôturer</button>
     </div>
   </div>
 </div>
@@ -979,6 +980,9 @@ const base = import.meta.env.BASE_URL;
     const hTotal = nc?.hebdo_total || 0;
     const hPub   = nc?.hebdo_published || 0;
     const canClose = (qTotal + hTotal) > 0;
+    // N réel = articles triés qui seront publiés par publish-all (même ensemble
+    // que le garde du handler et la mise à jour optimiste ci-dessous).
+    const triagedCount = articles.filter((a: any) => a.lifecycle_status === 'triaged').length;
 
     const digestSection = nc ? `
       <div>
@@ -999,8 +1003,8 @@ const base = import.meta.env.BASE_URL;
             <button class="ew-digest-btn" id="btn-apercu-hebdo" ${hTotal === 0 ? 'disabled style="opacity:.4"' : ''}>Aperçu</button>
           </div>
         </div>
-        <button class="ew-close" id="btn-publish-all" ${!canClose ? 'disabled style="opacity:.4"' : ''}>Archiver la sélection</button>
-        <div class="ew-close-note">Archive tous les articles triagés. Compteurs remis à 0.</div>
+        <button class="ew-close" id="btn-publish-all" ${!canClose ? 'disabled style="opacity:.4"' : ''}>Clôturer la session (publie ${triagedCount} article${triagedCount > 1 ? 's' : ''})</button>
+        <div class="ew-close-note">Publie les articles triés dans la newsletter et clôture la session.</div>
       </div>` : `
       <div>
         <div class="ew-r-title">Digest</div>
@@ -1047,14 +1051,26 @@ const base = import.meta.env.BASE_URL;
       publishAllBtn.addEventListener('click', () => {
         const triaged = articles.filter((a: any) => a.lifecycle_status === 'triaged');
         if (!triaged.length) return;
+        const n = triaged.length;
+        // Confirmation systématique : Maria voit ce qu'elle publie avant de valider.
+        document.getElementById('cloturer-intro')!.textContent =
+          `${n} article${n > 1 ? 's' : ''} ${n > 1 ? 'vont' : 'va'} être publié${n > 1 ? 's' : ''} dans la newsletter :`;
+        document.getElementById('cloturer-list')!.innerHTML = triaged.map((a: any) => `
+          <div style="padding:8px 0;border-bottom:0.5px solid var(--line)">
+            <div style="font-size:13px;color:var(--ink);line-height:1.35">${escHtml(a.title || 'Sans titre')}</div>
+            <div style="font-size:11px;color:var(--taupe);margin-top:2px">${escHtml(a.source_name || 'Source inconnue')}</div>
+          </div>`).join('');
+        // Note tracker conservée, en conditionnel (comportement préexistant).
+        const msg = document.getElementById('cloturer-msg')!;
         if (trackerPendingCount > 0) {
-          document.getElementById('cloturer-msg')!.textContent =
+          msg.textContent =
             `${trackerPendingCount} article${trackerPendingCount > 1 ? 's' : ''} éligible${trackerPendingCount > 1 ? 's' : ''} n'${trackerPendingCount > 1 ? 'ont' : 'a'} pas été ajouté${trackerPendingCount > 1 ? 's' : ''} au tracker.`;
-          const ov = document.getElementById('cloturer-overlay')!;
-          ov.style.display = 'flex';
+          msg.style.display = '';
         } else {
-          executePublishAll();
+          msg.style.display = 'none';
         }
+        document.getElementById('cloturer-confirm')!.textContent = `Clôturer (publier ${n})`;
+        document.getElementById('cloturer-overlay')!.style.display = 'flex';
       });
     }
 
@@ -1107,7 +1123,8 @@ const base = import.meta.env.BASE_URL;
       toast(`${res.published || 0} article${(res.published||0) > 1 ? 's' : ''} publiés — session clôturée`);
     } catch (e: any) {
       toast('Erreur: ' + (e.message || 'publication échouée'), 'error');
-      if (btn) { btn.disabled = false; btn.textContent = 'Archiver la sélection'; }
+      if (btn) btn.disabled = false;
+      renderDigestPanel();  // restaure le label dynamique correct (N articles)
     }
   }
 
