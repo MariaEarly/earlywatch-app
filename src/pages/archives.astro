@@ -28,7 +28,7 @@ const base = import.meta.env.BASE_URL;
 
   async function init(): Promise<void> {
     try {
-      const data: any = await api('/api/v1/articles?lifecycle_status=ignored,published&page_size=200');
+      const data: any = await api('/api/v1/articles?lifecycle_status=ignored,published,archived&page_size=200');
       articles = Array.isArray(data) ? data : (data?.items || []);
     } catch (e: any) {
       document.getElementById('article-list')!.innerHTML =
@@ -120,10 +120,11 @@ const base = import.meta.env.BASE_URL;
     const hasThemes = Object.keys(themeCounts).length > 0;
 
     // Status counts
-    const statusCounts: any = { all: articles.length, published: 0, ignored: 0 };
+    const statusCounts: any = { all: articles.length, published: 0, ignored: 0, archived: 0 };
     articles.forEach((a: any) => {
       if (a.lifecycle_status === 'published') statusCounts.published++;
       else if (a.lifecycle_status === 'ignored') statusCounts.ignored++;
+      else if (a.lifecycle_status === 'archived') statusCounts.archived++;
     });
 
     document.getElementById('sidebar-left')!.innerHTML = `
@@ -142,6 +143,7 @@ const base = import.meta.env.BASE_URL;
           ${statusBtn('all', 'Tous', statusCounts.all)}
           ${statusBtn('published', 'Publié', statusCounts.published)}
           ${statusBtn('ignored', 'Ignoré', statusCounts.ignored)}
+          ${statusBtn('archived', 'Archivé', statusCounts.archived)}
         </div>
       </div>
       <div class="sidebar-section">
@@ -226,6 +228,9 @@ const base = import.meta.env.BASE_URL;
     if (status === 'published') {
       return '<span class="badge badge-success">Publié</span>';
     }
+    if (status === 'archived') {
+      return '<span class="badge badge-neutral">Archivé</span>';
+    }
     return '<span class="badge badge-neutral">Ignoré</span>';
   }
 
@@ -272,6 +277,11 @@ const base = import.meta.env.BASE_URL;
             ? `<span class="badge-tracker-added">\u2713 Pub</span>`
             : `<button class="btn btn-sm btn-secondary" data-pub="${a.id}" onclick="event.stopPropagation()">+ Pub</button>`
           }
+          ${(a.lifecycle_status === 'ignored' || a.lifecycle_status === 'archived')
+            ? `<span class="action-sep">|</span>
+               <button class="btn btn-sm btn-secondary" data-restore="${a.id}" onclick="event.stopPropagation()">Restaurer</button>`
+            : ''
+          }
         </div>
       </div>
     `).join('');
@@ -299,6 +309,30 @@ const base = import.meta.env.BASE_URL;
         addToPub(el.dataset.pub, el);
       });
     });
+
+    // Bind restore buttons (EB-UX-001 P2 — archived/ignored → to_triage)
+    document.querySelectorAll('[data-restore]').forEach((el: any) => {
+      el.addEventListener('click', (e: any) => {
+        e.stopPropagation();
+        restoreArticle(el.dataset.restore, el);
+      });
+    });
+  }
+
+  async function restoreArticle(articleId: string, btn: HTMLButtonElement): Promise<void> {
+    btn.disabled = true;
+    try {
+      await api(`/api/v1/articles/${articleId}/restore`, { method: 'POST', body: {} });
+      // L'article repart en to_triage (inbox) → il quitte la vue Archives.
+      const idx = articles.findIndex((a: any) => a.id === articleId);
+      if (idx !== -1) articles.splice(idx, 1);
+      renderArticles();
+      renderSidebar();
+      toast('Article restauré — de retour dans l’inbox');
+    } catch (e: any) {
+      btn.disabled = false;
+      toast(e.message || 'Erreur', 'error');
+    }
   }
 
   async function addToTracker(articleId: string, btn: HTMLButtonElement): Promise<void> {
