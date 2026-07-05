@@ -424,6 +424,16 @@ const base = import.meta.env.BASE_URL;
     return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  /** Extrait le texte lisible d'un summary HTML brut (flux RSS : <div>/<img>…).
+   *  DOMParser parse dans un document détaché → n'exécute aucun script et ne charge
+   *  aucune image ; on ne garde que textContent, espaces normalisés. Le summary brut
+   *  reste intact côté API/DB (article_get) — on ne strip qu'à l'affichage. */
+  function stripHtml(s: string): string {
+    if (!s) return '';
+    const doc = new DOMParser().parseFromString(s, 'text/html');
+    return (doc.body.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
   /** Retourne le lundi de la semaine écoulée (semaine précédente). */
   function lastWeekMonday(): Date {
     const today = new Date();
@@ -735,7 +745,10 @@ const base = import.meta.env.BASE_URL;
 
     // Dégradation gracieuse : le champ `summary` n'arrive qu'après le deploy
     // de la PR backend #85. Si absent/vide → pas de chevron, carte non dépliable.
-    const summary = typeof art.summary === 'string' ? art.summary.trim() : '';
+    // Option A : le summary de flux RSS contient souvent du HTML brut ; on affiche le
+    // TEXTE lisible (balises retirées). hasSummary est calculé sur le texte strippé →
+    // pas de chevron/carte dépliable vide pour un résumé qui ne serait qu'une image.
+    const summary = stripHtml(typeof art.summary === 'string' ? art.summary : '');
     const hasSummary = summary.length > 0;
 
     const card = document.createElement('div');
