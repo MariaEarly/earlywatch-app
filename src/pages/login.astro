@@ -55,7 +55,7 @@ import AuthLayout from '../layouts/AuthLayout.astro';
     if (t) {
       fetch(`${API}/api/v1/auth/me`, { headers: { 'Authorization': `Bearer ${t}` } })
         .then(r => { if (r.ok) return r.json(); throw 0; })
-        .then(u => { window.location.href = BASE + (u.role === 'superadmin' ? 'superadmin' : 'conformite'); })
+        .then(u => { window.location.href = BASE + (u.role === 'superadmin' ? 'superadmin' : 'app/tableau-de-bord'); })
         .catch(() => {});
     }
 
@@ -99,7 +99,7 @@ import AuthLayout from '../layouts/AuthLayout.astro';
         const d = await r.json();
         sessionStorage.setItem('ew_token', d.access_token);
         sessionStorage.setItem('ew_user', JSON.stringify(d.user));
-        window.location.href = BASE + (d.user?.role === 'superadmin' ? 'superadmin' : 'conformite');
+        window.location.href = BASE + (d.user?.role === 'superadmin' ? 'superadmin' : 'app/tableau-de-bord');
 
       } catch (ex: any) {
         email.classList.add('error');
