@@ -36,7 +36,7 @@ export function requireClientAuth() {
     return false;
   }
   const user = getUser();
-  if (!user || !['admin', 'reader', 'superadmin'].includes(user.role)) {
+  if (!user || !['admin', 'reader', 'editor', 'superadmin'].includes(user.role)) {
     window.location.href = BASE + 'login';
     return false;
   }

@@ -298,11 +298,14 @@ const base = import.meta.env.BASE_URL;
       });
 
       const box: HTMLElement = document.getElementById('create-result')!;
-      box.innerHTML = `<b>Tenant cree !</b><br>
+      const emailSent: boolean = result.welcome_email_sent === true;
+      box.innerHTML = `<b>Client cree !</b><br>
         ID : ${result.tenant_id}<br>
         Email : ${result.admin_email}<br>
-        Mot de passe temporaire : <code style="background:#EDEAE3;padding:2px 6px;border-radius:0;font-weight:500">${result.temp_password}</code><br>
-        <span style="font-size:11px;color:#6B6860">Communiquer ce mot de passe au client — il devra le changer a la premiere connexion.</span>`;
+        ${emailSent
+          ? '<span style="color:#4A5240;font-weight:500">&#10003; Email d\'acces (lien d\'activation) envoye au client.</span>'
+          : '<span style="color:#C4603A;font-weight:500">&#9888; Email d\'acces NON envoye (SMTP desactive ou erreur) — verifier la config ou communiquer l\'acces autrement.</span>'}<br>
+        <span style="font-size:11px;color:#6B6860">Le client definit son mot de passe via le lien recu par email.</span>`;
       box.classList.add('visible');
 
       (document.getElementById('c-name') as HTMLInputElement).value = '';
