@@ -284,6 +284,32 @@ const base = import.meta.env.BASE_URL;
     return !!getUser()?.tenant_newsletter_enabled;
   }
 
+  // ── File de tri vs auto-classés ──────────────────────────────────────────
+  // 'inbox' = to_triage mappé par la rétrocompat v2 du backend (_v2_compat) ;
+  // on accepte aussi 'to_triage' pour rester correct après le retrait du mapping (PR D).
+  function isToTriage(a: any): boolean {
+    return a.lifecycle_status === 'inbox' || a.lifecycle_status === 'to_triage';
+  }
+
+  // File « À trier » : articles à trier + articles triés à la main dans cette
+  // session ('triaged' local après POST /triage) — jamais les auto-classés.
+  function isTriageFile(a: any): boolean {
+    return !a._auto_tagged && (isToTriage(a) || a.lifecycle_status === 'triaged');
+  }
+
+  // Compteur du menu Inbox = to_triage SEUL — même définition que
+  // inbox_stats.to_triage_count côté backend (lifecycle_status == 'to_triage'),
+  // calculée ici côté client car inbox_stats n'est exposé qu'en MCP, pas en REST.
+  function updateInboxBadge(): void {
+    const n = articles.filter((a: any) => isToTriage(a)).length;
+    sessionStorage.setItem('ew_inbox_count', String(n));
+    const el = document.getElementById('nav-count-inbox') as HTMLElement | null;
+    if (el) {
+      el.textContent = String(n);
+      el.style.display = n > 0 ? '' : 'none';
+    }
+  }
+
   // ── Init ─────────────────────────────────────────────────────────────────
 
   async function init(): Promise<void> {
@@ -322,11 +348,8 @@ const base = import.meta.env.BASE_URL;
       });
       articles = [...mainArticles, ...autoTagged];
 
-      // Expose inbox count pour le badge nav
-      const inbox = articles.filter((a: any) =>
-        a.lifecycle_status === 'inbox' || a.lifecycle_status === 'triaged'
-      );
-      sessionStorage.setItem('ew_inbox_count', String(inbox.length));
+      // Expose inbox count pour le badge nav — to_triage seul (pas les auto-classés)
+      updateInboxBadge();
 
     } catch (e: any) {
       document.getElementById('article-list')!.innerHTML =
@@ -342,9 +365,9 @@ const base = import.meta.env.BASE_URL;
   // ── Tabs ─────────────────────────────────────────────────────────────────
 
   function renderTabs(): void {
-    const visible: any[] = articles.filter((a: any) =>
-      a.lifecycle_status === 'inbox' || a.lifecycle_status === 'triaged'
-    );
+    updateInboxBadge();
+    // Les onglets ne comptent que la file « À trier » — les auto-classés en sont exclus.
+    const visible: any[] = articles.filter((a: any) => isTriageFile(a));
     const cnt: any = { all: visible.length, nouveau: 0, quotidien: 0, hebdo: 0, ignorer: 0 };
     visible.forEach((a: any) => { if (cnt[a.status] !== undefined) cnt[a.status]++; });
 
@@ -396,9 +419,8 @@ const base = import.meta.env.BASE_URL;
   // ── Articles ─────────────────────────────────────────────────────────────
 
   function renderArticles(): void {
-    let filtered: any[] = articles.filter((a: any) =>
-      a.lifecycle_status === 'inbox' || a.lifecycle_status === 'triaged'
-    );
+    // ── File « À trier » : uniquement les articles de la file de tri ──
+    let filtered: any[] = articles.filter((a: any) => isTriageFile(a));
     if (activeFilter !== 'all') filtered = filtered.filter((a: any) => a.status === activeFilter);
 
     // Masquer les articles traités dans cette session si toggle actif
@@ -414,29 +436,43 @@ const base = import.meta.env.BASE_URL;
       filtered = filtered.filter((a: any) => sortDate(a) >= now.getTime() - 7 * 86400000);
     }
 
-    filtered.sort((a: any, b: any) => {
-      return sortMode === 'oldest' ? sortDate(a) - sortDate(b) : sortDate(b) - sortDate(a);
-    });
+    const byDate = (a: any, b: any) =>
+      sortMode === 'oldest' ? sortDate(a) - sortDate(b) : sortDate(b) - sortDate(a);
+    filtered.sort(byDate);
 
-    // Mettre à jour la liste des IDs visibles pour la navigation clavier
-    visibleArticleIds = filtered.map((a: any) => a.id);
+    // ── Section « Auto-classés récents » : kept auto-tagués (48h), hors file de tri ──
+    const autoList: any[] = articles.filter((a: any) => a._auto_tagged).sort(byDate);
+
+    // Mettre à jour la liste des IDs visibles pour la navigation clavier (tri puis auto)
+    visibleArticleIds = [...filtered, ...autoList].map((a: any) => a.id);
 
     const container = document.getElementById('article-list')!;
     const tabs = container.querySelector('#ew-tabs');
 
-    if (filtered.length === 0) {
-      container.innerHTML = `<div class="ew-empty">
-        <div class="ew-empty-title">Aucun article dans cette vue</div>
-        <div class="ew-empty-sub">Modifie le filtre ou reviens plus tard.</div>
-        <div class="ew-empty-hint">Dernière ingestion automatique · 4×/jour</div>
-      </div>`;
-      if (tabs) container.insertAdjacentElement('afterbegin', tabs);
-      return;
-    }
+    const aTrierHtml = filtered.length
+      ? `<div class="ew-list" id="ew-list">${filtered.map((a: any) => articleCard(a)).join('')}</div>`
+      : `<div class="ew-empty">
+          <div class="ew-empty-title">Aucun article à trier</div>
+          <div class="ew-empty-sub">Modifie le filtre ou reviens plus tard.</div>
+          <div class="ew-empty-hint">Dernière ingestion automatique · 4×/jour</div>
+        </div>`;
 
-    // Rendre la liste
-    const listHtml = `<div class="ew-list" id="ew-list">${filtered.map((a: any) => articleCard(a)).join('')}</div>`;
-    container.innerHTML = listHtml;
+    const autoHtml = autoList.length
+      ? `<div class="ew-section-head">
+          <span class="ew-section-title">Auto-classés récents</span>
+          <span class="ew-section-count">${autoList.length}</span>
+          <span class="ew-section-hint">Classés automatiquement à l'ingestion (48 dernières heures)</span>
+        </div>
+        <div class="ew-list ew-list-auto" id="ew-list-auto">${autoList.map((a: any) => articleCard(a)).join('')}</div>`
+      : '';
+
+    container.innerHTML = `
+      <div class="ew-section-head">
+        <span class="ew-section-title">À trier</span>
+        <span class="ew-section-count">${filtered.length}</span>
+      </div>
+      ${aTrierHtml}
+      ${autoHtml}`;
     if (tabs) container.insertAdjacentElement('afterbegin', tabs);
 
     // ── Bind événements ──────────────────────────────────────────────────
@@ -549,7 +585,7 @@ const base = import.meta.env.BASE_URL;
     const newBadge = a.status === 'nouveau' ? `<span class="tag-new-right">Nouveau</span>` : '';
     const isAuto = !!a._auto_tagged;
     const autoBadge = isAuto
-      ? `<span style="font-size:9px;font-family:var(--font-mono);letter-spacing:0.06em;background:rgba(238,231,210,0.55);border:0.5px solid #C8C4BC;border-radius:3px;padding:1px 5px;color:var(--taupe)">auto</span>`
+      ? `<span style="font-size:9px;font-family:var(--font-mono);letter-spacing:0.06em;background:rgba(238,231,210,0.55);border:0.5px solid #C8C4BC;border-radius:3px;padding:1px 5px;color:var(--taupe)" title="Classé automatiquement à l'ingestion (EB-AUTO-001)">AUTO</span>`
       : '';
     const autoStyle = isAuto ? 'border-left:2px solid #C8C4BC;padding-left:14px;' : '';
     const traiteBadge = isTreated ? `<span class="ew-badge-traite">&#10003;</span>` : '';
@@ -631,6 +667,7 @@ const base = import.meta.env.BASE_URL;
         articles[idx].in_hebdo   = s.in_hebdo;
         articles[idx].in_mensuel = s.in_mensuel;
       }
+      updateInboxBadge(); // l'article quitte le compteur to_triage
 
       updateCardDOM(id); // applique ew-item--traite + badge ✓
       if (hideTraites && s._treated) {
@@ -1364,7 +1401,44 @@ const base = import.meta.env.BASE_URL;
   .ew-textarea { resize: vertical; min-height: 72px; }
 
   /* Scrollbar gutter pour les listes longues */
-  #ew-list { scrollbar-gutter: stable; }
+  #ew-list, #ew-list-auto { scrollbar-gutter: stable; }
+
+  /* ── En-têtes de section : « À trier » / « Auto-classés récents » ── */
+  .ew-section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 18px 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 0.5px solid var(--line, #E5E2D9);
+  }
+  .ew-section-title {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--taupe);
+    font-weight: 500;
+  }
+  .ew-section-count {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--mute);
+    background: var(--bg-hover, #EAE6DA);
+    border-radius: 8px;
+    padding: 0 7px;
+    line-height: 16px;
+  }
+  .ew-section-hint {
+    font-size: 11px;
+    color: var(--mute);
+    margin-left: auto;
+  }
+
+  /* Cartes auto-classées : légèrement en retrait visuel */
+  .ew-list-auto .ew-item {
+    opacity: 0.85;
+  }
 
   /* Les overlays sont contrôlés uniquement par JS (style.display = 'flex'/'none') */
   #apercu-overlay { display: none; }
